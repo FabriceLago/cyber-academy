@@ -20,4 +20,4 @@ Architecture et choix techniques : [docs/architecture.md](docs/architecture.md).
 | `npm run build` | Build de production dans `dist/` |
 | `npm test -- --watch=false` | Tests unitaires (Vitest) |
 | `npm run lint` | ESLint : TypeScript, templates et règles d'accessibilité |
-| `npm run e2e` | Tests de parcours (Playwright, bureau et mobile, audit axe) |
+| `npm run e2e` | Build de production puis tests de parcours (Playwright, bureau et mobile, audit axe, thèmes clair et sombre) |

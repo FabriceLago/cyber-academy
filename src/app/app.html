@@ -1,5 +1,65 @@
-<main>
-  <h1>Cyber Academy</h1>
-  <p>Le socle technique est en place. Le design system et la navigation arrivent à l'étape 3.</p>
-  <router-outlet />
-</main>
+<a class="btn btn-primary skip-link" href="#contenu" (click)="skipToContent($event)">
+  Aller au contenu principal
+</a>
+
+@if (navigating()) {
+  <div class="route-progress" role="progressbar" aria-label="Chargement de la page"></div>
+}
+
+<div class="layout">
+  <header class="topbar">
+    <a class="brand" routerLink="/">
+      <ca-icon name="shield" />
+      <span class="brand-name">Cyber Academy</span>
+    </a>
+    <button
+      #menuButton
+      type="button"
+      class="btn btn-ghost menu-toggle"
+      aria-controls="navigation-principale"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <ca-icon [name]="menuOpen() ? 'close' : 'menu'" />
+      Menu
+    </button>
+    <button
+      type="button"
+      class="btn btn-ghost btn-icon"
+      [attr.aria-label]="themeToggleLabel()"
+      [title]="themeToggleLabel()"
+      (click)="theme.toggle()"
+    >
+      <ca-icon [name]="theme.resolved() === 'dark' ? 'sun' : 'moon'" />
+    </button>
+  </header>
+
+  <nav
+    id="navigation-principale"
+    class="nav"
+    [class.open]="menuOpen()"
+    aria-label="Navigation principale"
+    (focusout)="closeMenuIfFocusLeaves($event)"
+  >
+    <ul>
+      @for (item of navItems; track item.path) {
+        <li>
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+            (click)="menuOpen.set(false)"
+          >
+            <ca-icon [name]="item.icon" />
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <main #main id="contenu" tabindex="-1">
+    <router-outlet />
+  </main>
+</div>

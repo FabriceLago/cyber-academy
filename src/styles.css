@@ -1,1 +1,271 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Cyber Academy : jetons du design system et styles de base.
+ *
+ * Chaque couleur est définie une seule fois avec light-dark(clair, sombre).
+ * La valeur utilisée dépend de color-scheme : réglage de l'appareil par défaut,
+ * ou choix explicite via l'attribut data-theme de <html> (voir ThemeService).
+ * Contrastes vérifiés : texte ≥ 4,5:1 et anneau de focus ≥ 3:1, dans les deux thèmes.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Couleurs */
+  --color-bg: light-dark(#f4f7fb, #0b1220);
+  --color-surface: light-dark(#ffffff, #111b2e);
+  --color-surface-raised: light-dark(#eef3f9, #172338);
+  --color-border: light-dark(#d3dce8, #26344f);
+  --color-text: light-dark(#0f1b2d, #e6edf7);
+  --color-text-muted: light-dark(#4a5b74, #a3b3cb);
+  --color-accent: light-dark(#0e7490, #22d3ee);
+  --color-accent-hover: light-dark(#155e75, #67e8f9);
+  --color-accent-soft: light-dark(#e0f5fa, #133145);
+  --color-on-accent: light-dark(#ffffff, #04161c);
+  --color-focus: light-dark(#0e7490, #67e8f9);
+  --color-success: light-dark(#15803d, #4ade80);
+  --color-warning: light-dark(#b45309, #fbbf24);
+  --color-danger: light-dark(#b91c1c, #f87171);
+  --shadow-color: light-dark(rgb(15 27 45 / 0.08), rgb(0 0 0 / 0.45));
+
+  /* Typographie : polices du système, aucun téléchargement */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-2xl: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem);
+  --leading: 1.6;
+
+  /* Espacements, rayons, profondeur */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px var(--shadow-color), 0 8px 24px var(--shadow-color);
+
+  /* Mouvement */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Mise en page */
+  --topbar-height: 3.75rem;
+  --sidebar-width: 16rem;
+  --content-max: 72rem;
+  --target-min: 2.75rem; /* 44 px : cible confortable au doigt (WCAG 2.5.8 exige 24 px) */
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* Base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading);
+  color: var(--color-text);
+  background: var(--color-bg);
+  accent-color: var(--color-accent);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--space-3);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-2xl);
+}
+
+h2 {
+  font-size: var(--text-xl);
+}
+
+h3 {
+  font-size: var(--text-lg);
+}
+
+p {
+  max-width: 70ch;
+  margin: 0 0 var(--space-4);
+}
+
+a {
+  color: var(--color-accent);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-mono);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Boutons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+  color: var(--color-on-accent);
+}
+
+.btn-secondary {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.btn-ghost:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.btn-icon {
+  min-width: var(--target-min);
+  padding: var(--space-2);
+}
+
+/* Cartes */
+
+.card {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* En-tête de page */
+
+.page-header {
+  margin-bottom: var(--space-6);
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+}
+
+/* Pages d'état : page introuvable, erreur */
+
+.status-page {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-7);
+  text-align: center;
+}
+
+.status-page p {
+  color: var(--color-text-muted);
+}
+
+.status-page .status-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--color-accent);
+}
+
+.status-page .actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+/* Mouvement réduit : les animations et transitions deviennent instantanées. */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -19,7 +19,7 @@ Versions installées et vérifiées le 2026-10-16.
 | Framework | Angular, composants standalone, sans zone.js | 22.2.3 |
 | Langage | TypeScript strict (actif par défaut depuis TypeScript 6.0) et templates stricts (défaut d'Angular 22) | 6.0.3 |
 | Tests unitaires | Vitest, lancé par `ng test` dans jsdom | 5.0.5 |
-| Tests de parcours | Playwright, projets « bureau » (Chrome) et « mobile » (Pixel 7) | 1.64.1 |
+| Tests de parcours | Playwright sur le build de production (servi par `vite preview`), projets « bureau » (Chrome) et « mobile » (Pixel 7), 2 navigateurs en parallèle | 1.64.1 |
 | Accessibilité | axe-core via `@axe-core/playwright`, règles WCAG 2.0 à 2.2 niveaux A et AA | 4.14.0 |
 | Lint | angular-eslint : TypeScript, templates et règles d'accessibilité des templates | 22.6.0 |
 | Styles | CSS natif ; les jetons du design system sont des variables CSS (étape 3) | — |
@@ -36,18 +36,24 @@ Versions installées et vérifiées le 2026-10-16.
 src/app/
 ├─ core/
 │  ├─ models/            types du contenu et de la progression            (étape 2, fait)
-│  └─ content/           validation automatique du contenu                (étape 2, fait)
-├─ shared/               composants d'interface réutilisables             (étape 3)
+│  ├─ content/           validation automatique du contenu                (étape 2, fait)
+│  ├─ theme/             thème clair, sombre ou selon l'appareil          (étape 3, fait)
+│  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
+├─ shared/
+│  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
+│  └─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
 ├─ content/              parcours, leçons, laboratoires, compétences      (étape 5)
 └─ features/
+   ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
+   ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
+   ├─ profile/           thème (fait) ; objectif hebdomadaire, réinitialisation (étape 5)
    ├─ dashboard/         tableau de bord                                  (étape 4)
    ├─ learning-paths/    carte des parcours                               (étape 5)
    ├─ lessons/           page de leçon en 17 sections                     (étape 5)
    ├─ quizzes/           moteur et interface de quiz                      (étape 6)
    ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8)
    ├─ projects/          projets pratiques                                (après le MVP)
-   ├─ progress/          compétences                                      (étape 4)
-   └─ profile/           thème, objectif hebdomadaire, réinitialisation   (étape 3)
+   └─ progress/          compétences                                      (étape 4)
 e2e/                     tests Playwright
 docs/                    ce document
 ```
@@ -57,7 +63,43 @@ Conventions :
 - sélecteurs préfixés `ca-` ;
 - une fonctionnalité = un dossier chargé à la demande (`loadComponent` / `loadChildren`) ;
 - état en signals (`signal`, `computed`), services `providedIn: 'root'` ;
-- textes de l'interface en français.
+- détection des changements OnPush (comportement par défaut d'Angular 22) ;
+- textes de l'interface en français, apostrophe typographique (’).
+
+### Design system et navigation
+
+**Jetons** ([`src/styles.css`](../src/styles.css)) : chaque couleur est écrite une seule fois avec
+`light-dark(clair, sombre)`. Le thème suit le réglage de l'appareil, ou le choix fait dans
+*Profil et paramètres* (attribut `data-theme` sur `<html>`, mémorisé dans le navigateur).
+
+| Rôle | Sombre | Clair |
+|---|---|---|
+| Fond | `#0b1220` (bleu nuit) | `#f4f7fb` |
+| Surface (cartes) | `#111b2e` | `#ffffff` |
+| Texte / texte secondaire | `#e6edf7` / `#a3b3cb` | `#0f1b2d` / `#4a5b74` |
+| Accent (liens, boutons) | `#22d3ee` (cyan) | `#0e7490` (cyan foncé) |
+| Succès / alerte / danger | `#4ade80` / `#fbbf24` / `#f87171` | `#15803d` / `#b45309` / `#b91c1c` |
+
+Contrastes calculés (formule WCAG) : texte ≥ 4,5:1 partout (minimum mesuré : 4,99 pour un lien
+clair sur le fond clair), anneau de focus ≥ 3:1. Polices du système (aucun téléchargement),
+espacements de 4 à 48 px, cibles cliquables de 44 px minimum.
+
+**Classes globales** : `.btn` (`-primary`, `-secondary`, `-ghost`, `-icon`), `.card`,
+`.page-header`, `.status-page`, `.visually-hidden`.
+**Composants** : `ca-icon` (15 icônes SVG au trait, toujours décoratives),
+`ca-empty-state` (section vide expliquée).
+
+**Navigation** : barre latérale à partir de 1024 px ; en dessous, bouton « Menu » qui déplie la
+navigation par-dessus le contenu (`aria-expanded`, fermeture par Échap ou quand le focus quitte le
+menu). Page active signalée par `aria-current="page"` et par la forme, pas seulement la couleur.
+Lien d'évitement « Aller au contenu principal ». À chaque changement de page : titre d'onglet
+propre, retour en haut, focus placé sur le contenu. Les sections pas encore développées affichent
+une page provisoire qui annonce l'étape prévue, sans fausses données.
+
+**Erreurs** : adresse inconnue → page introuvable ; échec de chargement d'une page (réseau) →
+page d'erreur chargée avec l'application, l'adresse demandée restant affichée pour « Recharger ».
+
+**Mouvement** : `prefers-reduced-motion` rend animations et transitions instantanées.
 
 ## 4. Modèle de contenu
 
