@@ -20,6 +20,8 @@
   --color-accent: light-dark(#0e7490, #22d3ee);
   --color-accent-hover: light-dark(#155e75, #67e8f9);
   --color-accent-soft: light-dark(#e0f5fa, #133145);
+  --color-accent-track: light-dark(#cdeaf1, #1d3d52); /* piste des jauges : remplissage ≥ 4:1 */
+  --color-control-border: light-dark(#7b8ba4, #6b7c99); /* bord des champs : ≥ 3:1 (WCAG 1.4.11) */
   --color-on-accent: light-dark(#ffffff, #04161c);
   --color-focus: light-dark(#0e7490, #67e8f9);
   --color-success: light-dark(#15803d, #4ade80);

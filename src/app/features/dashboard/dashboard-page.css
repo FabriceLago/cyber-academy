@@ -1,0 +1,156 @@
+/* Une seule mise en avant : la prochaine étape. Le reste reste discret. */
+
+.next {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  border-color: var(--color-accent);
+}
+
+.next h2,
+.next p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.next .notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.muted {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.stat {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.value {
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.hero {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.path-name {
+  margin: 0 0 var(--space-3);
+  font-weight: 600;
+}
+
+.lessons {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lessons li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+}
+
+.lessons li > span {
+  display: grid;
+}
+
+.lessons ca-icon {
+  margin-top: 0.15em;
+  color: var(--color-accent);
+}
+
+.lessons .completed ca-icon {
+  color: var(--color-success);
+}
+
+.lessons .in-progress ca-icon {
+  color: var(--color-warning);
+}
+
+.lessons .locked,
+.lessons .locked ca-icon {
+  color: var(--color-text-muted);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+th,
+td {
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  color: var(--color-text-muted);
+}
+
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+.date {
+  display: block;
+  font-weight: 400;
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-warning);
+}
+
+.result.passed {
+  color: var(--color-success);
+}

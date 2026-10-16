@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { ProgressStore } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { EmptyState } from '../../shared/empty-state/empty-state';
 
@@ -33,10 +34,25 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
       </fieldset>
     </section>
 
+    <section class="card" aria-labelledby="objectif">
+      <h2 id="objectif">Objectif hebdomadaire</h2>
+      <label class="field-label" for="weekly-goal">Leçons à valider chaque semaine</label>
+      <select id="weekly-goal" aria-describedby="weekly-goal-hint" (change)="setWeeklyGoal($event)">
+        <option value="" [selected]="weeklyGoal() === null">Aucun objectif</option>
+        @for (goal of goalOptions; track goal) {
+          <option [value]="goal" [selected]="weeklyGoal() === goal">
+            {{ goal }} {{ goal > 1 ? 'leçons' : 'leçon' }}
+          </option>
+        }
+      </select>
+      <p class="hint" id="weekly-goal-hint">
+        Facultatif. Le tableau de bord indique où vous en êtes depuis lundi.
+      </p>
+    </section>
+
     <ca-empty-state icon="user" heading="Compte et progression">
       <p>
-        L’objectif hebdomadaire et la réinitialisation de la progression arrivent à l’étape 5, le
-        compte utilisateur à l’étape 9.
+        La réinitialisation de la progression arrive à l’étape 5, le compte utilisateur à l’étape 9.
       </p>
     </ca-empty-state>
   `,
@@ -89,9 +105,37 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
       color: var(--color-text-muted);
       font-size: var(--text-sm);
     }
+
+    .field-label {
+      display: block;
+      margin-bottom: var(--space-2);
+    }
+
+    select {
+      min-height: var(--target-min);
+      padding: 0 var(--space-3);
+      border: 1px solid var(--color-control-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      color: var(--color-text);
+      font: inherit;
+    }
+
+    select + .hint {
+      margin: var(--space-2) 0 0;
+    }
   `,
 })
 export class ProfilePage {
+  private readonly progress = inject(ProgressStore);
+  protected readonly weeklyGoal = computed(() => this.progress.state().weeklyGoal);
+  protected readonly goalOptions = [1, 2, 3, 4, 5, 6, 7];
+
+  protected setWeeklyGoal(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.progress.setWeeklyGoal(value === '' ? null : Number(value));
+  }
+
   protected readonly theme = inject(ThemeService);
   protected readonly themeOptions: readonly {
     value: ThemePreference;

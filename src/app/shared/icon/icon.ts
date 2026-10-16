@@ -15,7 +15,11 @@ export type IconName =
   | 'sun'
   | 'moon'
   | 'compass'
-  | 'alert';
+  | 'alert'
+  | 'check'
+  | 'lock'
+  | 'circle'
+  | 'clock';
 
 /**
  * Icône du design system : trait de 2 px sur une grille de 24, couleur héritée du texte.
@@ -97,6 +101,20 @@ export type IconName =
             d="M10.3 3.9 2.4 17.5a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"
           />
           <svg:path d="M12 9v4M12 17h.01" />
+        }
+        @case ('check') {
+          <svg:path d="m5 12 5 5 9-10" />
+        }
+        @case ('lock') {
+          <svg:rect x="5" y="11" width="14" height="10" rx="2" />
+          <svg:path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        }
+        @case ('circle') {
+          <svg:circle cx="12" cy="12" r="8" />
+        }
+        @case ('clock') {
+          <svg:circle cx="12" cy="12" r="9" />
+          <svg:path d="M12 7v5l3 2" />
         }
       }
     </svg>

@@ -38,22 +38,24 @@ src/app/
 │  ├─ models/            types du contenu et de la progression            (étape 2, fait)
 │  ├─ content/           validation automatique du contenu                (étape 2, fait)
 │  ├─ theme/             thème clair, sombre ou selon l'appareil          (étape 3, fait)
+│  ├─ progress/          règles de progression, stockage validé           (étape 4, fait)
 │  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
 ├─ shared/
 │  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
-│  └─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
-├─ content/              parcours, leçons, laboratoires, compétences      (étape 5)
+│  ├─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
+│  └─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
+├─ content/catalog.ts    plan du parcours « Découverte » (fait) ; contenu des leçons (étape 5)
 └─ features/
    ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
    ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
-   ├─ profile/           thème (fait) ; objectif hebdomadaire, réinitialisation (étape 5)
-   ├─ dashboard/         tableau de bord                                  (étape 4)
+   ├─ profile/           thème, objectif hebdomadaire (fait) ; réinitialisation (étape 5)
+   ├─ dashboard/         tableau de bord                                  (étape 4, fait)
+   ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours                               (étape 5)
    ├─ lessons/           page de leçon en 17 sections                     (étape 5)
    ├─ quizzes/           moteur et interface de quiz                      (étape 6)
    ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8)
-   ├─ projects/          projets pratiques                                (après le MVP)
-   └─ progress/          compétences                                      (étape 4)
+   └─ projects/          projets pratiques                                (après le MVP)
 e2e/                     tests Playwright
 docs/                    ce document
 ```
@@ -165,21 +167,45 @@ Au niveau du parcours, il refuse aussi :
 - un laboratoire ou une compétence inconnus ;
 - un seuil de réussite hors de ]0, 1].
 
-À l'étape 5, un test appliquera ces règles à tout le catalogue : un contenu incomplet ne passe pas les tests.
+La structure est vérifiée dès maintenant sur le plan du catalogue (`validatePathStructure`,
+test [`catalog.spec.ts`](../src/app/content/catalog.spec.ts)). À l'étape 5, `validatePath` vérifiera
+aussi le contenu de chaque leçon : un contenu incomplet ne passera pas les tests.
+
+**Plan et contenu.** `PathOutline` (titres, durées, prérequis, laboratoires, compétences) suffit à la
+navigation et à la progression ; un `LearningPath` complet en est un cas particulier. Le parcours
+« Découverte » existe aujourd'hui sous forme de plan ; ses leçons sont rédigées à l'étape 5.
 
 ## 5. Progression
 
-Fichier : [`src/app/core/models/progress.model.ts`](../src/app/core/models/progress.model.ts).
+Fichiers : [`progress.model.ts`](../src/app/core/models/progress.model.ts) (format),
+[`progress.ts`](../src/app/core/progress/progress.ts) (règles),
+[`progress.store.ts`](../src/app/core/progress/progress.store.ts) (stockage).
 
 | Enregistré | Calculé à partir des tentatives |
 |---|---|
-| Tentatives de quiz : questions tirées et questions réussies | Score, meilleure tentative, notions à revoir |
-| Tentatives de laboratoire : réussite et indices utilisés | Leçon validée = meilleur score ≥ seuil du module, et laboratoire réussi s'il existe |
-| Objectif hebdomadaire facultatif | Leçons déverrouillées, points, compétences, progression globale |
+| Tentatives de quiz : questions tirées et questions réussies | Score, meilleur et dernier score, nombre de tentatives |
+| Tentatives de laboratoire : réussite et indices utilisés | Statut de chaque leçon, leçon recommandée, compétences, progression globale |
+| Objectif hebdomadaire facultatif (1 à 7 leçons) | Leçons validées depuis lundi 0 h |
 
-- **MVP :** stockage dans le navigateur (`localStorage`), avec un numéro de version (`schemaVersion`) pour migrer le format. L'utilisateur peut modifier ces données : elles seront validées à la lecture.
+Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.spec.ts)) :
+- **leçon validée** : un quiz atteint le seuil du module (80 %) et, si la leçon a un laboratoire, ce
+  laboratoire a été réussi ; la date de validation est la plus tardive des deux réussites ;
+- **statuts** : verrouillée (un prérequis n'est pas validé), disponible, commencée (tentée sans être
+  validée), validée ;
+- **leçon recommandée** : une leçon commencée d'abord, sinon la première disponible du parcours en cours ;
+- **compétence acquise** : toutes les leçons et tous les laboratoires qui l'entraînent sont validés ;
+- lire une page ne rapporte rien.
+
+- **MVP :** stockage dans le navigateur (`localStorage`, clé `ca-progress`), avec `schemaVersion`
+  pour migrer le format. L'utilisateur peut modifier ces données : chaque entrée est vérifiée à la
+  lecture (`parseProgress`), les entrées invalides sont ignorées, les dates normalisées.
+- **Enregistrement des tentatives :** par les quiz (étape 6) et les laboratoires (étape 8).
 - **Étape 10 :** tables Supabase `quiz_attempts` et `lab_attempts`, en insertion seule, protégées par RLS.
-- **Temps d'apprentissage :** il n'est pas mesurable de façon fiable dans le navigateur, donc il n'est pas affiché.
+- **Temps d'apprentissage :** le temps passé n'est pas mesurable de façon fiable dans le navigateur,
+  il n'est donc pas affiché. Le tableau de bord affiche à la place le **temps de cours restant estimé**
+  (somme des durées prévues des leçons non validées), présenté comme une estimation.
+- **Notions mal comprises :** elles demandent le lien question → objectif, qui vient avec les quiz
+  (étape 6).
 
 ## 6. Sécurité et périmètre des simulations
 

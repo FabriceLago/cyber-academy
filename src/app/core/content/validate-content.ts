@@ -1,4 +1,4 @@
-import { Lab, LearningPath, Lesson, Question, Skill } from '../models/content.model';
+import { Lab, LearningPath, Lesson, PathOutline, Question, Skill } from '../models/content.model';
 
 /**
  * Vérifie qu'une leçon respecte le modèle pédagogique : sections remplies, objectifs
@@ -103,14 +103,26 @@ export function validateLesson(lesson: Lesson): string[] {
   return errors;
 }
 
-/**
- * Vérifie un parcours entier : chaque leçon, l'unicité des leçons, les seuils de réussite,
- * et les références vers les prérequis (placés avant), les laboratoires et les compétences.
- */
+/** Vérifie un parcours entier : sa structure, puis le contenu de chaque leçon. */
 export function validatePath(
   path: LearningPath,
   labs: readonly Lab[],
   skills: readonly Skill[],
+): string[] {
+  return [
+    ...validatePathStructure(path, labs, skills),
+    ...path.modules.flatMap((module) => module.lessons.flatMap((lesson) => validateLesson(lesson))),
+  ];
+}
+
+/**
+ * Vérifie la structure d'un parcours, même quand seul son plan existe : unicité des leçons,
+ * seuils de réussite, prérequis placés avant, laboratoires et compétences connus.
+ */
+export function validatePathStructure(
+  path: PathOutline,
+  labs: readonly Pick<Lab, 'id'>[],
+  skills: readonly Pick<Skill, 'id'>[],
 ): string[] {
   const errors: string[] = [];
   const labIds = new Set(labs.map((l) => l.id));
@@ -130,7 +142,6 @@ export function validatePath(
 
   const earlierLessonIds = new Set<string>();
   for (const lesson of lessons) {
-    errors.push(...validateLesson(lesson));
     for (const id of lesson.prerequisiteIds) {
       if (!earlierLessonIds.has(id))
         errors.push(

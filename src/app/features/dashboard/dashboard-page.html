@@ -1,0 +1,158 @@
+<header class="page-header">
+  <h1>Tableau de bord</h1>
+  <p>Votre progression et la prochaine étape, en un coup d’œil.</p>
+</header>
+
+@let s = summary();
+
+<section class="card next" aria-labelledby="next-title">
+  @if (s.nextLesson; as next) {
+    <p class="eyebrow">Prochaine étape recommandée</p>
+    <h2 id="next-title">{{ next.lesson.title }}</h2>
+    <p class="muted">
+      {{ next.path.title }} · {{ next.module.title }} · environ
+      {{ duration(next.lesson.durationMinutes) }}
+    </p>
+    @if (next.status === 'in-progress') {
+      <p>
+        Vous avez commencé cette leçon : réussissez son quiz{{
+          next.lesson.labId ? ' et son laboratoire' : ''
+        }}
+        pour la valider.
+      </p>
+    }
+    <p class="notice">
+      <ca-icon name="book" />
+      Contenu en préparation : les leçons seront disponibles à l’étape 5.
+    </p>
+  } @else {
+    <p class="eyebrow">Bravo</p>
+    <h2 id="next-title">Vous avez terminé tous les parcours disponibles</h2>
+    <a class="btn btn-secondary" routerLink="/competences">Voir mes compétences</a>
+  }
+</section>
+
+<section aria-labelledby="stats-title">
+  <h2 id="stats-title" class="visually-hidden">Vos chiffres clés</h2>
+  <ul class="stats">
+    <li class="card stat">
+      <span class="label">Progression globale</span>
+      <span class="hero">{{ globalRatio() | percent }}</span>
+      <ca-progress-bar
+        label="Progression globale"
+        [value]="globalRatio()"
+        [valueText]="'Leçons validées : ' + s.completedLessons + ' sur ' + s.lessons.length"
+      />
+      <span class="muted">Leçons validées : {{ s.completedLessons }} sur {{ s.lessons.length }}</span>
+    </li>
+    <li class="card stat">
+      <span class="label">Quiz réussis</span>
+      <span class="value">{{ passedQuizzes() }} sur {{ s.lessons.length }}</span>
+    </li>
+    <li class="card stat">
+      <span class="label">Laboratoires terminés</span>
+      <span class="value">{{ completedLabs() }} sur {{ s.labs.length }}</span>
+    </li>
+    <li class="card stat">
+      <span class="label">Compétences acquises</span>
+      <span class="value">{{ acquiredSkills() }} sur {{ s.skills.length }}</span>
+      <a routerLink="/competences">Voir le détail</a>
+    </li>
+  </ul>
+</section>
+
+<div class="columns">
+  @if (s.currentPath; as current) {
+    <section class="card" aria-labelledby="path-title">
+      <h2 id="path-title">Parcours en cours</h2>
+      <p class="path-name">{{ current.path.title }}</p>
+      <ca-progress-bar
+        [label]="'Progression du parcours ' + current.path.title"
+        [value]="current.completed / current.lessons.length"
+        [valueText]="'Leçons validées : ' + current.completed + ' sur ' + current.lessons.length"
+      />
+      <p class="muted">
+        Leçons validées : {{ current.completed }} sur {{ current.lessons.length }} · temps de cours
+        restant estimé : {{ duration(current.remainingMinutes) }}
+      </p>
+      <ol class="lessons">
+        @for (item of current.lessons; track item.lesson.id) {
+          <li [class]="item.status">
+            <ca-icon [name]="status[item.status].icon" />
+            <span>
+              <span class="lesson-title">{{ item.lesson.title }}</span>
+              <span class="muted">
+                {{ status[item.status].label }}
+                @if (item.blockedBy.length > 0) {
+                  : après « {{ item.blockedBy[0].title }} »
+                }
+              </span>
+            </span>
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  <section class="card" aria-labelledby="quiz-title">
+    <h2 id="quiz-title">Résultats des quiz</h2>
+    @if (s.quizResults.length > 0) {
+      <table>
+        <caption class="visually-hidden">
+          Résultats par leçon, du plus récent au plus ancien
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Leçon</th>
+            <th scope="col">Meilleur score</th>
+            <th scope="col">Tentatives</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (result of s.quizResults; track result.lesson.id) {
+            <tr>
+              <th scope="row">
+                {{ result.lesson.title }}
+                <span class="muted date">
+                  Dernière tentative le {{ result.lastAttemptAt | date: 'd MMMM' }}
+                </span>
+              </th>
+              <td>
+                {{ result.bestScore | percent }}
+                <span class="result" [class.passed]="result.passed">
+                  <ca-icon [name]="result.passed ? 'check' : 'clock'" />
+                  {{ result.passed ? 'Réussi' : 'À retenter' }}
+                </span>
+              </td>
+              <td>{{ result.attempts }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="muted">
+        Aucun quiz passé pour l’instant. Chaque leçon se termine par un quiz corrigé.
+      </p>
+    }
+  </section>
+</div>
+
+<section class="card" aria-labelledby="weekly-title">
+  <h2 id="weekly-title">Objectif de la semaine</h2>
+  @if (s.weekly; as weekly) {
+    <ca-progress-bar
+      label="Objectif de la semaine"
+      [value]="weekly.completedThisWeek / weekly.goal"
+      [valueText]="'Leçons validées depuis lundi : ' + weekly.completedThisWeek + ' sur ' + weekly.goal"
+    />
+    <p class="muted">
+      Leçons validées depuis lundi : {{ weekly.completedThisWeek }} sur {{ weekly.goal }}.
+      <a routerLink="/profil">Modifier l’objectif</a>
+    </p>
+  } @else {
+    <p class="muted">
+      Facultatif : fixez-vous un nombre de leçons à valider chaque semaine dans
+      <a routerLink="/profil">Profil et paramètres</a>.
+    </p>
+  }
+</section>

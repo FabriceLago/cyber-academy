@@ -189,3 +189,29 @@ export interface Lab {
   readonly debrief: string;
   readonly skillIds: readonly string[];
 }
+
+/**
+ * Plan d'un parcours : ce que la navigation et le suivi de progression doivent connaître,
+ * sans le contenu des leçons. Un LearningPath complet est aussi un PathOutline.
+ */
+export type LessonOutline = Pick<
+  Lesson,
+  'id' | 'title' | 'durationMinutes' | 'prerequisiteIds' | 'labId' | 'skillIds'
+>;
+
+export interface ModuleOutline extends Omit<Module, 'lessons'> {
+  readonly lessons: readonly LessonOutline[];
+}
+
+export interface PathOutline extends Omit<LearningPath, 'modules'> {
+  readonly modules: readonly ModuleOutline[];
+}
+
+export type LabOutline = Pick<Lab, 'id' | 'kind' | 'title' | 'skillIds'>;
+
+/** Ce que propose la plateforme : parcours, laboratoires et compétences visées. */
+export interface Catalog {
+  readonly paths: readonly PathOutline[];
+  readonly labs: readonly LabOutline[];
+  readonly skills: readonly Skill[];
+}

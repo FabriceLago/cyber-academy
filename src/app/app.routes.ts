@@ -21,13 +21,12 @@ function comingSoon(
 }
 
 export const routes: Routes = [
-  comingSoon(
-    '',
-    'Tableau de bord',
-    'dashboard',
-    'Votre progression, la prochaine leçon recommandée et vos résultats, en un coup d’œil.',
-    'à l’étape 4',
-  ),
+  {
+    path: '',
+    pathMatch: 'full',
+    title: 'Tableau de bord',
+    loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+  },
   comingSoon(
     'parcours',
     'Parcours d’apprentissage',
@@ -63,13 +62,11 @@ export const routes: Routes = [
     'Des projets concrets pour construire votre portfolio.',
     'après la première version (MVP)',
   ),
-  comingSoon(
-    'competences',
-    'Compétences',
-    'award',
-    'Les compétences que vous avez démontrées en quiz et en laboratoire.',
-    'à l’étape 4',
-  ),
+  {
+    path: 'competences',
+    title: 'Compétences',
+    loadComponent: () => import('./features/skills/skills-page').then((m) => m.SkillsPage),
+  },
   {
     path: 'profil',
     title: 'Profil et paramètres',
