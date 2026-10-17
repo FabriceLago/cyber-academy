@@ -21,7 +21,11 @@ export function toAnswerPayload(questionId: string, answer: Answer): AnswerPaylo
     case 'choice':
       return { question_id: questionId, kind: 'choice', selected: [...answer.selected] };
     case 'matching':
-      return { question_id: questionId, kind: 'matching', matches: Object.fromEntries(answer.matches) };
+      return {
+        question_id: questionId,
+        kind: 'matching',
+        matches: Object.fromEntries(answer.matches),
+      };
     case 'ordering':
       return { question_id: questionId, kind: 'ordering', order: [...answer.order] };
   }
@@ -88,7 +92,10 @@ export class AccountProgress {
     if (!this.settled()) setTimeout(() => this.settled.set(true), SETTLE_TIMEOUT_MS);
   }
 
-  async recordQuizAttempt(lessonId: string, answers: readonly AnswerPayload[]): Promise<QuizAttempt> {
+  async recordQuizAttempt(
+    lessonId: string,
+    answers: readonly AnswerPayload[],
+  ): Promise<QuizAttempt> {
     const supabase = await this.client;
     const { data, error } = await supabase.rpc('record_quiz_attempt', {
       p_lesson_id: lessonId,
@@ -105,7 +112,11 @@ export class AccountProgress {
     return attempt;
   }
 
-  async recordLabAttempt(labId: string, succeeded: boolean, hintsUsed: number): Promise<LabAttempt> {
+  async recordLabAttempt(
+    labId: string,
+    succeeded: boolean,
+    hintsUsed: number,
+  ): Promise<LabAttempt> {
     const supabase = await this.client;
     const { data, error } = await supabase.rpc('record_lab_attempt', {
       p_lab_id: labId,
@@ -127,7 +138,10 @@ export class AccountProgress {
     const userId = this.auth.userId();
     if (!userId) return;
     const supabase = await this.client;
-    const { error } = await supabase.from('profiles').update({ weekly_goal: goal }).eq('id', userId);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ weekly_goal: goal })
+      .eq('id', userId);
     if (error) throw new RecordError(recordMessage(error));
     this.update((state) => ({ ...state, weeklyGoal: goal }));
   }

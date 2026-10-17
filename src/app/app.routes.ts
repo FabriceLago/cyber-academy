@@ -33,6 +33,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/learning-paths/paths-page').then((m) => m.PathsPage),
   },
   {
+    path: 'parcours/:pathId',
+    title: (route) =>
+      import('./content/catalog').then(
+        (m) => m.findPath(route.paramMap.get('pathId') ?? '')?.title ?? 'Parcours introuvable',
+      ),
+    loadComponent: () => import('./features/learning-paths/path-page').then((m) => m.PathPage),
+  },
+  {
     path: 'lecons',
     title: 'Leçons',
     loadComponent: () => import('./features/lessons/lessons-page').then((m) => m.LessonsPage),

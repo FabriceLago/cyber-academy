@@ -1,4 +1,5 @@
 import { AnyLab, Catalog, LearningPath, Lesson, Module } from '../core/models/content.model';
+import { LOGS_LAB } from './labs/lab-journaux';
 import { PHISHING_LAB } from './labs/lab-phishing';
 import { TERMINAL_LAB } from './labs/lab-terminal';
 import { ORDINATEUR_ET_FICHIERS } from './lessons/01-ordinateur-et-fichiers';
@@ -6,6 +7,7 @@ import { DECOUVRIR_LE_TERMINAL } from './lessons/02-decouvrir-le-terminal';
 import { VOYAGE_D_UNE_INFORMATION } from './lessons/03-voyage-d-une-information';
 import { SECURITE_ET_RISQUES } from './lessons/04-securite-et-risques';
 import { HAMECONNAGE } from './lessons/05-hameconnage';
+import { ANALYSTE_SOC_JUNIOR } from './paths/analyste-soc-junior';
 
 /** Parcours complets, leçons rédigées. */
 export const PATHS: readonly LearningPath[] = [
@@ -33,7 +35,12 @@ export const PATHS: readonly LearningPath[] = [
       },
     ],
   },
+  ANALYSTE_SOC_JUNIOR,
 ];
+
+export function findPath(id: string): LearningPath | undefined {
+  return PATHS.find((path) => path.id === id);
+}
 
 /** Leçon complète, avec son module et son parcours. */
 export function findLesson(
@@ -49,7 +56,7 @@ export function findLesson(
 }
 
 /** Laboratoires du Cyber Lab, complets (scénario, environnement simulé, validation). */
-export const LABS: readonly AnyLab[] = [TERMINAL_LAB, PHISHING_LAB];
+export const LABS: readonly AnyLab[] = [TERMINAL_LAB, PHISHING_LAB, LOGS_LAB];
 
 export function findLab(id: string): AnyLab | undefined {
   return LABS.find((lab) => lab.id === id);
@@ -87,6 +94,18 @@ export const CATALOG: Catalog = {
       id: 'detecter-l-hameconnage',
       title: 'Détecter l’hameçonnage',
       description: 'Repérer les indices d’un faux message et savoir comment réagir.',
+    },
+    {
+      id: 'analyser-des-journaux',
+      title: 'Analyser des journaux',
+      description:
+        'Lire des journaux d’événements, les filtrer et relier les événements pour reconstituer ce qui s’est passé.',
+    },
+    {
+      id: 'trier-des-alertes',
+      title: 'Trier une alerte',
+      description:
+        'Qualifier une alerte, estimer sa gravité et décider d’une escalade, en documentant ses conclusions.',
     },
   ],
 };

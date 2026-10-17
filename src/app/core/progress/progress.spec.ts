@@ -169,4 +169,55 @@ describe('summarizeProgress', () => {
     expect(summary.quizResults).toEqual([]);
     expect(summary.completedLessons).toBe(0);
   });
+
+  it('une spécialisation reste verrouillée tant que son parcours prérequis n’est pas terminé', () => {
+    const special: Catalog = {
+      ...catalog,
+      paths: [
+        ...catalog.paths,
+        {
+          id: 'spe',
+          title: 'Spécialisation',
+          description: 'Test',
+          level: 'intermediaire',
+          prerequisitePathIds: ['p'],
+          modules: [
+            {
+              id: 'ms',
+              title: 'Module S',
+              description: 'Test',
+              passThreshold: 0.8,
+              lessons: [
+                {
+                  id: 'S',
+                  title: 'Leçon S',
+                  durationMinutes: 10,
+                  prerequisiteIds: [],
+                  skillIds: ['s1'],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const lessonS = (s: ProgressState) =>
+      summarizeProgress(special, s, NOW).lessons.find((l) => l.lesson.id === 'S');
+
+    const partial = state({ quizAttempts: [quiz('A', 5), quiz('C', 5)] });
+    expect(lessonS(partial)?.status).toBe('locked');
+    expect(lessonS(partial)?.blockedBy.map((l) => l.id)).toEqual(['B']);
+
+    const done = state({
+      quizAttempts: [quiz('A', 5), quiz('B', 5), quiz('C', 5)],
+      labAttempts: [{ labId: 'L', completedAt: iso(14), succeeded: true, hintsUsed: 0 }],
+    });
+    expect(lessonS(done)?.status).toBe('available');
+    const summary = summarizeProgress(special, done, NOW);
+    expect(summary.paths.map((p) => [p.path.id, p.completed, p.lessons.length])).toEqual([
+      ['p', 3, 3],
+      ['spe', 0, 1],
+    ]);
+    expect(summary.currentPath?.path.id).toBe('spe');
+  });
 });

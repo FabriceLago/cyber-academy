@@ -1,7 +1,14 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Level } from '../../core/models/content.model';
 import { LessonProgress, LessonStatus } from '../../core/progress/progress';
 import { Icon, IconName } from '../../shared/icon/icon';
+
+export const LEVELS: Record<Level, string> = {
+  debutant: 'Débutant',
+  intermediaire: 'Intermédiaire',
+  avance: 'Avancé',
+};
 
 export const LESSON_STATUS: Record<
   LessonStatus,

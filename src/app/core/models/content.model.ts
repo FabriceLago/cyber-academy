@@ -22,6 +22,51 @@ export interface LearningPath {
   readonly description: string;
   readonly level: Level;
   readonly modules: readonly Module[];
+  /** Parcours à valider entièrement avant d'ouvrir celui-ci (placés avant lui dans le catalogue). */
+  readonly prerequisitePathIds?: readonly string[];
+  /** Spécialisation métier : préparation à un premier poste (niveau 9 du programme). */
+  readonly career?: Career;
+}
+
+/**
+ * Fiche d'une spécialisation. Elle prépare à un poste sans rien promettre : les compétences
+ * travaillées ici sont pédagogiques et ne remplacent pas une expérience professionnelle.
+ */
+export interface Career {
+  /** Poste visé, par exemple « Analyste SOC junior (niveau 1) ». */
+  readonly role: string;
+  readonly summary: string;
+  /** Compétences attendues pour le poste, y compris celles que le parcours n'enseigne pas encore. */
+  readonly requiredSkills: readonly string[];
+  readonly prerequisites: readonly string[];
+  /** Modules annoncés mais pas encore rédigés, affichés comme tels. */
+  readonly upcoming: readonly string[];
+  readonly finalProject: FinalProject;
+  readonly interviewQuestions: readonly InterviewPrompt[];
+  readonly interviewExercises: readonly InterviewPrompt[];
+  readonly certifications: readonly Certification[];
+}
+
+export interface FinalProject {
+  readonly title: string;
+  readonly brief: string;
+  readonly deliverables: readonly string[];
+  /** Critères d'évaluation, utilisés pour l'auto-évaluation. */
+  readonly criteria: readonly string[];
+}
+
+/** Question ou exercice d'entretien ; les éléments attendus s'affichent après la réponse. */
+export interface InterviewPrompt {
+  readonly id: string;
+  readonly title: string;
+  readonly prompt: string;
+  readonly expectations: readonly string[];
+}
+
+export interface Certification {
+  readonly name: string;
+  readonly issuer: string;
+  readonly note: string;
 }
 
 export interface Module {
@@ -173,7 +218,7 @@ export interface OrderingQuestion extends QuestionBase {
 
 export type Question = ChoiceQuestion | TrueFalseQuestion | MatchingQuestion | OrderingQuestion;
 
-export type LabKind = 'terminal' | 'phishing';
+export type LabKind = 'terminal' | 'phishing' | 'logs';
 
 /**
  * Partie commune des laboratoires. L'environnement simulé, les actions autorisées et la
@@ -259,7 +304,37 @@ export interface PhishingLab extends Lab {
   readonly emails: readonly LabEmail[];
 }
 
-export type AnyLab = TerminalLab | PhishingLab;
+/** Ligne d'un journal d'événements fictif. */
+export interface LogEntry {
+  /** « 2026-10-14 02:14:52 » : tri alphabétique = tri chronologique. */
+  readonly time: string;
+  readonly host: string;
+  readonly event: string;
+  readonly account: string;
+  readonly ip: string;
+  readonly detail: string;
+}
+
+/** Question d'enquête : une réponse à choisir parmi des options, vérifiée automatiquement. */
+export interface LogQuestion {
+  readonly id: string;
+  readonly prompt: string;
+  readonly options: readonly string[];
+  /** L'une des options. */
+  readonly answer: string;
+  /** Montrée après la réponse de l'apprenant, jamais avant. */
+  readonly explanation: string;
+}
+
+export interface LogsLab extends Lab {
+  readonly kind: 'logs';
+  /** L'alerte de départ et ce que l'on attend de l'analyste. */
+  readonly context: string;
+  readonly entries: readonly LogEntry[];
+  readonly questions: readonly LogQuestion[];
+}
+
+export type AnyLab = TerminalLab | PhishingLab | LogsLab;
 
 /**
  * Plan d'un parcours : ce que la navigation et le suivi de progression doivent connaître,

@@ -40,9 +40,9 @@ src/app/
 │  ├─ models/            types du contenu et de la progression            (étape 2, fait)
 │  ├─ content/           validation automatique du contenu                (étape 2, fait)
 │  ├─ theme/             thème clair, sombre ou selon l'appareil          (étape 3, fait)
-│  ├─ progress/          règles de progression, stockage validé           (étape 4, fait)
+│  ├─ progress/          règles de progression, stockage, portfolio       (étapes 4 et 11, fait)
 │  ├─ quiz/              tirage, correction, notions à revoir             (étape 6, fait)
-│  ├─ labs/              moteur du terminal simulé, correction phishing   (étape 8, fait)
+│  ├─ labs/              terminal simulé, phishing, journaux              (étapes 8 et 11, fait)
 │  ├─ supabase/          client typé, types générés du schéma             (étape 9, fait)
 │  ├─ auth/              session, profil, messages d'erreur               (étape 9, fait)
 │  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
@@ -51,7 +51,7 @@ src/app/
 │  ├─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
 │  ├─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
 │  └─ animation-player/  lecteur commun des animations pédagogiques       (étape 7, fait)
-├─ content/              catalogue, 5 leçons (lessons/), 2 labos (labs/)  (étapes 5 et 8, fait)
+├─ content/              catalogue, 7 leçons, 3 labos, parcours (paths/)  (étapes 5, 8 et 11)
 └─ features/
    ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
    ├─ auth/              connexion et création de compte                  (étape 9, fait)
@@ -59,11 +59,11 @@ src/app/
    ├─ profile/           thème, objectif, réinitialisation, compte        (étapes 5 et 9, fait)
    ├─ dashboard/         tableau de bord                                  (étape 4, fait)
    ├─ skills/            compétences                                      (étape 4, fait)
-   ├─ learning-paths/    carte des parcours                               (étape 5, fait)
+   ├─ learning-paths/    carte des parcours, page d'une spécialisation    (étapes 5 et 11, fait)
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
    │  └─ animations/     animation « Le trajet d'un paquet »              (étape 7, fait)
    ├─ quizzes/           page de quiz, liste des quiz, saisie des réponses (étape 6, fait)
-   ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8, fait)
+   ├─ labs/              Cyber Lab : terminal, phishing, journaux simulés (étapes 8 et 11, fait)
    └─ projects/          projets pratiques                                (après le MVP)
 src/environments/        URL et clé publique de Supabase (local)          (étape 9, fait)
 supabase/                config locale, migrations, seed, tests RLS       (étape 9, fait)
@@ -268,6 +268,35 @@ ou non) ; un laboratoire réussi, avec le quiz, valide la leçon.
 - **Limite connue** : l'ordre des e-mails est fixe ; la correction est dans le JavaScript envoyé au
   navigateur (comme pour les quiz, jusqu'à la vérification côté serveur).
 
+### Parcours spécialisés (étape 11)
+
+Un parcours peut exiger d'autres parcours (`prerequisitePathIds`) : tant qu'ils ne sont pas
+terminés, toutes ses leçons restent verrouillées, avec la liste de ce qui manque. Une
+**spécialisation** est un parcours qui porte une fiche métier (`career`). Page commune :
+`/parcours/:id` ([`path-page`](../src/app/features/learning-paths/path-page.ts)).
+
+- **Rédigée : Analyste SOC junior** ([`analyste-soc-junior.ts`](../src/app/content/paths/analyste-soc-junior.ts)),
+  ouverte après le parcours « Découverte ». Un module de 2 leçons (« Le SOC et les journaux de
+  sécurité », « Trier une alerte de sécurité ») et le laboratoire **Analyser des journaux
+  d'authentification** ([`logs.ts`](../src/app/core/labs/logs.ts)) : environ 30 lignes fictives
+  (VPN et serveur de fichiers, adresses IP réservées à la documentation, RFC 5737), filtres par
+  texte, événement et adresse IP, puis 6 questions d'enquête ; réussi si les 6 réponses sont justes,
+  correction affichée après l'envoi seulement.
+- **Fiche métier** : poste visé, compétences attendues, prérequis, modules en préparation (annoncés
+  comme tels), projet final (livrables et critères), 4 questions et 2 mises en situation d'entretien
+  (les éléments attendus ne s'affichent qu'après une réponse écrite), pistes de certifications à
+  vérifier auprès des organismes.
+- **Projet final et portfolio** : le rapport et l'auto-évaluation sont gardés dans le navigateur
+  (`ca-projet-<id>`, relus avec vérification par `parseDraft`) ; « Exporter mon portfolio » télécharge
+  un fichier Markdown ([`portfolio.ts`](../src/app/core/progress/portfolio.ts)) : leçons, laboratoires
+  et compétences réellement validés, rapport, auto-évaluation, et l'avertissement que ces exercices
+  simulés ne remplacent pas une expérience professionnelle.
+- **En préparation** (affichées comme telles, sans contenu factice) : Pentester junior, Ingénieur
+  sécurité cloud junior, Analyste vulnérabilités, Développeur orienté sécurité, Junior DevSecOps.
+- **Limites** : le brouillon n'est pas enregistré sur le compte ; pas de relecture par un mentor
+  (l'auto-évaluation en tient lieu) ; le verrouillage des leçons est appliqué par l'application, pas
+  par le serveur (comme à l'étape 10).
+
 ### Supabase et comptes (étape 9)
 
 **Où :** une pile Supabase **locale** (`npm run db:start`), sur les ports 546xx (API 54621, base
@@ -333,7 +362,8 @@ Fichiers : [`progress.model.ts`](../src/app/core/models/progress.model.ts) (form
 Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.spec.ts)) :
 - **leçon validée** : un quiz atteint le seuil du module (80 %) et, si la leçon a un laboratoire, ce
   laboratoire a été réussi ; la date de validation est la plus tardive des deux réussites ;
-- **statuts** : verrouillée (un prérequis n'est pas validé), disponible, commencée (tentée sans être
+- **statuts** : verrouillée (un prérequis n'est pas validé, ou un parcours prérequis n'est pas
+  terminé), disponible, commencée (tentée sans être
   validée), validée ;
 - **leçon recommandée** : une leçon commencée d'abord, sinon la première disponible du parcours en cours ;
 - **compétence acquise** : toutes les leçons et tous les laboratoires qui l'entraînent sont validés ;
@@ -377,7 +407,7 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 
 | Catégorie (brief §9) | Dans le MVP |
 |---|---|
-| Simulations visuelles | Animations SVG, terminal et détecteur de phishing simulés en TypeScript |
+| Simulations visuelles | Animations SVG, terminal, détecteur de phishing et analyseur de journaux simulés en TypeScript |
 | Outils réellement exécutés | Aucun |
 | Données fictives | E-mails, journaux et noms de domaine synthétiques (domaines réservés `.example` et `.test`, RFC 2606) |
 | Environnements isolés | Aucun. Si l'exécution réelle devient nécessaire : service séparé, éphémère et limité en ressources |

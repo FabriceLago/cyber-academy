@@ -54,7 +54,7 @@ test('la progression suit le compte : vérifiée par le serveur, retrouvée apr�
   // Elle n'est pas reprise par le compte : le serveur ne l'a pas vérifiée.
   await expect(page.getByText(/Ce navigateur garde aussi 1 tentative/)).toBeVisible();
   await page.goto('/');
-  await expect(page.getByText('Leçons validées : 0 sur 5', { exact: true })).toBeVisible();
+  await expect(page.getByText('Leçons validées : 0 sur 7', { exact: true })).toBeVisible();
   await expect(page.getByText('Points d’expérience')).toBeVisible();
 
   // Quiz réussi avec le compte : corrigé et enregistré par le serveur.
@@ -85,7 +85,10 @@ test('la progression suit le compte : vérifiée par le serveur, retrouvée apr�
 
   // Déconnecté : la progression du navigateur revient, sans points.
   await page.goto('/profil');
-  await page.getByRole('region', { name: 'Compte' }).getByRole('button', { name: 'Se déconnecter' }).click();
+  await page
+    .getByRole('region', { name: 'Compte' })
+    .getByRole('button', { name: 'Se déconnecter' })
+    .click();
   await page.goto('/competences');
   await expect(page.getByText(/réservés aux comptes/)).toBeVisible();
   await expect(page.getByText('325 points d’expérience')).toHaveCount(0);

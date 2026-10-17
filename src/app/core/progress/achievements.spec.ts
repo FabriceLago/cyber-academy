@@ -7,7 +7,12 @@ import { EMPTY_PROGRESS } from './progress.store';
 const NOW = new Date('2026-10-17T12:00:00.000Z');
 const quiz = (correct: number, submittedAt: string): QuizAttempt => {
   const ids = ['q1', 'q2', 'q3', 'q4', 'q5'];
-  return { lessonId: 'ordinateur-et-fichiers', submittedAt, questionIds: ids, correctQuestionIds: ids.slice(0, correct) };
+  return {
+    lessonId: 'ordinateur-et-fichiers',
+    submittedAt,
+    questionIds: ids,
+    correctQuestionIds: ids.slice(0, correct),
+  };
 };
 
 /** Leçon 1 manquée (2/5) puis réussie (5/5) ; laboratoire du terminal réussi sans indice. */
@@ -15,7 +20,12 @@ const STATE: ProgressState = {
   ...EMPTY_PROGRESS,
   quizAttempts: [quiz(2, '2026-10-15T10:00:00.000Z'), quiz(5, '2026-10-16T10:00:00.000Z')],
   labAttempts: [
-    { labId: 'lab-terminal', completedAt: '2026-10-16T11:00:00.000Z', succeeded: true, hintsUsed: 0 },
+    {
+      labId: 'lab-terminal',
+      completedAt: '2026-10-16T11:00:00.000Z',
+      succeeded: true,
+      hintsUsed: 0,
+    },
   ],
 };
 
@@ -41,7 +51,10 @@ describe('points d’expérience', () => {
   });
 
   it('ne se cumulent pas en refaisant un quiz déjà réussi', () => {
-    const again = { ...STATE, quizAttempts: [...STATE.quizAttempts, quiz(5, '2026-10-17T09:00:00.000Z')] };
+    const again = {
+      ...STATE,
+      quizAttempts: [...STATE.quizAttempts, quiz(5, '2026-10-17T09:00:00.000Z')],
+    };
     expect(run(again).xp.total).toBe(325);
   });
 });
@@ -52,7 +65,9 @@ describe('badges', () => {
   });
 
   it('sont obtenus selon les faits enregistrés', () => {
-    const earned = run(STATE).badges.filter((b) => b.earned).map((b) => b.id);
+    const earned = run(STATE)
+      .badges.filter((b) => b.earned)
+      .map((b) => b.id);
     expect(earned).toEqual([
       'premier-pas',
       'sans-faute',

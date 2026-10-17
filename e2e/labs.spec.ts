@@ -145,7 +145,7 @@ test('une analyse fausse fait échouer le laboratoire, et la tentative est enreg
 
 test('sans progression, les laboratoires sont verrouillés et le disent', async ({ page }) => {
   await page.goto('/laboratoires');
-  await expect(page.getByText(/^Accessible après la leçon/)).toHaveCount(2);
+  await expect(page.getByText(/^Accessible après la leçon/)).toHaveCount(3);
   await expect(page.getByRole('link', { name: 'Ouvrir le laboratoire' })).toHaveCount(0);
   await page.goto(`/laboratoires/${PHISHING_LAB.id}`);
   await expect(

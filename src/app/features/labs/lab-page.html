@@ -51,6 +51,9 @@
         @if (phishing(); as phishingLab) {
           <ca-phishing-lab [lab]="phishingLab" (completed)="finish($event)" />
         }
+        @if (logs(); as logsLab) {
+          <ca-logs-lab [lab]="logsLab" (completed)="finish($event)" />
+        }
       }
     </section>
 

@@ -1,0 +1,118 @@
+<p class="context"><strong>L’alerte :</strong> {{ lab().context }}</p>
+
+<fieldset class="filters">
+  <legend>Filtres</legend>
+  <div class="filter">
+    <label [for]="uid + '-texte'">Rechercher</label>
+    <input
+      #search
+      [id]="uid + '-texte'"
+      type="search"
+      [value]="filter().text"
+      (input)="setFilter({ text: search.value })"
+      placeholder="compte, adresse, mot…"
+    />
+  </div>
+  <div class="filter">
+    <label [for]="uid + '-evenement'">Événement</label>
+    <select #eventSelect [id]="uid + '-evenement'" (change)="setFilter({ event: eventSelect.value })">
+      <option value="" [selected]="filter().event === ''">Tous</option>
+      @for (name of events(); track name) {
+        <option [value]="name" [selected]="filter().event === name">{{ name }}</option>
+      }
+    </select>
+  </div>
+  <div class="filter">
+    <label [for]="uid + '-ip'">Adresse IP</label>
+    <select #ipSelect [id]="uid + '-ip'" (change)="setFilter({ ip: ipSelect.value })">
+      <option value="" [selected]="filter().ip === ''">Toutes</option>
+      @for (address of ips(); track address) {
+        <option [value]="address" [selected]="filter().ip === address">{{ address }}</option>
+      }
+    </select>
+  </div>
+  <button type="button" class="btn btn-secondary" (click)="filter.set({ text: '', event: '', ip: '' })">
+    Effacer les filtres
+  </button>
+</fieldset>
+
+<p class="count" role="status">{{ rows().length }} ligne(s) sur {{ lab().entries.length }}</p>
+
+<!-- tabindex : la zone défile, elle doit pouvoir être atteinte au clavier. -->
+<div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="'Journaux, ' + rows().length + ' lignes'">
+  <table>
+    <caption class="visually-hidden">Journaux fictifs, dans l’ordre chronologique</caption>
+    <thead>
+      <tr>
+        <th scope="col">Date et heure</th>
+        <th scope="col">Source</th>
+        <th scope="col">Événement</th>
+        <th scope="col">Compte</th>
+        <th scope="col">Adresse IP</th>
+        <th scope="col">Détail</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track $index) {
+        <tr>
+          <td class="nowrap">{{ row.time }}</td>
+          <td>{{ row.host }}</td>
+          <td>{{ row.event }}</td>
+          <td>{{ row.account }}</td>
+          <td class="nowrap">{{ row.ip }}</td>
+          <td>{{ row.detail }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6">Aucune ligne ne correspond à ces filtres.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<form class="inquiry" (submit)="submit($event)">
+  <h3>Votre enquête</h3>
+  @if (missing() > 0 && !grade()) {
+    <p #missingAlert class="missing" role="alert" tabindex="-1">
+      Il reste {{ missing() }} question(s) sans réponse.
+    </p>
+  }
+  @for (question of lab().questions; track question.id; let i = $index) {
+    <fieldset class="question" [disabled]="grade() !== null">
+      <legend>{{ i + 1 }}. {{ question.prompt }}</legend>
+      @for (option of question.options; track option) {
+        <label class="choice">
+          <input
+            type="radio"
+            [name]="uid + '-' + question.id"
+            [checked]="answers().get(question.id) === option"
+            (change)="answer(question.id, option)"
+          />
+          {{ option }}
+        </label>
+      }
+    </fieldset>
+  }
+  @if (!grade()) {
+    <button type="submit" class="btn btn-primary">Valider mes conclusions</button>
+  }
+</form>
+
+@if (grade(); as result) {
+  <section class="feedback" [class.passed]="result.passed" [attr.aria-labelledby]="uid + '-correction'">
+    <h3 [id]="uid + '-correction'" #resultHeading tabindex="-1">Correction de l’enquête</h3>
+    <ul class="results">
+      @for (item of result.results; track item.question.id) {
+        <li [class.ok]="item.correct">
+          <ca-icon [name]="item.correct ? 'check' : 'close'" />
+          <span>
+            <strong>{{ item.question.prompt }}</strong>
+            {{ item.correct ? 'Juste.' : 'Votre réponse : « ' + item.given + ' ». Réponse attendue : « ' + item.question.answer + ' ».' }}
+            {{ item.question.explanation }}
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+}

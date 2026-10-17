@@ -69,7 +69,7 @@ test('la progression enregistrée met à jour le tableau de bord et les compéte
   ).toBeVisible();
   await expect(page.getByRole('progressbar', { name: 'Progression globale' })).toHaveAttribute(
     'aria-valuenow',
-    '20',
+    '14',
   );
 
   const rows = page.getByRole('table').getByRole('row');
@@ -92,7 +92,7 @@ test('la progression enregistrée met à jour le tableau de bord et les compéte
 
   await page.getByRole('link', { name: 'Voir le détail' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Compétences');
-  await expect(page.getByText('Compétences acquises : 1 sur 5')).toBeVisible();
+  await expect(page.getByText('Compétences acquises : 1 sur 7')).toBeVisible();
   const skill = page
     .getByRole('listitem')
     .filter({ has: page.getByRole('heading', { name: 'Décrire un ordinateur' }) });

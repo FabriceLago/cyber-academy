@@ -10,6 +10,9 @@ const PATHS = [
   '/lecons/ordinateur-et-fichiers/quiz',
   '/lecons/securite-et-risques/quiz', // quiz verrouillé
   '/laboratoires/lab-phishing', // laboratoire verrouillé
+  '/laboratoires/lab-journaux', // laboratoire d'une spécialisation verrouillée
+  '/parcours/analyste-soc-junior', // spécialisation verrouillée, avec sa fiche métier
+  '/parcours/inexistant',
   '/laboratoires/inexistant',
   '/connexion',
   '/inscription',

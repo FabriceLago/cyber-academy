@@ -11,20 +11,14 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATALOG, findLesson } from '../../content/catalog';
-import { Lesson, Level } from '../../core/models/content.model';
+import { Lesson } from '../../core/models/content.model';
 import { quizScore, summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { presentQuestion } from '../../core/quiz/quiz-engine';
 import { Icon } from '../../shared/icon/icon';
 import { PacketJourney } from './animations/packet-journey';
-import { LESSON_STATUS } from './lesson-list';
+import { LESSON_STATUS, LEVELS } from './lesson-list';
 import { PracticeQuestion } from './practice-question';
-
-const LEVELS: Record<Level, string> = {
-  debutant: 'Débutant',
-  intermediaire: 'Intermédiaire',
-  avance: 'Avancé',
-};
 
 const CALLOUTS = { info: 'À savoir', tip: 'Astuce', warning: 'Attention' } as const;
 

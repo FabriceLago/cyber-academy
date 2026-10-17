@@ -10,11 +10,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import {
-  AccountProgress,
-  RecordError,
-  recordMessage,
-} from '../../core/progress/account-progress';
+import { AccountProgress, RecordError, recordMessage } from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 
@@ -74,24 +70,26 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
           Elles forment votre historique et ne peuvent pas être effacées.
         </p>
       } @else {
-      <p class="hint">Vos tentatives de quiz et de laboratoire sont gardées dans ce navigateur.</p>
-      @if (confirmingReset()) {
-        <p>
-          <strong>Effacer toutes vos tentatives de quiz et de laboratoire ?</strong> Cette action
-          est définitive ; votre objectif hebdomadaire est conservé.
+        <p class="hint">
+          Vos tentatives de quiz et de laboratoire sont gardées dans ce navigateur.
         </p>
-        <div class="row">
-          <button #confirmResetRef type="button" class="btn btn-primary" (click)="reset()">
-            Oui, réinitialiser
+        @if (confirmingReset()) {
+          <p>
+            <strong>Effacer toutes vos tentatives de quiz et de laboratoire ?</strong> Cette action
+            est définitive ; votre objectif hebdomadaire est conservé.
+          </p>
+          <div class="row">
+            <button #confirmResetRef type="button" class="btn btn-primary" (click)="reset()">
+              Oui, réinitialiser
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelReset()">Annuler</button>
+          </div>
+        } @else {
+          <button #askResetRef type="button" class="btn btn-secondary" (click)="askReset()">
+            Réinitialiser ma progression
           </button>
-          <button type="button" class="btn btn-secondary" (click)="cancelReset()">Annuler</button>
-        </div>
-      } @else {
-        <button #askResetRef type="button" class="btn btn-secondary" (click)="askReset()">
-          Réinitialiser ma progression
-        </button>
-      }
-      <p role="status" class="hint">{{ resetMessage() }}</p>
+        }
+        <p role="status" class="hint">{{ resetMessage() }}</p>
       }
     </section>
 

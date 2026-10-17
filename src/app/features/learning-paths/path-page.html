@@ -1,0 +1,225 @@
+@if (path(); as path) {
+  @let job = career();
+  <nav class="crumbs" aria-label="Fil d’Ariane">
+    <a routerLink="/parcours">Parcours</a> › {{ path.title }}
+  </nav>
+  <header class="page-header">
+    <p class="eyebrow">{{ job ? 'Spécialisation' : 'Parcours' }} · {{ levels[path.level] }}</p>
+    <h1 tabindex="-1">{{ path.title }}</h1>
+    <p>{{ path.description }}</p>
+  </header>
+
+  @if (missing().length > 0) {
+    <section class="card locked" aria-labelledby="verrou">
+      <h2 id="verrou">
+        <ca-icon name="lock" /> {{ job ? 'Spécialisation verrouillée' : 'Parcours verrouillé' }}
+      </h2>
+      @for (item of missing(); track item.path.id) {
+        <p>
+          Terminez d’abord le parcours
+          <a [routerLink]="['/parcours', item.path.id]">« {{ item.path.title }} »</a> :
+          {{ item.remaining }} leçon{{ item.remaining > 1 ? 's' : '' }} à valider.
+        </p>
+      }
+      <p class="muted">Le programme ci-dessous reste consultable pour vous orienter.</p>
+    </section>
+  }
+
+  @if (overview(); as overview) {
+    <section class="card" aria-labelledby="programme">
+      <h2 id="programme">Programme</h2>
+      <ca-progress-bar
+        [label]="'Progression du parcours ' + path.title"
+        [value]="overview.completed / overview.lessons.length"
+        [valueText]="'Leçons validées : ' + overview.completed + ' sur ' + overview.lessons.length"
+      />
+      <p class="muted">
+        Leçons validées : {{ overview.completed }} sur {{ overview.lessons.length }}
+      </p>
+      <ol class="modules">
+        @for (group of modules(); track group.module.id; let i = $index) {
+          <li>
+            <h3>Module {{ i + 1 }} : {{ group.module.title }}</h3>
+            <p class="muted">
+              {{ group.module.description }} Validation :
+              {{ group.module.passThreshold | percent }} au quiz de chaque leçon.
+            </p>
+            <ca-lesson-list [lessons]="group.lessons" />
+          </li>
+        }
+      </ol>
+      @if (job && job.upcoming.length > 0) {
+        <h3>Modules en préparation</h3>
+        <p class="muted">Prévus au programme, pas encore disponibles :</p>
+        <ul>
+          @for (title of job.upcoming; track title) {
+            <li>{{ title }}</li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  @if (job) {
+    <section class="card" aria-labelledby="metier">
+      <h2 id="metier">Le métier : {{ job.role }}</h2>
+      <p>{{ job.summary }}</p>
+      <div class="columns">
+        <div>
+          <h3>Compétences attendues</h3>
+          <ul>
+            @for (skill of job.requiredSkills; track skill) {
+              <li>{{ skill }}</li>
+            }
+          </ul>
+        </div>
+        <div>
+          <h3>Prérequis</h3>
+          <ul>
+            @for (item of job.prerequisites; track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+      <p class="honest">
+        <ca-icon name="shield" />
+        <span>
+          Ce parcours développe des compétences sur des exercices simulés et des données fictives.
+          Il ne remplace pas une expérience professionnelle et ne garantit pas un emploi.
+        </span>
+      </p>
+    </section>
+
+    @let project = job.finalProject;
+    <section class="card" aria-labelledby="projet">
+      <h2 id="projet">Projet final : {{ project.title }}</h2>
+      <p>{{ project.brief }}</p>
+      <h3>Livrables</h3>
+      <ol>
+        @for (item of project.deliverables; track item) {
+          <li>{{ item }}</li>
+        }
+      </ol>
+
+      <div class="field">
+        <label for="rapport">Votre rapport</label>
+        <p id="rapport-aide" class="muted">
+          Enregistré automatiquement dans ce navigateur, pas sur votre compte. Évitez d’y mettre des
+          informations personnelles.
+        </p>
+        <textarea
+          id="rapport"
+          #report
+          rows="12"
+          maxlength="20000"
+          aria-describedby="rapport-aide"
+          [value]="draft().report"
+          (input)="setReport(report.value)"
+        ></textarea>
+      </div>
+
+      <fieldset class="criteria">
+        <legend>Auto-évaluation : cochez les critères que votre rapport remplit</legend>
+        @for (criterion of project.criteria; track criterion) {
+          <label class="choice">
+            <input
+              #box
+              type="checkbox"
+              [checked]="draft().checked.includes(criterion)"
+              (change)="toggle(criterion, box.checked)"
+            />
+            {{ criterion }}
+          </label>
+        }
+      </fieldset>
+      <p class="muted">
+        Pas de correction par un mentor pour l’instant : cette grille sert à relire votre propre
+        travail.
+      </p>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" (click)="exportPortfolio()">
+          Exporter mon portfolio (Markdown)
+        </button>
+      </div>
+      <p class="muted" role="status">
+        @if (exported()) {
+          Fichier « {{ exported() }} » téléchargé : leçons, laboratoires et compétences validés,
+          rapport et auto-évaluation.
+        }
+      </p>
+    </section>
+
+    <section class="card" aria-labelledby="entretiens">
+      <h2 id="entretiens">Préparer les entretiens</h2>
+      <p class="muted">
+        Répondez d’abord par écrit, puis comparez avec les éléments attendus. Vos réponses ne sont
+        pas enregistrées.
+      </p>
+      @for (group of interview(); track group.title) {
+        <h3>{{ group.title }}</h3>
+        @for (item of group.items; track item.id) {
+          <article class="prompt" [attr.aria-labelledby]="'q-' + item.id">
+            <h4 [id]="'q-' + item.id">{{ item.title }}</h4>
+            <p>{{ item.prompt }}</p>
+            <form (submit)="$event.preventDefault(); reveal(item.id, answer.value)">
+              <label class="visually-hidden" [for]="'r-' + item.id">
+                Votre réponse : {{ item.title }}
+              </label>
+              <textarea
+                #answer
+                rows="4"
+                maxlength="5000"
+                [id]="'r-' + item.id"
+                [attr.aria-invalid]="empty() === item.id ? 'true' : null"
+                [attr.aria-describedby]="empty() === item.id ? 'e-' + item.id : null"
+              ></textarea>
+              @if (empty() === item.id) {
+                <p class="error" role="alert" [id]="'e-' + item.id">
+                  Écrivez d’abord votre réponse : les éléments attendus s’affichent ensuite.
+                </p>
+              }
+              @if (!answered().has(item.id)) {
+                <button type="submit" class="btn btn-secondary">
+                  Comparer avec les éléments attendus
+                </button>
+              }
+            </form>
+            @if (answered().has(item.id)) {
+              <div class="expected">
+                <h5>Éléments attendus</h5>
+                <ul>
+                  @for (point of item.expectations; track point) {
+                    <li>{{ point }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </article>
+        }
+      }
+    </section>
+
+    <section class="card" aria-labelledby="certifications">
+      <h2 id="certifications">Certifications possibles</h2>
+      <p class="muted">
+        Des pistes, pas une obligation : vérifiez le contenu, le prix et les prérequis sur le site
+        de chaque organisme. Une certification ne garantit pas un emploi.
+      </p>
+      <ul class="certs">
+        @for (cert of job.certifications; track cert.name) {
+          <li>
+            <strong>{{ cert.name }}</strong> ({{ cert.issuer }}) : {{ cert.note }}
+          </li>
+        }
+      </ul>
+    </section>
+  }
+} @else {
+  <header class="page-header">
+    <h1 tabindex="-1">Parcours introuvable</h1>
+    <p>Ce parcours n’existe pas, ou son adresse a changé.</p>
+  </header>
+  <a class="btn btn-primary" routerLink="/parcours">Voir tous les parcours</a>
+}

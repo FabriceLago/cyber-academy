@@ -77,7 +77,10 @@ export class AuthService {
     try {
       return await action(await this.client);
     } catch {
-      return { ok: false, message: authMessage({ name: 'AuthRetryableFetchError', status: 0 }) } as const;
+      return {
+        ok: false,
+        message: authMessage({ name: 'AuthRetryableFetchError', status: 0 }),
+      } as const;
     }
   }
 

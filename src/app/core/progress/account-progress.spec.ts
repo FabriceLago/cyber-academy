@@ -2,12 +2,7 @@ import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from '../auth/auth.service';
 import { AppSupabaseClient, SUPABASE } from '../supabase/supabase';
-import {
-  AccountProgress,
-  RecordError,
-  recordMessage,
-  toAnswerPayload,
-} from './account-progress';
+import { AccountProgress, RecordError, recordMessage, toAnswerPayload } from './account-progress';
 import { ProgressStore } from './progress.store';
 
 /** Faux client : chaque table renvoie ses lignes ; la fonction d'enregistrement est espionnée. */
@@ -48,7 +43,10 @@ function setup({ storedSession = false, authReady = true } = {}) {
   TestBed.configureTestingModule({
     providers: [
       { provide: SUPABASE, useValue: Promise.resolve(client as unknown as AppSupabaseClient) },
-      { provide: AuthService, useValue: { user, ready, userId: computed(() => user()?.id ?? null) } },
+      {
+        provide: AuthService,
+        useValue: { user, ready, userId: computed(() => user()?.id ?? null) },
+      },
     ],
   });
   const account = TestBed.inject(AccountProgress);
@@ -154,7 +152,11 @@ describe('format des réponses envoyées', () => {
   });
 
   it('traduit les codes d’erreur', () => {
-    expect(recordMessage({ code: '28000' })).toBe('Votre session a expiré : reconnectez-vous, puis réessayez.');
-    expect(recordMessage({})).toBe('L’enregistrement a échoué : vérifiez votre connexion, puis réessayez.');
+    expect(recordMessage({ code: '28000' })).toBe(
+      'Votre session a expiré : reconnectez-vous, puis réessayez.',
+    );
+    expect(recordMessage({})).toBe(
+      'L’enregistrement a échoué : vérifiez votre connexion, puis réessayez.',
+    );
   });
 });

@@ -23,6 +23,7 @@ import {
 } from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { Icon } from '../../shared/icon/icon';
+import { LogsLabView } from './logs-lab';
 import { PhishingLabView } from './phishing-lab';
 import { TerminalLabView } from './terminal-lab';
 
@@ -58,6 +59,14 @@ export const LAB_KINDS: Record<
       'Actions possibles : afficher l’adresse réelle de l’expéditeur, vérifier la destination d’un lien, signaler des éléments suspects, donner un verdict.',
     environment: 'Boîte de réception',
   },
+  logs: {
+    label: 'Analyse de journaux',
+    simulated:
+      'Journaux fictifs, préchargés : aucune donnée réelle, aucun système n’est surveillé.',
+    actions:
+      'Actions possibles : rechercher et filtrer les journaux par texte, type d’événement ou adresse IP, puis répondre aux questions de l’enquête.',
+    environment: 'Journaux',
+  },
 };
 
 /**
@@ -66,7 +75,7 @@ export const LAB_KINDS: Record<
  */
 @Component({
   selector: 'ca-lab-page',
-  imports: [RouterLink, DatePipe, Icon, TerminalLabView, PhishingLabView],
+  imports: [RouterLink, DatePipe, Icon, TerminalLabView, PhishingLabView, LogsLabView],
   templateUrl: './lab-page.html',
   styleUrl: './lab-page.css',
 })
@@ -89,6 +98,10 @@ export class LabPage {
   protected readonly phishing = computed(() => {
     const lab = this.lab();
     return lab?.kind === 'phishing' ? lab : null;
+  });
+  protected readonly logs = computed(() => {
+    const lab = this.lab();
+    return lab?.kind === 'logs' ? lab : null;
   });
 
   private readonly summary = computed(() =>

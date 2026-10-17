@@ -3,7 +3,7 @@
 -- Lancer avec « npm run db:test » (Supabase local démarré). Tout est annulé à la fin.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(21);
 
 -- Comptes fictifs (domaine réservé .test). Alice demande le rôle admin à l'inscription.
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -45,7 +45,11 @@ select throws_ok(
 
 -- Visiteur sans compte
 set local role anon;
-select is((select count(*) from public.lessons), 5::bigint, 'sans compte, le catalogue est lisible');
+select is((select count(*) from public.lessons), 7::bigint, 'sans compte, le catalogue est lisible');
+select is(
+  (select kind from public.labs where id = 'lab-journaux'), 'logs',
+  'le laboratoire d’analyse de journaux est publié'
+);
 select throws_ok($$ select * from public.profiles $$, '42501', null, 'sans compte, aucun profil');
 select throws_ok($$ select * from public.quiz_attempts $$, '42501', null, 'sans compte, aucune tentative');
 select throws_ok(

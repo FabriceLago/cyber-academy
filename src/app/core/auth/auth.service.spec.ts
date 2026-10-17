@@ -97,10 +97,19 @@ describe('AuthService', () => {
 
 describe('authMessage', () => {
   it.each([
-    [{ code: 'user_already_exists' }, 'Un compte existe déjà avec cette adresse : connectez-vous plutôt.'],
+    [
+      { code: 'user_already_exists' },
+      'Un compte existe déjà avec cette adresse : connectez-vous plutôt.',
+    ],
     [{ code: 'weak_password' }, 'Mot de passe trop faible : choisissez au moins 10 caractères.'],
-    [{ code: 'over_request_rate_limit' }, 'Trop de tentatives : patientez quelques minutes avant de réessayer.'],
-    [{ name: 'AuthRetryableFetchError', status: 0 }, 'Le service de comptes ne répond pas. Réessayez plus tard : votre progression reste enregistrée dans ce navigateur.'],
+    [
+      { code: 'over_request_rate_limit' },
+      'Trop de tentatives : patientez quelques minutes avant de réessayer.',
+    ],
+    [
+      { name: 'AuthRetryableFetchError', status: 0 },
+      'Le service de comptes ne répond pas. Réessayez plus tard : votre progression reste enregistrée dans ce navigateur.',
+    ],
     [{ code: 'inconnu', status: 500 }, 'La demande a échoué. Réessayez plus tard.'],
   ])('%o → message en français', (error, message) => {
     expect(authMessage(error)).toBe(message);

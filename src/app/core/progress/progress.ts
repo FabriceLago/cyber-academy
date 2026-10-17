@@ -60,6 +60,8 @@ export interface SkillProgress {
 export interface ProgressSummary {
   readonly lessons: readonly LessonProgress[];
   readonly completedLessons: number;
+  /** Chaque parcours du catalogue, dans l'ordre. */
+  readonly paths: readonly PathProgress[];
   /** Parcours commencé et pas terminé, sinon le premier pas terminé. */
   readonly currentPath: PathProgress | null;
   /** Leçon commencée à terminer en priorité, sinon la première accessible. */
@@ -104,6 +106,11 @@ export function summarizeProgress(
   const byId = new Map<string, LessonProgress>();
 
   for (const path of catalog.paths) {
+    // Parcours prérequis (placés avant dans le catalogue) : tant qu'ils ne sont pas terminés,
+    // toutes les leçons de ce parcours restent verrouillées, avec la liste de ce qui manque.
+    const pathBlockers = (path.prerequisitePathIds ?? []).flatMap((id) =>
+      lessons.filter((l) => l.path.id === id && l.status !== 'completed').map((l) => l.lesson),
+    );
     for (const module of path.modules) {
       for (const lesson of module.lessons) {
         const attempts = quizAttempts.get(lesson.id) ?? [];
@@ -114,10 +121,13 @@ export function summarizeProgress(
           firstPass && (lesson.labId === undefined || labDate)
             ? latest(firstPass.submittedAt, labDate)
             : null;
-        const blockedBy = lesson.prerequisiteIds
-          .map((id) => byId.get(id))
-          .filter((p): p is LessonProgress => p !== undefined && p.status !== 'completed')
-          .map((p) => p.lesson);
+        const blockedBy = [
+          ...lesson.prerequisiteIds
+            .map((id) => byId.get(id))
+            .filter((p): p is LessonProgress => p !== undefined && p.status !== 'completed')
+            .map((p) => p.lesson),
+          ...pathBlockers,
+        ];
 
         let status: LessonStatus = 'available';
         if (completedAt) status = 'completed';
@@ -194,6 +204,7 @@ export function summarizeProgress(
   return {
     lessons,
     completedLessons: lessons.filter((l) => l.status === 'completed').length,
+    paths,
     currentPath,
     nextLesson,
     labs: catalog.labs.map((lab) => ({ lab, completed: labCompletedAt.has(lab.id) })),
