@@ -101,6 +101,17 @@ figcaption {
   font-weight: 700;
 }
 
+.description {
+  margin-top: var(--space-4);
+}
+
+.description summary {
+  min-height: var(--target-min);
+  align-content: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .soon {
   display: flex;
   align-items: center;

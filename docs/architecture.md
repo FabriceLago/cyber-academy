@@ -44,7 +44,8 @@ src/app/
 ├─ shared/
 │  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
 │  ├─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
-│  └─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
+│  ├─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
+│  └─ animation-player/  lecteur commun des animations pédagogiques       (étape 7, fait)
 ├─ content/              catalogue et 5 leçons complètes (lessons/)       (étape 5, fait)
 └─ features/
    ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
@@ -54,6 +55,7 @@ src/app/
    ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours                               (étape 5, fait)
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
+   │  └─ animations/     animation « Le trajet d'un paquet »              (étape 7, fait)
    ├─ quizzes/           page de quiz, liste des quiz, saisie des réponses (étape 6, fait)
    ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8)
    └─ projects/          projets pratiques                                (après le MVP)
@@ -87,7 +89,7 @@ Contrastes calculés (formule WCAG) : texte ≥ 4,5:1 partout (minimum mesuré :
 clair sur le fond clair), anneau de focus ≥ 3:1. Polices du système (aucun téléchargement),
 espacements de 4 à 48 px, cibles cliquables de 44 px minimum.
 
-**Classes globales** : `.btn` (`-primary`, `-secondary`, `-ghost`, `-icon`), `.card`,
+**Classes globales** : `.btn` (`-primary`, `-secondary`, `-ghost`, `-icon`, état indisponible estompé), `.card`,
 `.page-header`, `.status-page`, `.visually-hidden`.
 **Composants** : `ca-icon` (15 icônes SVG au trait, toujours décoratives),
 `ca-empty-state` (section vide expliquée).
@@ -185,8 +187,8 @@ fictives.
   seulement après la réponse, rien d'enregistré), les critères de réussite, « Recommencer » et
   « Leçon suivante » (actif seulement si la leçon est validée). Une leçon verrouillée affiche ce qu'il
   faut valider d'abord, sans son contenu. Le titre d'onglet est celui de la leçon.
-- Annoncé dans la page, pas simulé : animation et démonstration illustrées (étape 7, la description
-  complète est affichée), laboratoire (étape 8).
+- Annoncé dans la page, pas simulé : laboratoire (étape 8) ; animations des leçons 1, 2, 4 et 5 et
+  schémas des 5 démonstrations (pas encore planifiés, la description complète est affichée).
 
 ### Moteur de quiz (étape 6)
 
@@ -210,6 +212,23 @@ Fichier : [`quiz-engine.ts`](../src/app/core/quiz/quiz-engine.ts), testé dans `
   sans réponse.
 - **Limite connue :** les réponses attendues sont dans le JavaScript envoyé au navigateur ; une
   correction côté serveur est prévue avec Supabase (étapes 9-10).
+
+### Animations (étape 7)
+
+- **Lecteur commun** ([`animation-player.ts`](../src/app/shared/animation-player/animation-player.ts)) :
+  lecture et pause (une étape toutes les 6 s, arrêt sur la dernière), étapes précédente et suivante,
+  « Revenir au début », légende de l'étape annoncée aux lecteurs d'écran (`aria-live`) et explication.
+  Boutons natifs, donc utilisables au clavier ; aux extrémités, `aria-disabled` plutôt que `disabled`,
+  pour que le focus ne se perde pas. Rien ne bouge au chargement de la page.
+- **Le trajet d'un paquet** (leçon 3, [`packet-journey.ts`](../src/app/features/lessons/animations/packet-journey.ts)) :
+  schéma SVG en trois zones (chez vous, fournisseur d'accès, Internet), paquet coloré selon son rôle
+  (question DNS, demande, réponse) avec légende des couleurs, trajet de l'étape mis en évidence.
+  Version détaillée (7 étapes, dont la résolution DNS et le retour) ou simplifiée (4 étapes, 4
+  équipements). Le mouvement utilise la Web Animations API.
+- **Mouvement réduit** : si le système le demande, le paquet saute directement à sa position, sans
+  trajet animé (vérifié par test e2e).
+- **Alternative textuelle** : la description complète reste disponible sous l'animation ; un test
+  vérifie que les légendes reprennent mot pour mot celle de la leçon.
 
 ## 5. Progression
 

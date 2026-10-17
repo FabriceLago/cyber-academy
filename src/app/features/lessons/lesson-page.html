@@ -112,12 +112,21 @@
       <h2 id="animation-titre" tabindex="-1">Animation</h2>
       <figure class="card visual">
         <figcaption>{{ lesson.animation.title }}</figcaption>
-        <ol>
-          @for (step of animationSteps(); track $index) {
-            <li>{{ step }}</li>
-          }
-        </ol>
-        <p class="soon"><ca-icon name="clock" /> La version animée et interactive arrive à l’étape 7 ; voici sa description complète.</p>
+        @let animated = lesson.animation.id === 'trajet-paquet';
+        @if (animated) {
+          <ca-packet-journey />
+        }
+        <details class="description" [open]="!animated">
+          <summary>Description textuelle, étape par étape</summary>
+          <ol>
+            @for (step of animationSteps(); track $index) {
+              <li>{{ step }}</li>
+            }
+          </ol>
+        </details>
+        @if (!animated) {
+          <p class="soon"><ca-icon name="clock" /> L’animation interactive de cette leçon n’est pas encore disponible : voici sa description complète.</p>
+        }
       </figure>
     </section>
 
@@ -126,7 +135,7 @@
       <figure class="card visual">
         <figcaption>{{ lesson.demonstration.title }}</figcaption>
         <p>{{ lesson.demonstration.textAlternative }}</p>
-        <p class="soon"><ca-icon name="clock" /> Le schéma illustré arrive à l’étape 7 ; voici sa description complète.</p>
+        <p class="soon"><ca-icon name="clock" /> Le schéma illustré n’est pas encore disponible : voici sa description complète.</p>
       </figure>
     </section>
 

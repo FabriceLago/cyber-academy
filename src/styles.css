@@ -210,6 +210,12 @@ pre {
   padding: var(--space-2);
 }
 
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Cartes */
 
 .card {
