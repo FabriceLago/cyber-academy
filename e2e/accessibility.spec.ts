@@ -7,6 +7,8 @@ const PATHS = [
   ...PAGES.map((p) => p.path),
   '/lecons/ordinateur-et-fichiers', // leçon ouverte, avec toutes ses sections
   '/lecons/hameconnage', // leçon verrouillée
+  '/lecons/ordinateur-et-fichiers/quiz',
+  '/lecons/securite-et-risques/quiz', // quiz verrouillé
   '/lecons/inexistante',
   '/adresse-inexistante',
   '/erreur',
@@ -27,6 +29,11 @@ for (const [colorScheme, name] of [
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
       expect(violations, `page ${path}`).toEqual([]);
+      // WCAG 1.4.10 : pas de défilement horizontal, même sur un écran de téléphone.
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `défilement horizontal sur ${path}`).toBeLessThanOrEqual(0);
     }
 
     if (isMobile) {

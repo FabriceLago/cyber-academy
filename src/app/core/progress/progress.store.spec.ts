@@ -77,6 +77,18 @@ describe('ProgressStore', () => {
     expect(store.state().weeklyGoal).toBeNull();
   });
 
+  it('enregistre une tentative de quiz à la suite des précédentes', () => {
+    localStorage.setItem('ca-progress', stored({ quizAttempts: [validQuiz] }));
+    const store = TestBed.inject(ProgressStore);
+    const next = { ...validQuiz, submittedAt: '2026-10-15T10:00:00.000Z' };
+    store.recordQuizAttempt(next);
+    expect(store.state().quizAttempts).toEqual([validQuiz, next]);
+    expect(parseProgress(localStorage.getItem('ca-progress')).quizAttempts).toEqual([
+      validQuiz,
+      next,
+    ]);
+  });
+
   it('réinitialise les tentatives en gardant l’objectif hebdomadaire', () => {
     localStorage.setItem(
       'ca-progress',

@@ -1,0 +1,112 @@
+@if (entry(); as entry) {
+  @let threshold = entry.module.passThreshold;
+
+  <nav class="crumbs" aria-label="Fil d’Ariane">
+    <a [routerLink]="['/lecons', entry.lesson.id]">{{ entry.lesson.title }}</a> › Quiz
+  </nav>
+  <header class="page-header">
+    <h1 #title tabindex="-1">Quiz : {{ entry.lesson.title }}</h1>
+    <p>
+      {{ drawn().length }} questions tirées parmi {{ entry.lesson.quiz.questions.length }}, de la plus
+      simple à la plus difficile. Il faut au moins {{ threshold | percent }} de bonnes réponses pour
+      valider. La correction s’affiche après l’envoi de vos réponses.
+    </p>
+  </header>
+
+  @if (lessonState()?.status === 'locked') {
+    <section class="card" aria-labelledby="verrou">
+      <h2 id="verrou">Quiz verrouillé</h2>
+      <p>Ce quiz s’ouvre quand la leçon est accessible.</p>
+      <a class="btn btn-primary" [routerLink]="['/lecons', entry.lesson.id]">Voir la leçon</a>
+    </section>
+  } @else {
+    @if (submitted(); as attempt) {
+      <section class="card result" [class.passed]="passed()" aria-labelledby="resultat">
+        <h2 id="resultat" #resultHeading tabindex="-1">Résultat : {{ score() | percent }}</h2>
+        <p>Bonnes réponses : {{ attempt.correctQuestionIds.length }} sur {{ attempt.questionIds.length }}.</p>
+        <p class="verdict">
+          <ca-icon [name]="passed() ? 'check' : 'clock'" />
+          <strong>
+            @if (passed()) {
+              Quiz réussi.
+            } @else {
+              Pas encore : il faut au moins {{ threshold | percent }} pour valider.
+            }
+          </strong>
+        </p>
+        @if (lessonState()?.status === 'completed') {
+          <p>La leçon est validée.</p>
+        } @else if (passed() && entry.lesson.labId) {
+          <p>Il reste à réussir le laboratoire de la leçon pour la valider (disponible à l’étape 8).</p>
+        }
+
+        @if (review().length > 0) {
+          <h3>Notions à revoir</h3>
+          <ul>
+            @for (objective of review(); track objective.id) {
+              <li>{{ objective.text }}</li>
+            }
+          </ul>
+          <p>
+            Conseil : relisez l’explication et le glossaire, refaites l’exercice guidé, puis retentez le
+            quiz. Les questions seront différentes.
+          </p>
+        }
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary" (click)="retry()">
+            Recommencer avec de nouvelles questions
+          </button>
+          <a class="btn btn-secondary" [routerLink]="['/lecons', entry.lesson.id]">Revoir la leçon</a>
+          @if (next(); as next) {
+            @if (lessonState()?.status === 'completed' && next.status !== 'locked') {
+              <a class="btn btn-secondary" [routerLink]="['/lecons', next.lesson.id]">
+                Leçon suivante : {{ next.lesson.title }}
+              </a>
+            }
+          }
+        </div>
+      </section>
+      <h2>Correction détaillée</h2>
+    } @else if (missing().length > 0) {
+      <div class="card errors" role="alert" tabindex="-1" #errorSummary>
+        <p>
+          <strong>Il reste {{ missing().length }} question(s) sans réponse :</strong>
+          question(s) {{ missing().join(', ') }}.
+        </p>
+      </div>
+    }
+
+    <ol class="questions">
+      @for (presented of drawn(); track presented.question.id; let i = $index, count = $count) {
+        <li class="card">
+          <p class="number">
+            Question {{ i + 1 }} sur {{ count }}
+            @if (submitted()) {
+              <span class="mark" [class.ok]="isCorrect(presented)">
+                <ca-icon [name]="isCorrect(presented) ? 'check' : 'close'" />
+                {{ isCorrect(presented) ? 'Bonne réponse' : 'Réponse incorrecte' }}
+              </span>
+            }
+          </p>
+          <ca-answer-input
+            [presented]="presented"
+            [answer]="answerOf(presented)"
+            (answerChange)="setAnswer(presented.question.id, $event)"
+            [corrected]="submitted() !== null"
+          />
+        </li>
+      }
+    </ol>
+
+    @if (!submitted()) {
+      <button type="button" class="btn btn-primary" (click)="submit()">Envoyer mes réponses</button>
+    }
+  }
+} @else {
+  <div class="status-page">
+    <h1>Quiz introuvable</h1>
+    <p>Cette leçon n’existe pas, ou son adresse a changé.</p>
+    <a class="btn btn-primary" routerLink="/quiz">Voir tous les quiz</a>
+  </div>
+}

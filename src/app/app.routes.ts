@@ -54,13 +54,20 @@ export const routes: Routes = [
     'Le Cyber Lab : des exercices pratiques dans des environnements simulés, sans risque.',
     'à l’étape 8',
   ),
-  comingSoon(
-    'quiz',
-    'Quiz et examens',
-    'quiz',
-    'Vos quiz, vos résultats et les notions à revoir.',
-    'à l’étape 6',
-  ),
+  {
+    path: 'lecons/:lessonId/quiz',
+    title: (route) =>
+      import('./content/catalog').then((m) => {
+        const title = m.findLesson(route.paramMap.get('lessonId') ?? '')?.lesson.title;
+        return title ? `Quiz : ${title}` : 'Quiz introuvable';
+      }),
+    loadComponent: () => import('./features/quizzes/quiz-page').then((m) => m.QuizPage),
+  },
+  {
+    path: 'quiz',
+    title: 'Quiz et examens',
+    loadComponent: () => import('./features/quizzes/quizzes-page').then((m) => m.QuizzesPage),
+  },
   comingSoon(
     'projets',
     'Projets pratiques',

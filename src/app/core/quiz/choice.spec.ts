@@ -1,5 +1,5 @@
-import { ChoiceQuestion, Question } from '../models/content.model';
-import { asChoiceQuestion, choiceOptions, isChoiceCorrect } from './choice';
+import { ChoiceQuestion } from '../models/content.model';
+import { choiceOptions, isChoiceCorrect } from './choice';
 
 const base = { id: 'q', objectiveId: 'o', difficulty: 1 as const, prompt: '?', explanation: '!' };
 const option = (id: string, correct: boolean) => ({ id, label: id, correct, feedback: id });
@@ -31,11 +31,5 @@ describe('isChoiceCorrect', () => {
     expect(choiceOptions(statement).map((o) => o.label)).toEqual(['Vrai', 'Faux']);
     expect(isChoiceCorrect(statement, new Set(['false']))).toBe(true);
     expect(isChoiceCorrect(statement, new Set(['true']))).toBe(false);
-  });
-
-  it('ne traite comme question à options que les choix et les vrai ou faux', () => {
-    const ordering: Question = { ...base, type: 'ordering', items: [] };
-    expect(asChoiceQuestion(ordering)).toBeNull();
-    expect(asChoiceQuestion(single)).toBe(single);
   });
 });

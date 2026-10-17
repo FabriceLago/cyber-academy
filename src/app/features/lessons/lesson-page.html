@@ -137,11 +137,7 @@
         @for (step of guidedSteps(); track step.key; let i = $index, count = $count) {
           <li class="card">
             <p class="step-number">Question {{ i + 1 }} sur {{ count }}</p>
-            @if (step.question; as question) {
-              <ca-practice-question [question]="question" [hints]="step.hints" />
-            } @else {
-              <p>Ce type d’exercice sera disponible à l’étape 6.</p>
-            }
+            <ca-practice-question [presented]="step.presented" [hints]="step.hints" />
           </li>
         }
       </ol>
@@ -169,10 +165,32 @@
           sont tirées à chaque tentative, avec une correction détaillée de chaque réponse. Pour valider :
           au moins {{ entry.module.passThreshold | percent }} de bonnes réponses.
         </p>
-        @if (quizResult(); as result) {
-          <p>Votre meilleur score : {{ result.bestScore | percent }} ({{ result.attempts }} tentative(s)).</p>
+        <a class="btn btn-primary" [routerLink]="['/lecons', lesson.id, 'quiz']">
+          {{ attempts().length > 0 ? 'Retenter le quiz' : 'Commencer le quiz' }}
+        </a>
+        @if (attempts().length > 0) {
+          <table class="history">
+            <caption>
+              Historique de vos tentatives, de la plus récente à la plus ancienne
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Score</th>
+                <th scope="col">Résultat</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (attempt of attempts(); track attempt.at) {
+                <tr>
+                  <td>{{ attempt.at | date: 'd MMMM, HH:mm' }}</td>
+                  <td>{{ attempt.score | percent }}</td>
+                  <td>{{ attempt.score >= entry.module.passThreshold ? 'Réussi' : 'À retenter' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         }
-        <p class="soon"><ca-icon name="clock" /> Le quiz jouable arrive à l’étape 6.</p>
       </div>
     </section>
 

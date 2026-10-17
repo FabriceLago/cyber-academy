@@ -140,6 +140,9 @@
 
 main {
   grid-area: main;
+  /* Une cellule de grille ne rétrécit pas sous la largeur de son contenu sans cela :
+     un élément trop large ferait défiler toute la page horizontalement sur mobile. */
+  min-width: 0;
   width: 100%;
   max-width: var(--content-max);
   margin-inline: auto;

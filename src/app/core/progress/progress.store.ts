@@ -27,6 +27,12 @@ export class ProgressStore {
     this.save({ ...this.current(), weeklyGoal: isWeeklyGoal(goal) ? goal : null });
   }
 
+  /** Ajoute une tentative de quiz ; les tentatives ne sont jamais modifiées ensuite. */
+  recordQuizAttempt(attempt: QuizAttempt): void {
+    const state = this.current();
+    this.save({ ...state, quizAttempts: [...state.quizAttempts, attempt] });
+  }
+
   /** Efface toutes les tentatives ; l'objectif hebdomadaire, qui est un réglage, est conservé. */
   reset(): void {
     this.save({ ...EMPTY_PROGRESS, weeklyGoal: this.current().weeklyGoal });

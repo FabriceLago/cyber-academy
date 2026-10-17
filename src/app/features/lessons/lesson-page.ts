@@ -1,4 +1,4 @@
-import { PercentPipe } from '@angular/common';
+import { DatePipe, PercentPipe } from '@angular/common';
 import {
   Component,
   DOCUMENT,
@@ -12,9 +12,9 @@ import {
 import { RouterLink } from '@angular/router';
 import { CATALOG, findLesson } from '../../content/catalog';
 import { Lesson, Level } from '../../core/models/content.model';
-import { summarizeProgress } from '../../core/progress/progress';
+import { quizScore, summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
-import { asChoiceQuestion } from '../../core/quiz/choice';
+import { presentQuestion } from '../../core/quiz/quiz-engine';
 import { Icon } from '../../shared/icon/icon';
 import { LESSON_STATUS } from './lesson-list';
 import { PracticeQuestion } from './practice-question';
@@ -35,7 +35,7 @@ function splitSteps(text: string): string[] {
 /** Page d'une leçon : les 17 sections du modèle pédagogique, ou l'explication du verrouillage. */
 @Component({
   selector: 'ca-lesson-page',
-  imports: [RouterLink, PercentPipe, Icon, PracticeQuestion],
+  imports: [RouterLink, DatePipe, PercentPipe, Icon, PracticeQuestion],
   templateUrl: './lesson-page.html',
   styleUrl: './lesson-page.css',
 })
@@ -70,6 +70,14 @@ export class LessonPage {
   protected readonly quizResult = computed(
     () => this.summary().quizResults.find((r) => r.lesson.id === this.lessonId()) ?? null,
   );
+  /** Historique des tentatives au quiz, de la plus récente à la plus ancienne. */
+  protected readonly attempts = computed(() =>
+    this.progress
+      .state()
+      .quizAttempts.filter((a) => a.lessonId === this.lessonId())
+      .map((a) => ({ at: a.submittedAt, score: quizScore(a) }))
+      .reverse(),
+  );
   protected readonly animationSteps = computed(() =>
     splitSteps(this.entry()?.lesson.animation.textAlternative ?? ''),
   );
@@ -79,7 +87,7 @@ export class LessonPage {
   protected readonly guidedSteps = computed(() =>
     (this.entry()?.lesson.guidedExercise.steps ?? []).map((step) => ({
       key: `${this.lessonId()}:${this.run()}:${step.question.id}`,
-      question: asChoiceQuestion(step.question),
+      presented: presentQuestion(step.question),
       hints: step.hints,
     })),
   );

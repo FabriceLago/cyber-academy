@@ -39,7 +39,7 @@ src/app/
 │  ├─ content/           validation automatique du contenu                (étape 2, fait)
 │  ├─ theme/             thème clair, sombre ou selon l'appareil          (étape 3, fait)
 │  ├─ progress/          règles de progression, stockage validé           (étape 4, fait)
-│  ├─ quiz/              correction des questions à options               (étape 5, fait)
+│  ├─ quiz/              tirage, correction, notions à revoir             (étape 6, fait)
 │  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
 ├─ shared/
 │  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
@@ -54,7 +54,7 @@ src/app/
    ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours                               (étape 5, fait)
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
-   ├─ quizzes/           moteur et interface de quiz                      (étape 6)
+   ├─ quizzes/           page de quiz, liste des quiz, saisie des réponses (étape 6, fait)
    ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8)
    └─ projects/          projets pratiques                                (après le MVP)
 e2e/                     tests Playwright
@@ -186,7 +186,30 @@ fictives.
   « Leçon suivante » (actif seulement si la leçon est validée). Une leçon verrouillée affiche ce qu'il
   faut valider d'abord, sans son contenu. Le titre d'onglet est celui de la leçon.
 - Annoncé dans la page, pas simulé : animation et démonstration illustrées (étape 7, la description
-  complète est affichée), quiz jouable (étape 6), laboratoire (étape 8).
+  complète est affichée), laboratoire (étape 8).
+
+### Moteur de quiz (étape 6)
+
+Fichier : [`quiz-engine.ts`](../src/app/core/quiz/quiz-engine.ts), testé dans `quiz-engine.spec.ts`.
+
+- **Tirage** (`drawQuiz`) : 5 questions parmi 10, prises d'abord hors de la tentative précédente
+  (au moins une par objectif si possible), puis triées de la plus facile à la plus difficile. Avec une
+  banque d'au moins deux fois la taille d'un tirage (règle du validateur), deux tentatives successives
+  n'ont aucune question commune.
+- **Présentation** (`presentQuestion`) : options et colonne de droite mélangées ; un classement n'est
+  jamais présenté déjà dans le bon ordre.
+- **Saisie** ([`answer-input.ts`](../src/app/features/quizzes/answer-input.ts)) : choix (boutons radio
+  ou cases), association (une liste déroulante par élément), classement (boutons Monter / Descendre,
+  utilisables au clavier, nouvelle position annoncée aux lecteurs d'écran).
+- **Correction** : rien n'est montré avant l'envoi. Ensuite : score immédiat, réussite selon le seuil
+  du module, explication de chaque question et de chaque option, notions à revoir (objectifs des
+  questions ratées) et conseil de révision.
+- **Enregistrement** : chaque envoi ajoute une tentative (`recordQuizAttempt`) ; un quiz réussi valide
+  la leçon (ou la moitié des critères si elle a un laboratoire) et débloque la suite.
+- **Envoi incomplet** : refusé, avec un message d'erreur qui reçoit le focus et liste les questions
+  sans réponse.
+- **Limite connue :** les réponses attendues sont dans le JavaScript envoyé au navigateur ; une
+  correction côté serveur est prévue avec Supabase (étapes 9-10).
 
 ## 5. Progression
 
@@ -217,8 +240,10 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 - **Temps d'apprentissage :** le temps passé n'est pas mesurable de façon fiable dans le navigateur,
   il n'est donc pas affiché. Le tableau de bord affiche à la place le **temps de cours restant estimé**
   (somme des durées prévues des leçons non validées), présenté comme une estimation.
-- **Notions mal comprises :** elles demandent le lien question → objectif, qui vient avec les quiz
-  (étape 6).
+- **Notions mal comprises :** calculées à partir de la dernière tentative (`objectivesToReview`),
+  affichées après un quiz et dans la page « Quiz et examens ».
+- **Points d'expérience et badges :** pas encore. Stockés dans le navigateur, ils seraient
+  modifiables par l'apprenant ; ils viendront avec la progression enregistrée côté serveur (étape 10).
 
 ## 6. Sécurité et périmètre des simulations
 
