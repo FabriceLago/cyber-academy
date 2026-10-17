@@ -89,6 +89,19 @@ describe('ProgressStore', () => {
     ]);
   });
 
+  it('enregistre une tentative de laboratoire, réussie ou non', () => {
+    const store = TestBed.inject(ProgressStore);
+    const failed = { ...validLab, succeeded: false, completedAt: '2026-10-14T11:00:00.000Z' };
+    const passed = { ...failed, succeeded: true, completedAt: '2026-10-14T12:00:00.000Z' };
+    store.recordLabAttempt(failed);
+    store.recordLabAttempt(passed);
+    expect(store.state().labAttempts).toEqual([failed, passed]);
+    expect(parseProgress(localStorage.getItem('ca-progress')).labAttempts).toEqual([
+      failed,
+      passed,
+    ]);
+  });
+
   it('réinitialise les tentatives en gardant l’objectif hebdomadaire', () => {
     localStorage.setItem(
       'ca-progress',

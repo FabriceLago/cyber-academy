@@ -9,6 +9,8 @@ const PATHS = [
   '/lecons/hameconnage', // leçon verrouillée
   '/lecons/ordinateur-et-fichiers/quiz',
   '/lecons/securite-et-risques/quiz', // quiz verrouillé
+  '/laboratoires/lab-phishing', // laboratoire verrouillé
+  '/laboratoires/inexistant',
   '/lecons/inexistante',
   '/adresse-inexistante',
   '/erreur',

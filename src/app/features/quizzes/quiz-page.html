@@ -37,7 +37,11 @@
         @if (lessonState()?.status === 'completed') {
           <p>La leçon est validée.</p>
         } @else if (passed() && entry.lesson.labId) {
-          <p>Il reste à réussir le laboratoire de la leçon pour la valider (disponible à l’étape 8).</p>
+          <p>
+            Il reste à réussir
+            <a [routerLink]="['/laboratoires', entry.lesson.labId]">le laboratoire de la leçon</a>
+            pour la valider.
+          </p>
         }
 
         @if (review().length > 0) {

@@ -47,13 +47,19 @@ export const routes: Routes = [
       ),
     loadComponent: () => import('./features/lessons/lesson-page').then((m) => m.LessonPage),
   },
-  comingSoon(
-    'laboratoires',
-    'Laboratoires',
-    'flask',
-    'Le Cyber Lab : des exercices pratiques dans des environnements simulés, sans risque.',
-    'à l’étape 8',
-  ),
+  {
+    path: 'laboratoires',
+    title: 'Laboratoires',
+    loadComponent: () => import('./features/labs/labs-page').then((m) => m.LabsPage),
+  },
+  {
+    path: 'laboratoires/:labId',
+    title: (route) =>
+      import('./content/catalog').then(
+        (m) => m.findLab(route.paramMap.get('labId') ?? '')?.title ?? 'Laboratoire introuvable',
+      ),
+    loadComponent: () => import('./features/labs/lab-page').then((m) => m.LabPage),
+  },
   {
     path: 'lecons/:lessonId/quiz',
     title: (route) =>

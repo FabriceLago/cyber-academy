@@ -159,9 +159,11 @@
           <h3>{{ lab.lab.title }}</h3>
           <p>
             {{ lab.completed ? 'Laboratoire réussi.' : 'Laboratoire pas encore réussi.' }} Il fait partie
-            des critères de réussite de cette leçon.
+            des critères de réussite de cette leçon. Tout y est simulé : vous pouvez essayer sans risque.
           </p>
-          <p class="soon"><ca-icon name="clock" /> Le laboratoire simulé arrive à l’étape 8.</p>
+          <a class="btn btn-primary" [routerLink]="['/laboratoires', lab.lab.id]">
+            {{ lab.completed ? 'Refaire le laboratoire' : 'Ouvrir le laboratoire' }}
+          </a>
         </div>
       </section>
     }

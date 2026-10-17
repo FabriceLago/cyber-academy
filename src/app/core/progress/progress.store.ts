@@ -12,8 +12,7 @@ export const EMPTY_PROGRESS: ProgressState = {
 
 /**
  * Progression de l'apprenant, gardée dans le navigateur jusqu'à l'arrivée de Supabase
- * (étape 10). Les tentatives seront enregistrées par les quiz (étape 6) et les laboratoires
- * (étape 8).
+ * (étape 10). Les tentatives sont enregistrées par les quiz et les laboratoires.
  */
 @Injectable({ providedIn: 'root' })
 export class ProgressStore {
@@ -31,6 +30,12 @@ export class ProgressStore {
   recordQuizAttempt(attempt: QuizAttempt): void {
     const state = this.current();
     this.save({ ...state, quizAttempts: [...state.quizAttempts, attempt] });
+  }
+
+  /** Ajoute une tentative de laboratoire, réussie ou non. */
+  recordLabAttempt(attempt: LabAttempt): void {
+    const state = this.current();
+    this.save({ ...state, labAttempts: [...state.labAttempts, attempt] });
   }
 
   /** Efface toutes les tentatives ; l'objectif hebdomadaire, qui est un réglage, est conservé. */

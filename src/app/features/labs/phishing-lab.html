@@ -1,0 +1,115 @@
+<p class="context"><strong>Votre situation :</strong> {{ lab().context }}</p>
+<p class="rule">
+  Pour réussir un e-mail : un verdict juste, aucun élément sain signalé à tort et, s’il s’agit d’un
+  hameçonnage, au moins {{ minClues }} indices relevés.
+</p>
+
+@let mail = email();
+<p class="position">E-mail {{ index() + 1 }} sur {{ lab().emails.length }}</p>
+
+<article class="email" [attr.aria-labelledby]="uid + '-objet'">
+  <h3 [id]="uid + '-objet'" #subject tabindex="-1">{{ mail.subject }}</h3>
+  <dl class="headers">
+    <div>
+      <dt>De</dt>
+      <dd>
+        {{ mail.fromName }}
+        @if (addressShown()) {
+          <span class="address">&lt;{{ mail.fromAddress }}&gt;</span>
+        } @else {
+          <button type="button" class="btn btn-secondary" (click)="addressShown.set(true)">
+            Afficher l’adresse réelle
+          </button>
+        }
+      </dd>
+    </div>
+    <div>
+      <dt>Reçu</dt>
+      <dd>{{ mail.receivedAt }}</dd>
+    </div>
+  </dl>
+
+  <div class="body">
+    @for (paragraph of mail.body; track $index) {
+      <p>{{ paragraph }}</p>
+    }
+    @if (mail.link; as link) {
+      <p>
+        <span class="fake-link">{{ link.label }}</span>
+        <span class="visually-hidden">(lien désactivé dans ce laboratoire)</span>
+      </p>
+      @if (linkShown()) {
+        <p class="destination">Destination réelle du lien : <code>{{ link.url }}</code></p>
+      } @else {
+        <button type="button" class="btn btn-secondary" (click)="linkShown.set(true)">
+          Vérifier la destination du lien
+        </button>
+      }
+    }
+    @if (mail.attachment; as attachment) {
+      <p class="attachment"><strong>Pièce jointe :</strong> <code>{{ attachment }}</code></p>
+    }
+  </div>
+</article>
+
+@if (review(); as result) {
+  <section class="feedback" [class.passed]="result.passed" [attr.aria-labelledby]="uid + '-correction'">
+    <h3 [id]="uid + '-correction'" #feedback tabindex="-1">
+      <ca-icon [name]="result.passed ? 'check' : 'alert'" />
+      {{ result.passed ? 'Analyse juste' : 'Analyse à revoir' }}
+    </h3>
+    <p>
+      <strong>{{ mail.phishing ? 'C’était un hameçonnage.' : 'C’était un message légitime.' }}</strong>
+      {{ result.verdictCorrect ? 'Votre verdict est juste.' : 'Votre verdict était différent.' }}
+    </p>
+    <ul class="zones">
+      @for (zone of zoneResults(); track zone.id) {
+        <li [class.ok]="zone.ok">
+          <ca-icon [name]="zone.ok ? 'check' : 'close'" />
+          <span><strong>{{ zone.label }} : {{ zone.status }}.</strong> {{ zone.explanation }}</span>
+        </li>
+      }
+    </ul>
+    <p>{{ mail.verdict }}</p>
+    @if (!done()) {
+      <button type="button" class="btn btn-primary" (click)="next()">
+        {{ last() ? 'Voir le bilan' : 'E-mail suivant' }}
+      </button>
+    }
+  </section>
+} @else {
+  <form class="analysis" (submit)="submit($event)">
+    <fieldset>
+      <legend>Éléments suspects</legend>
+      <p class="hint">Cochez ce qui vous paraît anormal. Si rien ne l’est, ne cochez rien.</p>
+      @for (zone of zones(); track zone.id) {
+        <label class="choice">
+          <input type="checkbox" [checked]="flagged().has(zone.id)" (change)="toggle(zone.id)" />
+          {{ zone.label }}
+        </label>
+      }
+    </fieldset>
+    <fieldset>
+      <legend>Votre verdict</legend>
+      <label class="choice">
+        <input
+          type="radio"
+          [name]="uid + '-verdict'"
+          [checked]="verdict() === 'legitime'"
+          (change)="verdict.set('legitime')"
+        />
+        Message légitime
+      </label>
+      <label class="choice">
+        <input
+          type="radio"
+          [name]="uid + '-verdict'"
+          [checked]="verdict() === 'hameconnage'"
+          (change)="verdict.set('hameconnage')"
+        />
+        Hameçonnage
+      </label>
+    </fieldset>
+    <button type="submit" class="btn btn-primary" [disabled]="!verdict()">Valider mon analyse</button>
+  </form>
+}

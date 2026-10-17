@@ -1,11 +1,13 @@
-import { Catalog, LearningPath, Lesson, Module } from '../core/models/content.model';
+import { AnyLab, Catalog, LearningPath, Lesson, Module } from '../core/models/content.model';
+import { PHISHING_LAB } from './labs/lab-phishing';
+import { TERMINAL_LAB } from './labs/lab-terminal';
 import { ORDINATEUR_ET_FICHIERS } from './lessons/01-ordinateur-et-fichiers';
 import { DECOUVRIR_LE_TERMINAL } from './lessons/02-decouvrir-le-terminal';
 import { VOYAGE_D_UNE_INFORMATION } from './lessons/03-voyage-d-une-information';
 import { SECURITE_ET_RISQUES } from './lessons/04-securite-et-risques';
 import { HAMECONNAGE } from './lessons/05-hameconnage';
 
-/** Parcours complets, leçons rédigées. Les laboratoires sont développés à l'étape 8. */
+/** Parcours complets, leçons rédigées. */
 export const PATHS: readonly LearningPath[] = [
   {
     id: 'decouverte',
@@ -46,22 +48,16 @@ export function findLesson(
   return undefined;
 }
 
+/** Laboratoires du Cyber Lab, complets (scénario, environnement simulé, validation). */
+export const LABS: readonly AnyLab[] = [TERMINAL_LAB, PHISHING_LAB];
+
+export function findLab(id: string): AnyLab | undefined {
+  return LABS.find((lab) => lab.id === id);
+}
+
 export const CATALOG: Catalog = {
   paths: PATHS,
-  labs: [
-    {
-      id: 'lab-terminal',
-      kind: 'terminal',
-      title: 'Explorer un système de fichiers dans un terminal simulé',
-      skillIds: ['utiliser-un-terminal'],
-    },
-    {
-      id: 'lab-phishing',
-      kind: 'phishing',
-      title: 'Démasquer un e-mail d’hameçonnage',
-      skillIds: ['detecter-l-hameconnage'],
-    },
-  ],
+  labs: LABS,
   skills: [
     {
       id: 'decrire-un-ordinateur',

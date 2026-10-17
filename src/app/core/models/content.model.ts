@@ -177,7 +177,7 @@ export type LabKind = 'terminal' | 'phishing';
 
 /**
  * Partie commune des laboratoires. L'environnement simulé, les actions autorisées et la
- * validation automatique propres à chaque type sont définis avec son moteur (étape 8).
+ * validation automatique propres à chaque type sont dans `TerminalLab` et `PhishingLab`.
  */
 export interface Lab {
   readonly id: string;
@@ -191,6 +191,75 @@ export interface Lab {
   readonly debrief: string;
   readonly skillIds: readonly string[];
 }
+
+/** Élément du système de fichiers fictif d'un terminal simulé. */
+export type FsNode = FsFile | FsDir;
+
+export interface FsFile {
+  readonly kind: 'file';
+  readonly content: string;
+}
+
+export interface FsDir {
+  readonly kind: 'dir';
+  readonly children: Readonly<Record<string, FsNode>>;
+}
+
+/**
+ * Tâche vérifiée automatiquement sur l'état simulé : fichier affiché avec cat (`read`), dossier ou
+ * fichier existant (`dir`, `file`), dossier courant (`cwd`). Chemins absolus.
+ */
+export interface TerminalTask {
+  readonly id: string;
+  readonly text: string;
+  readonly check: { readonly kind: 'read' | 'dir' | 'file' | 'cwd'; readonly path: string };
+}
+
+export interface TerminalLab extends Lab {
+  readonly kind: 'terminal';
+  readonly user: string;
+  readonly host: string;
+  /** Dossier personnel : point de départ, cible de « cd » seul et de « ~ ». */
+  readonly home: string;
+  readonly filesystem: FsDir;
+  readonly tasks: readonly TerminalTask[];
+}
+
+/** Éléments d'un e-mail que l'apprenant peut signaler comme suspects. */
+export type EmailZone = 'expediteur' | 'objet' | 'demande' | 'lien' | 'piece-jointe';
+
+export interface ZoneReview {
+  readonly suspicious: boolean;
+  /** Montrée après l'analyse de l'apprenant, jamais avant. */
+  readonly explanation: string;
+}
+
+export interface LabEmail {
+  readonly id: string;
+  readonly fromName: string;
+  readonly fromAddress: string;
+  readonly subject: string;
+  /** Tel qu'affiché par la messagerie, par exemple « Aujourd'hui, 07:42 ». */
+  readonly receivedAt: string;
+  readonly body: readonly string[];
+  /** Le texte affiché et la vraie destination, révélée par l'équivalent du survol. */
+  readonly link?: { readonly label: string; readonly url: string };
+  readonly attachment?: string;
+  readonly phishing: boolean;
+  /** Analyse de chaque élément présent dans l'e-mail. */
+  readonly zones: Readonly<Partial<Record<EmailZone, ZoneReview>>>;
+  /** Pourquoi c'est, ou non, de l'hameçonnage, et le bon réflexe. */
+  readonly verdict: string;
+}
+
+export interface PhishingLab extends Lab {
+  readonly kind: 'phishing';
+  /** Qui est l'apprenant et quels domaines sont officiels : de quoi juger les adresses. */
+  readonly context: string;
+  readonly emails: readonly LabEmail[];
+}
+
+export type AnyLab = TerminalLab | PhishingLab;
 
 /**
  * Plan d'un parcours : ce que la navigation et le suivi de progression doivent connaître,

@@ -1,0 +1,117 @@
+@if (lab(); as lab) {
+  @let kind = kinds[lab.kind];
+  @let owner = lesson();
+
+  <nav class="crumbs" aria-label="Fil d’Ariane">
+    <a routerLink="/laboratoires">Laboratoires</a> › {{ lab.title }}
+  </nav>
+  <header class="page-header">
+    <p class="kind">Cyber Lab · {{ kind.label }}</p>
+    <h1 #title tabindex="-1">{{ lab.title }}</h1>
+    <p class="simulated"><ca-icon name="shield" /> <span>{{ kind.simulated }}</span></p>
+  </header>
+
+  @if (owner?.status === 'locked') {
+    <section class="card" aria-labelledby="verrou">
+      <h2 id="verrou">Laboratoire verrouillé</h2>
+      <p>
+        Ce laboratoire accompagne la leçon « {{ owner?.lesson?.title }} ». Il s’ouvre en même temps
+        qu’elle, après la leçon
+        @for (blocking of owner?.blockedBy ?? []; track blocking.id; let last = $last) {
+          « {{ blocking.title }} »{{ last ? '.' : ', ' }}
+        }
+      </p>
+      <a class="btn btn-primary" routerLink="/parcours">Voir le parcours</a>
+    </section>
+  } @else {
+    <section class="card" aria-labelledby="scenario-titre">
+      <h2 id="scenario-titre">Scénario</h2>
+      <p>{{ lab.scenario }}</p>
+      <h3>Objectifs</h3>
+      <ul>
+        @for (objective of lab.objectives; track $index) {
+          <li>{{ objective }}</li>
+        }
+      </ul>
+      <p class="muted">{{ kind.actions }}</p>
+      @if (completed()) {
+        <p class="already">
+          <ca-icon name="check" /> Vous avez déjà réussi ce laboratoire : vous pouvez le refaire pour
+          vous entraîner.
+        </p>
+      }
+    </section>
+
+    <section class="environment" aria-labelledby="environnement-titre">
+      <h2 id="environnement-titre">{{ kind.environment }}</h2>
+      @for (key of [runKey()]; track key) {
+        @if (terminal(); as terminalLab) {
+          <ca-terminal-lab [lab]="terminalLab" (completed)="finish($event)" />
+        }
+        @if (phishing(); as phishingLab) {
+          <ca-phishing-lab [lab]="phishingLab" (completed)="finish($event)" />
+        }
+      }
+    </section>
+
+    @if (outcome(); as outcome) {
+      <section class="card result" [class.passed]="outcome.succeeded" aria-labelledby="bilan-titre">
+        <h2 id="bilan-titre" #resultHeading tabindex="-1">
+          {{ outcome.succeeded ? 'Laboratoire réussi' : 'Laboratoire pas encore réussi' }}
+        </h2>
+        <ul>
+          @for (line of outcome.summary; track $index) {
+            <li>{{ line }}</li>
+          }
+          <li>Indices utilisés : {{ shownHints() }} sur {{ lab.hints.length }}.</li>
+        </ul>
+        @if (owner?.status === 'completed') {
+          <p><strong>La leçon « {{ owner?.lesson?.title }} » est validée.</strong></p>
+        } @else if (outcome.succeeded && owner) {
+          <p>Pour valider la leçon « {{ owner.lesson.title }} », il faut aussi réussir son quiz.</p>
+        } @else if (!outcome.succeeded) {
+          <p>Relisez la correction de chaque élément, puis recommencez : le laboratoire est réussi quand toutes les analyses sont justes.</p>
+        }
+
+        <h3>Explications</h3>
+        <p>{{ lab.debrief }}</p>
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary" (click)="restart()">
+            Recommencer le laboratoire
+          </button>
+          @if (owner) {
+            @if (owner.status !== 'completed' && outcome.succeeded) {
+              <a class="btn btn-secondary" [routerLink]="['/lecons', owner.lesson.id, 'quiz']">Passer le quiz</a>
+            }
+            <a class="btn btn-secondary" [routerLink]="['/lecons', owner.lesson.id]">Revenir à la leçon</a>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="card" aria-labelledby="indices-titre">
+        <h2 id="indices-titre">Indices</h2>
+        <p class="muted">
+          Bloqué ? Les indices se dévoilent un par un, du plus léger au plus précis. Leur nombre
+          apparaîtra dans votre bilan.
+        </p>
+        @for (hint of lab.hints.slice(0, shownHints()); track $index) {
+          <p class="hint"><strong>Indice {{ $index + 1 }} :</strong> {{ hint }}</p>
+        }
+        @if (shownHints() < lab.hints.length) {
+          <button type="button" class="btn btn-secondary" (click)="shownHints.set(shownHints() + 1)">
+            Afficher un indice ({{ lab.hints.length - shownHints() }} restant{{
+              lab.hints.length - shownHints() > 1 ? 's' : ''
+            }})
+          </button>
+        }
+      </section>
+    }
+  }
+} @else {
+  <header class="page-header">
+    <h1 #title tabindex="-1">Laboratoire introuvable</h1>
+    <p>Ce laboratoire n’existe pas, ou son adresse a changé.</p>
+  </header>
+  <a class="btn btn-primary" routerLink="/laboratoires">Voir tous les laboratoires</a>
+}

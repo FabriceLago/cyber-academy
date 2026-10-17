@@ -40,13 +40,14 @@ src/app/
 │  ├─ theme/             thème clair, sombre ou selon l'appareil          (étape 3, fait)
 │  ├─ progress/          règles de progression, stockage validé           (étape 4, fait)
 │  ├─ quiz/              tirage, correction, notions à revoir             (étape 6, fait)
+│  ├─ labs/              moteur du terminal simulé, correction phishing   (étape 8, fait)
 │  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
 ├─ shared/
 │  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
 │  ├─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
 │  ├─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
 │  └─ animation-player/  lecteur commun des animations pédagogiques       (étape 7, fait)
-├─ content/              catalogue et 5 leçons complètes (lessons/)       (étape 5, fait)
+├─ content/              catalogue, 5 leçons (lessons/), 2 labos (labs/)  (étapes 5 et 8, fait)
 └─ features/
    ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
    ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
@@ -57,7 +58,7 @@ src/app/
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
    │  └─ animations/     animation « Le trajet d'un paquet »              (étape 7, fait)
    ├─ quizzes/           page de quiz, liste des quiz, saisie des réponses (étape 6, fait)
-   ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8)
+   ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8, fait)
    └─ projects/          projets pratiques                                (après le MVP)
 e2e/                     tests Playwright
 docs/                    ce document
@@ -187,8 +188,8 @@ fictives.
   seulement après la réponse, rien d'enregistré), les critères de réussite, « Recommencer » et
   « Leçon suivante » (actif seulement si la leçon est validée). Une leçon verrouillée affiche ce qu'il
   faut valider d'abord, sans son contenu. Le titre d'onglet est celui de la leçon.
-- Annoncé dans la page, pas simulé : laboratoire (étape 8) ; animations des leçons 1, 2, 4 et 5 et
-  schémas des 5 démonstrations (pas encore planifiés, la description complète est affichée).
+- Annoncé dans la page, pas simulé : animations des leçons 1, 2, 4 et 5 et schémas des 5
+  démonstrations (pas encore planifiés, la description complète est affichée).
 
 ### Moteur de quiz (étape 6)
 
@@ -229,6 +230,33 @@ Fichier : [`quiz-engine.ts`](../src/app/core/quiz/quiz-engine.ts), testé dans `
   trajet animé (vérifié par test e2e).
 - **Alternative textuelle** : la description complète reste disponible sous l'animation ; un test
   vérifie que les légendes reprennent mot pour mot celle de la leçon.
+
+### Laboratoires (étape 8)
+
+Le Cyber Lab (`/laboratoires`) liste les laboratoires ; chacun s'ouvre en même temps que sa leçon
+(`/laboratoires/:id`). Page commune ([`lab-page`](../src/app/features/labs/lab-page.ts)) : scénario,
+objectifs, actions autorisées, environnement simulé, indices progressifs (comptés), puis bilan,
+explications et « Recommencer ». Chaque fin d'exercice est enregistrée (`recordLabAttempt`, réussie
+ou non) ; un laboratoire réussi, avec le quiz, valide la leçon.
+
+- **Terminal simulé** ([`terminal.ts`](../src/app/core/labs/terminal.ts)) : interpréteur d'une liste
+  fermée de commandes (`pwd`, `ls [-l]`, `cd`, `cat`, `mkdir`, `touch`, `clear`, `help`) sur un système
+  de fichiers fictif en mémoire, jamais modifié en place. Messages d'erreur proches des vrais (en
+  français) ; `rm`, `rmdir`, `sudo` et `su` sont refusés avec leur raison ; tout autre nom est
+  « commande introuvable ». Les tâches de la mission sont vérifiées sur l'état simulé : fichier lu,
+  dossier ou fichier créé, dossier courant. Invite qui suit le dossier courant, rappel des commandes
+  avec les flèches, sortie lue par les lecteurs d'écran (`role="log"`).
+- **Détecteur d'hameçonnage** ([`phishing.ts`](../src/app/core/labs/phishing.ts)) : 5 e-mails fictifs
+  (3 pièges, 2 légitimes). L'apprenant affiche l'adresse réelle, vérifie la destination du lien,
+  coche les éléments suspects et donne son verdict ; la correction, élément par élément, n'apparaît
+  qu'après. Un e-mail est réussi si le verdict est juste, si aucun élément sain n'est signalé à tort,
+  et, pour un piège, si au moins 2 indices sont relevés ; le laboratoire, si les 5 le sont.
+- **Sécurité** : aucune commande n'est exécutée, ni dans le navigateur ni ailleurs ; la saisie n'est
+  qu'une chaîne comparée à une liste, et tout est affiché comme du texte (jamais comme du HTML). Les
+  recherches passent par `Map` et `Object.hasOwn`, pour qu'un nom comme `constructor` ne trouve rien.
+  Les données sont fictives (domaines réservés `.example`, vérifié par test).
+- **Limite connue** : l'ordre des e-mails est fixe ; la correction est dans le JavaScript envoyé au
+  navigateur (comme pour les quiz, jusqu'à la vérification côté serveur).
 
 ## 5. Progression
 
