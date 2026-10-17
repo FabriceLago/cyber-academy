@@ -1,4 +1,4 @@
-import { DOCUMENT, Injectable, inject, signal } from '@angular/core';
+import { DOCUMENT, Injectable, computed, inject, signal } from '@angular/core';
 import { LabAttempt, ProgressState, QuizAttempt } from '../models/progress.model';
 
 const STORAGE_KEY = 'ca-progress';
@@ -11,15 +11,27 @@ export const EMPTY_PROGRESS: ProgressState = {
 };
 
 /**
- * Progression de l'apprenant, gardée dans le navigateur jusqu'à l'arrivée de Supabase
- * (étape 10). Les tentatives sont enregistrées par les quiz et les laboratoires.
+ * Progression de l'apprenant. Avec une session ouverte, c'est celle du compte, chargée et
+ * enregistrée par AccountProgress ; sinon, celle de ce navigateur (localStorage), que les
+ * méthodes ci-dessous modifient.
  */
 @Injectable({ providedIn: 'root' })
 export class ProgressStore {
   private readonly window = inject(DOCUMENT).defaultView;
   private readonly current = signal(this.read());
+  private readonly account = signal<ProgressState | null>(null);
 
-  readonly state = this.current.asReadonly();
+  /** Progression affichée par toutes les pages. */
+  readonly state = computed(() => this.account() ?? this.current());
+  /** Vrai quand la progression affichée est celle du compte. */
+  readonly fromAccount = computed(() => this.account() !== null);
+  /** Progression de ce navigateur, même quand celle du compte est affichée. */
+  readonly local = this.current.asReadonly();
+
+  /** Affiche la progression du compte, ou celle du navigateur (null). */
+  useAccount(state: ProgressState | null): void {
+    this.account.set(state);
+  }
 
   /** Objectif facultatif : nombre de leçons à valider par semaine (1 à 7), ou aucun. */
   setWeeklyGoal(goal: number | null): void {

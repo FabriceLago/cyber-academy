@@ -56,6 +56,26 @@
   border-left-color: var(--color-success);
 }
 
+.save-error {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border: 2px solid var(--color-danger);
+  border-radius: var(--radius-md);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+th,
+td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

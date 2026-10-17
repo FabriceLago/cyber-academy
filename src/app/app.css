@@ -207,3 +207,7 @@ main:focus {
     padding: var(--space-6) var(--space-6) var(--space-7);
   }
 }
+
+.settling {
+  color: var(--color-text-muted);
+}

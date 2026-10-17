@@ -4,7 +4,7 @@
 
 ## 1. Principes
 
-1. **La plateforme fonctionne sans compte.** Le compte (Supabase, étape 9) est facultatif ; jusqu'à l'étape 10, la progression reste dans le navigateur. Le modèle de contenu n'a pas changé.
+1. **La plateforme fonctionne sans compte.** Sans compte, la progression reste dans le navigateur ; avec un compte (facultatif), elle est enregistrée sur le serveur, qui corrige lui-même les quiz. Le modèle de contenu n'a pas changé.
 2. **Aucune commande réelle n'est exécutée**, ni dans le navigateur, ni dans une Edge Function, ni sur un serveur. Les laboratoires sont des simulations écrites en TypeScript.
 3. **On n'enregistre que des faits** (tentatives de quiz et de laboratoire). Leçon validée, points, compétences et révisions se calculent à partir d'eux.
 4. **Les points récompensent une compétence démontrée** (quiz réussi au-dessus du seuil, objectif de laboratoire atteint), jamais un clic ou une page vue.
@@ -219,8 +219,10 @@ Fichier : [`quiz-engine.ts`](../src/app/core/quiz/quiz-engine.ts), testé dans `
   la leçon (ou la moitié des critères si elle a un laboratoire) et débloque la suite.
 - **Envoi incomplet** : refusé, avec un message d'erreur qui reçoit le focus et liste les questions
   sans réponse.
-- **Limite connue :** les réponses attendues sont dans le JavaScript envoyé au navigateur ; une
-  correction côté serveur est prévue avec Supabase (étapes 9-10).
+- **Avec un compte**, la tentative est corrigée et enregistrée par le serveur (étape 10) : la
+  correction affichée est celle qu'il a retenue.
+- **Limite connue :** les réponses attendues sont encore dans le JavaScript envoyé au navigateur
+  (nécessaire à la correction sans compte). Les retirer est prévu à l'étape 12.
 
 ### Animations (étape 7)
 
@@ -279,17 +281,18 @@ projet hébergé sera créé au déploiement (étape 13).
 |---|---|---|
 | `profiles` | nom affiché, rôle (`apprenant` ou `admin`), objectif hebdomadaire | lire et modifier son seul profil, et seulement le nom et l'objectif |
 | `learning_paths`, `modules`, `lessons`, `labs` | structure du catalogue publié | lecture pour tous ; écriture réservée aux administrateurs |
-| `quiz_attempts`, `lab_attempts` | tentatives (faits datés) | lire les siennes ; aucune écriture (étape 10 : fonctions serveur qui corrigent elles-mêmes) |
+| `quiz_attempts`, `lab_attempts` | tentatives (faits datés) | lire les siennes ; écriture seulement par les fonctions `record_quiz_attempt` et `record_lab_attempt` |
+| `quiz_answer_keys` | clés de correction des 50 questions de quiz | aucun accès (aucune politique) |
 
 Clés étrangères, index sur `(user_id, …, date)`, horodatages, contraintes (bonnes réponses incluses
 dans les questions posées, sans doublon ; seuils entre 0 et 1 ; identifiants en minuscules). Le
 profil est créé par un déclencheur à l'inscription, toujours avec le rôle `apprenant` : le rôle
 `admin` ne s'attribue qu'en SQL. Tables du brief **non créées, volontairement** :
 `user_lesson_progress` (calculée à partir des tentatives), `lesson_content`, `quizzes`,
-`quiz_questions`, `quiz_options` (le contenu reste versionné avec l'application ; les clés de
-correction rejoindront la base à l'étape 10, dans une table illisible depuis le navigateur),
-`projects`, `project_submissions`, `achievements`, `user_achievements` (après le MVP et à
-l'étape 10).
+`quiz_questions`, `quiz_options` (le contenu reste versionné avec l'application ; seules les clés
+de correction sont en base, dans `quiz_answer_keys`), `achievements`, `user_achievements` (points
+et badges calculés à partir des tentatives, comme la progression), `projects`,
+`project_submissions` (après le MVP).
 
 **Catalogue :** `supabase/seed.sql` est généré à partir du contenu TypeScript
 (`npm run db:catalog`, et `-- --check` pour vérifier qu'il est à jour) ; ses `insert … on conflict`
@@ -339,15 +342,36 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 - **MVP :** stockage dans le navigateur (`localStorage`, clé `ca-progress`), avec `schemaVersion`
   pour migrer le format. L'utilisateur peut modifier ces données : chaque entrée est vérifiée à la
   lecture (`parseProgress`), les entrées invalides sont ignorées, les dates normalisées.
-- **Enregistrement des tentatives :** par les quiz (étape 6) et les laboratoires (étape 8).
-- **Étape 10 :** tables Supabase `quiz_attempts` et `lab_attempts`, en insertion seule, protégées par RLS.
+- **Avec un compte (étape 10)** : la progression affichée est celle du compte, chargée à l'ouverture
+  de la session ([`account-progress.ts`](../src/app/core/progress/account-progress.ts)). Chaque
+  tentative passe par une fonction serveur :
+  - `record_quiz_attempt(leçon, réponses)` vérifie que les questions appartiennent au quiz (bon
+    nombre, sans doublon), **corrige les réponses avec ses propres clés**, date avec l'heure du
+    serveur et renvoie la tentative enregistrée ;
+  - `record_lab_attempt(laboratoire, réussite, indices)` vérifie le laboratoire et date la fin ;
+  - limitation de débit : 30 tentatives de chaque sorte par heure et par compte.
+  L'objectif hebdomadaire est enregistré dans le profil. En cas d'échec réseau, un message le dit
+  et l'envoi peut être refait (les réponses sont conservées).
+- **Tentatives faites sans compte** : elles restent dans le navigateur et réapparaissent à la
+  déconnexion, mais ne sont pas ajoutées au compte, car le serveur n'a pas pu les vérifier ; le
+  profil l'indique.
+- **Au démarrage avec une session gardée**, les pages attendent la progression du compte (5 s au
+  plus) : sinon une leçon apparaîtrait verrouillée puis déverrouillée, ce qui recréerait un
+  laboratoire en cours. Les chargements ne réagissent qu'à un changement d'utilisateur, et un
+  chargement dépassé est ignoré.
 - **Temps d'apprentissage :** le temps passé n'est pas mesurable de façon fiable dans le navigateur,
   il n'est donc pas affiché. Le tableau de bord affiche à la place le **temps de cours restant estimé**
   (somme des durées prévues des leçons non validées), présenté comme une estimation.
 - **Notions mal comprises :** calculées à partir de la dernière tentative (`objectivesToReview`),
   affichées après un quiz et dans la page « Quiz et examens ».
-- **Points d'expérience et badges :** pas encore. Stockés dans le navigateur, ils seraient
-  modifiables par l'apprenant ; ils viendront avec la progression enregistrée côté serveur (étape 10).
+- **Points d'expérience et badges** ([`achievements.ts`](../src/app/core/progress/achievements.ts)),
+  réservés aux comptes (calculés à partir de tentatives vérifiées) : leçon validée 100, laboratoire
+  réussi 50, bonus sans indice 25, compétence acquise 150. Refaire un quiz réussi ne rapporte rien.
+  Badges : Premier pas, Sans faute, Persévérance (réussir après un échec), Premier laboratoire,
+  Sans indice, Première compétence, et un badge par parcours terminé. Affichés sur la page
+  Compétences ; total sur le tableau de bord.
+- **Historique des laboratoires** : date, résultat et indices de chaque tentative, sur la page du
+  laboratoire.
 
 ## 6. Sécurité et périmètre des simulations
 
@@ -359,7 +383,8 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 | Environnements isolés | Aucun. Si l'exécution réelle devient nécessaire : service séparé, éphémère et limité en ressources |
 
 Limites connues du MVP :
-- **Les réponses sont visibles par un apprenant curieux :** elles se trouvent dans le JavaScript envoyé au navigateur. Aucun badge ni examen ne sera présenté comme certifiant avant la correction côté serveur (étapes 9-10).
+- **Les réponses sont visibles par un apprenant curieux :** elles se trouvent dans le JavaScript envoyé au navigateur. Avec un compte, le serveur corrige lui-même, mais quelqu'un qui lit ce JavaScript peut envoyer les bonnes réponses. Les retirer du navigateur est prévu à l'étape 12 ; d'ici là, points et badges restent des repères pédagogiques, pas une certification.
+- **La réussite d'un laboratoire est déclarée par le navigateur** (simulation côté client) : le serveur vérifie le laboratoire et la date, pas le travail fait.
 - **Clé Supabase :** la clé secrète n'est jamais dans le front ni dans le dépôt ; seule la clé publique, protégée par RLS, y figure.
 
 ## 7. Feuille de route

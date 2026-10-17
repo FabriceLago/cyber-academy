@@ -18,20 +18,42 @@ const { outputFiles } = await build({
 const source = Buffer.from(outputFiles[0].text).toString('base64');
 const { PATHS, LABS } = await import(`data:text/javascript;base64,${source}`);
 
+const quote = (text) => `'${text.replaceAll("'", "''")}'`;
 const literal = (value) =>
-  typeof value === 'number' ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+  typeof value === 'number'
+    ? String(value)
+    : typeof value === 'object'
+      ? `${quote(JSON.stringify(value))}::jsonb`
+      : quote(String(value));
 
 /** insert … on conflict do update : le fichier peut être rejoué pour publier une mise à jour. */
-function upsert(table, rows) {
+function upsert(table, rows, key = ['id']) {
   const columns = Object.keys(rows[0]);
   const values = rows.map((row) => `  (${columns.map((c) => literal(row[c])).join(', ')})`);
-  const updates = columns.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`);
+  const updates = columns.filter((c) => !key.includes(c)).map((c) => `${c} = excluded.${c}`);
   return [
     `insert into public.${table} (${columns.join(', ')}) values`,
     `${values.join(',\n')}`,
-    `on conflict (id) do update set ${updates.join(', ')};`,
+    `on conflict (${key.join(', ')}) do update set ${updates.join(', ')};`,
     '',
   ].join('\n');
+}
+
+/** Clé de correction lue par record_quiz_attempt (voir la migration d'enregistrement). */
+function answerKey(question) {
+  switch (question.type) {
+    case 'single':
+    case 'multiple':
+      return { type: 'choice', correct: question.options.filter((o) => o.correct).map((o) => o.id) };
+    case 'true-false':
+      return { type: 'choice', correct: [String(question.answer)] };
+    case 'matching':
+      return { type: 'matching', pairs: question.pairs.map((p) => p.id) };
+    case 'ordering':
+      return { type: 'ordering', items: question.items.map((i) => i.id) };
+    default:
+      throw new Error(`Type de question inconnu : ${question.type}`);
+  }
 }
 
 const paths = PATHS.map((path, position) => ({
@@ -58,8 +80,16 @@ const lessons = PATHS.flatMap((path) =>
       title: lesson.title,
       duration_minutes: lesson.durationMinutes,
       position,
+      quiz_size: lesson.quiz.questionsPerAttempt,
     })),
   ),
+);
+const answerKeys = lessonOutlines.flatMap((lesson) =>
+  lesson.quiz.questions.map((question) => ({
+    lesson_id: lesson.id,
+    question_id: question.id,
+    answer: answerKey(question),
+  })),
 );
 const labs = LABS.map((lab) => {
   const lesson = lessonOutlines.find((l) => l.labId === lab.id);
@@ -75,6 +105,8 @@ const sql = [
   upsert('modules', modules),
   upsert('lessons', lessons),
   upsert('labs', labs),
+  '-- Clés de correction : illisibles depuis le navigateur (aucune politique RLS).',
+  upsert('quiz_answer_keys', answerKeys, ['lesson_id', 'question_id']),
 ].join('\n');
 
 if (process.argv.includes('--check')) {
@@ -87,6 +119,6 @@ if (process.argv.includes('--check')) {
 } else {
   await writeFile(OUT, sql);
   console.log(
-    `${OUT} : ${paths.length} parcours, ${modules.length} modules, ${lessons.length} leçons, ${labs.length} laboratoires.`,
+    `${OUT} : ${paths.length} parcours, ${modules.length} modules, ${lessons.length} leçons, ${labs.length} laboratoires, ${answerKeys.length} clés de correction.`,
   );
 }

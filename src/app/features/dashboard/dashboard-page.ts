@@ -2,6 +2,8 @@ import { DatePipe, PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/catalog';
+import { AccountProgress } from '../../core/progress/account-progress';
+import { badges, experience } from '../../core/progress/achievements';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { Icon } from '../../shared/icon/icon';
@@ -24,9 +26,15 @@ export function formatDuration(minutes: number): string {
 })
 export class DashboardPage {
   private readonly progress = inject(ProgressStore);
+  protected readonly account = inject(AccountProgress);
+  protected readonly fromAccount = this.progress.fromAccount;
 
   protected readonly summary = computed(() =>
     summarizeProgress(CATALOG, this.progress.state(), new Date()),
+  );
+  protected readonly xp = computed(() => experience(this.summary(), this.progress.state()).total);
+  protected readonly earnedBadges = computed(
+    () => badges(this.summary(), this.progress.state()).filter((b) => b.earned).length,
   );
   protected readonly globalRatio = computed(() => {
     const { completedLessons, lessons } = this.summary();

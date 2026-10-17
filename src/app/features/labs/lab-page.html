@@ -59,6 +59,14 @@
         <h2 id="bilan-titre" #resultHeading tabindex="-1">
           {{ outcome.succeeded ? 'Laboratoire réussi' : 'Laboratoire pas encore réussi' }}
         </h2>
+        @if (saveError()) {
+          <div class="save-error" role="alert">
+            <p><strong>Ce résultat n’a pas été enregistré sur votre compte.</strong> {{ saveError() }}</p>
+            <button type="button" class="btn btn-secondary" (click)="save(outcome)">
+              Réessayer l’enregistrement
+            </button>
+          </div>
+        }
         <ul>
           @for (line of outcome.summary; track $index) {
             <li>{{ line }}</li>
@@ -107,6 +115,35 @@
         }
       </section>
     }
+
+    <section class="card" aria-labelledby="historique-titre">
+      <h2 id="historique-titre">Historique</h2>
+      @if (history().length > 0) {
+        <table>
+          <caption class="visually-hidden">
+            Vos tentatives, de la plus récente à la plus ancienne
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Résultat</th>
+              <th scope="col">Indices</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (attempt of history(); track $index) {
+              <tr>
+                <td>{{ attempt.completedAt | date: 'd MMMM à HH:mm' }}</td>
+                <td>{{ attempt.succeeded ? 'Réussi' : 'Pas encore réussi' }}</td>
+                <td>{{ attempt.hintsUsed }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="muted">Aucune tentative pour l’instant.</p>
+      }
+    </section>
   }
 } @else {
   <header class="page-header">

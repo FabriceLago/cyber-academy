@@ -47,10 +47,12 @@ describe('AuthService', () => {
     emit({ user: { id: 'u1', email: 'lea@exemple.test' } });
     expect(auth.ready()).toBe(true);
     expect(auth.user()?.id).toBe('u1');
+    TestBed.tick();
     await flush();
     expect(auth.profile()).toEqual({ displayName: 'Léa', role: 'apprenant' });
 
     emit(null);
+    TestBed.tick();
     await flush();
     expect(auth.user()).toBeNull();
     expect(auth.profile()).toBeNull();

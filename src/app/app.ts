@@ -12,6 +12,7 @@ import {
 } from '@angular/router';
 import { filter, map, skip } from 'rxjs';
 import { AuthService } from './core/auth/auth.service';
+import { AccountProgress } from './core/progress/account-progress';
 import { ThemeService } from './core/theme/theme.service';
 import { Icon, IconName } from './shared/icon/icon';
 
@@ -43,6 +44,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
 export class App {
   protected readonly theme = inject(ThemeService);
   protected readonly auth = inject(AuthService);
+  /** Créé dès le démarrage : charge la progression du compte à l'ouverture d'une session. */
+  protected readonly accountProgress = inject(AccountProgress);
   protected readonly navItems = NAV_ITEMS;
   protected readonly menuOpen = signal(false);
   protected readonly themeToggleLabel = computed(() =>

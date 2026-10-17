@@ -71,6 +71,10 @@
   </nav>
 
   <main #main id="contenu" tabindex="-1">
-    <router-outlet />
+    @if (accountProgress.settled()) {
+      <router-outlet />
+    } @else {
+      <p class="settling" role="status">Chargement de votre progression…</p>
+    }
   </main>
 </div>

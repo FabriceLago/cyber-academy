@@ -79,6 +79,13 @@
           question(s) {{ missing().join(', ') }}.
         </p>
       </div>
+    } @else if (saveError()) {
+      <div class="card errors" role="alert" tabindex="-1" #errorSummary>
+        <p>
+          <strong>Vos réponses n’ont pas été enregistrées.</strong> {{ saveError() }} Elles sont
+          conservées : vous pouvez les renvoyer.
+        </p>
+      </div>
     }
 
     <ol class="questions">
@@ -104,7 +111,9 @@
     </ol>
 
     @if (!submitted()) {
-      <button type="button" class="btn btn-primary" (click)="submit()">Envoyer mes réponses</button>
+      <button type="button" class="btn btn-primary" (click)="submit()">
+        {{ saving() ? 'Envoi en cours…' : 'Envoyer mes réponses' }}
+      </button>
     }
   }
 } @else {

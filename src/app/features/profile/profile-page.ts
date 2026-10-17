@@ -10,6 +10,11 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import {
+  AccountProgress,
+  RecordError,
+  recordMessage,
+} from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 
@@ -58,10 +63,17 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       <p class="hint" id="weekly-goal-hint">
         Facultatif. Le tableau de bord indique où vous en êtes depuis lundi.
       </p>
+      <p role="status" class="hint">{{ goalMessage() }}</p>
     </section>
 
     <section class="card" aria-labelledby="progression">
       <h2 id="progression">Progression</h2>
+      @if (progress.fromAccount()) {
+        <p class="hint">
+          Vos tentatives sont enregistrées sur votre compte, après vérification par le serveur.
+          Elles forment votre historique et ne peuvent pas être effacées.
+        </p>
+      } @else {
       <p class="hint">Vos tentatives de quiz et de laboratoire sont gardées dans ce navigateur.</p>
       @if (confirmingReset()) {
         <p>
@@ -80,6 +92,7 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
         </button>
       }
       <p role="status" class="hint">{{ resetMessage() }}</p>
+      }
     </section>
 
     <section class="card" aria-labelledby="compte">
@@ -90,16 +103,24 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
           >{{ auth.profile() ? ', au nom de ' + auth.profile()?.displayName : '' }}.
         </p>
         <p class="hint">
-          Pour l’instant, votre progression reste enregistrée dans ce navigateur : elle sera
-          rattachée à votre compte à l’étape 10.
+          Votre progression est enregistrée sur votre compte : vous la retrouvez sur tous vos
+          appareils.
         </p>
+        @if (localAttempts() > 0) {
+          <p class="hint">
+            Ce navigateur garde aussi {{ localAttempts() }} tentative(s) faite(s) sans compte. Elles
+            ne sont pas ajoutées à votre compte, car le serveur n’a pas pu les vérifier ; elles
+            réapparaissent si vous vous déconnectez.
+          </p>
+        }
         <button type="button" class="btn btn-secondary" (click)="auth.signOut()">
           Se déconnecter
         </button>
       } @else {
         <p class="hint">
           Sans compte, tout fonctionne : votre progression est gardée dans ce navigateur. Un compte
-          gratuit permettra bientôt de la retrouver sur vos autres appareils.
+          gratuit l’enregistre sur le serveur, la rend disponible sur vos autres appareils et vous
+          fait gagner des points et des badges.
         </p>
         <div class="row">
           <a class="btn btn-primary" routerLink="/connexion">Se connecter</a>
@@ -190,13 +211,30 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 })
 export class ProfilePage {
   protected readonly auth = inject(AuthService);
-  private readonly progress = inject(ProgressStore);
+  protected readonly progress = inject(ProgressStore);
+  private readonly account = inject(AccountProgress);
   protected readonly weeklyGoal = computed(() => this.progress.state().weeklyGoal);
   protected readonly goalOptions = [1, 2, 3, 4, 5, 6, 7];
+  protected readonly goalMessage = signal('');
+  /** Tentatives faites sans compte dans ce navigateur. */
+  protected readonly localAttempts = computed(
+    () => this.progress.local().quizAttempts.length + this.progress.local().labAttempts.length,
+  );
 
-  protected setWeeklyGoal(event: Event): void {
+  protected async setWeeklyGoal(event: Event): Promise<void> {
     const value = (event.target as HTMLSelectElement).value;
-    this.progress.setWeeklyGoal(value === '' ? null : Number(value));
+    const goal = value === '' ? null : Number(value);
+    this.goalMessage.set('');
+    if (!this.account.active()) {
+      this.progress.setWeeklyGoal(goal);
+      return;
+    }
+    try {
+      await this.account.setWeeklyGoal(goal);
+      this.goalMessage.set('Objectif enregistré sur votre compte.');
+    } catch (error) {
+      this.goalMessage.set(error instanceof RecordError ? error.message : recordMessage({}));
+    }
   }
 
   private readonly injector = inject(Injector);

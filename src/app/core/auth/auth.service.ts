@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import type { Session } from '@supabase/supabase-js';
 import { AppSupabaseClient, SUPABASE } from '../supabase/supabase';
 
@@ -20,20 +20,29 @@ export class AuthService {
   /** Faux tant que la session gardée par le navigateur n'a pas été relue. */
   readonly ready = signal(false);
   readonly user = computed(() => this.session()?.user ?? null);
+  /**
+   * Identifiant seul : ne change que si l'utilisateur change. Chaque événement de session crée
+   * un nouvel objet `user` ; réagir à `user` relancerait les chargements à chaque événement.
+   */
+  readonly userId = computed(() => this.session()?.user.id ?? null);
   readonly profile = signal<Profile | null>(null);
 
   constructor() {
     this.client.then(
       (supabase) =>
+        // Pas d'appel à Supabase dans ce rappel (il bloquerait le client) : le profil est
+        // chargé par l'effet ci-dessous, après coup.
         supabase.auth.onAuthStateChange((_event, session) => {
           this.session.set(session);
           this.ready.set(true);
-          // Pas d'appel à Supabase dans ce rappel : il bloquerait le client. On le diffère.
-          setTimeout(() => void this.loadProfile(session?.user.id ?? null));
         }),
       // Bibliothèque impossible à charger (hors ligne) : on continue sans compte.
       () => this.ready.set(true),
     );
+    effect(() => {
+      const userId = this.userId();
+      untracked(() => void this.loadProfile(userId));
+    });
   }
 
   async signUp(email: string, password: string, displayName: string): Promise<AuthResult> {
@@ -84,7 +93,7 @@ export class AuthService {
       .eq('id', userId)
       .maybeSingle();
     // Une réponse arrivée après une déconnexion ne doit pas réafficher l'ancien profil.
-    if (this.user()?.id !== userId) return;
+    if (this.userId() !== userId) return;
     this.profile.set(data ? { displayName: data.display_name, role: data.role } : null);
   }
 }

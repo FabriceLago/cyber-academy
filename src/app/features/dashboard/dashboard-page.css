@@ -123,3 +123,7 @@ td {
 .result.passed {
   color: var(--color-success);
 }
+
+.load-error {
+  border-color: var(--color-danger);
+}

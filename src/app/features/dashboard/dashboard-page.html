@@ -5,6 +5,13 @@
 
 @let s = summary();
 
+@if (account.status() === 'error') {
+  <p class="card load-error" role="alert">
+    La progression enregistrée sur votre compte n’a pas pu être chargée : celle de ce navigateur
+    est affichée. Vérifiez votre connexion, puis rechargez la page.
+  </p>
+}
+
 <section class="card next" aria-labelledby="next-title">
   @if (s.nextLesson; as next) {
     <p class="eyebrow">Prochaine étape recommandée</p>
@@ -59,6 +66,13 @@
       <span class="value">{{ acquiredSkills() }} sur {{ s.skills.length }}</span>
       <a routerLink="/competences">Voir le détail</a>
     </li>
+    @if (fromAccount()) {
+      <li class="card stat">
+        <span class="label">Points d’expérience</span>
+        <span class="value">{{ xp() }}</span>
+        <a routerLink="/competences">Badges obtenus : {{ earnedBadges() }}</a>
+      </li>
+    }
   </ul>
 </section>
 

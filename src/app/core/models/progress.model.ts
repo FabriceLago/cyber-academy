@@ -1,7 +1,8 @@
 /**
  * Progression d'un apprenant. On n'enregistre que des faits datés, en ajout seul :
  * leçon validée, points d'expérience, compétences et révisions en sont dérivés.
- * MVP : stocké dans le navigateur ; étape 10 : tables Supabase quiz_attempts et lab_attempts.
+ * Sans compte : stocké dans le navigateur ; avec un compte : tables Supabase quiz_attempts et
+ * lab_attempts, remplies par les fonctions serveur (voir account-progress.ts).
  */
 
 export interface QuizAttempt {

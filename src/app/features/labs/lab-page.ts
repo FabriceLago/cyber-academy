@@ -11,10 +11,16 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CATALOG, findLab } from '../../content/catalog';
 import { LabKind } from '../../core/models/content.model';
 import { summarizeProgress } from '../../core/progress/progress';
+import {
+  AccountProgress,
+  RecordError,
+  recordMessage,
+} from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { Icon } from '../../shared/icon/icon';
 import { PhishingLabView } from './phishing-lab';
@@ -60,7 +66,7 @@ export const LAB_KINDS: Record<
  */
 @Component({
   selector: 'ca-lab-page',
-  imports: [RouterLink, Icon, TerminalLabView, PhishingLabView],
+  imports: [RouterLink, DatePipe, Icon, TerminalLabView, PhishingLabView],
   templateUrl: './lab-page.html',
   styleUrl: './lab-page.css',
 })
@@ -68,6 +74,7 @@ export class LabPage {
   readonly labId = input.required<string>();
 
   private readonly progress = inject(ProgressStore);
+  private readonly account = inject(AccountProgress);
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');
@@ -107,15 +114,42 @@ export class LabPage {
     return null;
   });
 
+  /** Message si le résultat n'a pas pu être enregistré sur le compte. */
+  protected readonly saveError = linkedSignal(() => {
+    this.runKey();
+    return '';
+  });
+  /** Historique de ce laboratoire, de la tentative la plus récente à la plus ancienne. */
+  protected readonly history = computed(() =>
+    this.progress
+      .state()
+      .labAttempts.filter((a) => a.labId === this.labId())
+      .reverse(),
+  );
+
   protected finish(outcome: LabOutcome): void {
-    this.progress.recordLabAttempt({
-      labId: this.labId(),
-      completedAt: new Date().toISOString(),
-      succeeded: outcome.succeeded,
-      hintsUsed: this.shownHints(),
-    });
     this.outcome.set(outcome);
+    void this.save(outcome);
     this.focusAfterRender(() => this.resultHeading());
+  }
+
+  /** Avec un compte, le serveur enregistre ; sinon, ce navigateur. */
+  protected async save(outcome: LabOutcome): Promise<void> {
+    this.saveError.set('');
+    if (!this.account.active()) {
+      this.progress.recordLabAttempt({
+        labId: this.labId(),
+        completedAt: new Date().toISOString(),
+        succeeded: outcome.succeeded,
+        hintsUsed: this.shownHints(),
+      });
+      return;
+    }
+    try {
+      await this.account.recordLabAttempt(this.labId(), outcome.succeeded, this.shownHints());
+    } catch (error) {
+      this.saveError.set(error instanceof RecordError ? error.message : recordMessage({}));
+    }
   }
 
   protected restart(): void {

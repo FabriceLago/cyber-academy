@@ -78,13 +78,13 @@ isOneToOne: true
                   ]
                 },"lessons": {
                   Row: {
-                    "created_at": string,"duration_minutes": number,"id": string,"module_id": string,"position": number,"title": string,"updated_at": string
+                    "created_at": string,"duration_minutes": number,"id": string,"module_id": string,"position": number,"quiz_size": number,"title": string,"updated_at": string
                   }
                   Insert: {
-                    "created_at"?: string,"duration_minutes": number,"id": string,"module_id": string,"position": number,"title": string,"updated_at"?: string
+                    "created_at"?: string,"duration_minutes": number,"id": string,"module_id": string,"position": number,"quiz_size"?: number,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"duration_minutes"?: number,"id"?: string,"module_id"?: string,"position"?: number,"title"?: string,"updated_at"?: string
+                    "created_at"?: string,"duration_minutes"?: number,"id"?: string,"module_id"?: string,"position"?: number,"quiz_size"?: number,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -127,6 +127,25 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"quiz_answer_keys": {
+                  Row: {
+                    "answer": NonNullable<Json>,"created_at": string,"lesson_id": string,"question_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "answer": NonNullable<Json>,"created_at"?: string,"lesson_id": string,"question_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "answer"?: NonNullable<Json>,"created_at"?: string,"lesson_id"?: string,"question_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "quiz_answer_keys_lesson_id_fkey"
+      columns: ["lesson_id"]
+isOneToOne: false
+      referencedRelation: "lessons"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"quiz_attempts": {
                   Row: {
                     "correct_question_ids": (string)[],"created_at": string,"id": number,"lesson_id": string,"question_ids": (string)[],"submitted_at": string,"user_id": string
@@ -152,12 +171,50 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "has_distinct_elements":
+            "check_attempt_rate":
+{ Args: { "recent": number }; Returns: undefined
+                           },
+"has_distinct_elements":
 { Args: { "items": (string)[] }; Returns: boolean
                            },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
-                           }
+                           },
+"is_answer_correct":
+{ Args: { "answer": Json,"answer_key": Json }; Returns: boolean
+                           },
+"record_lab_attempt":
+{ Args: { "p_hints_used": number,"p_lab_id": string,"p_succeeded": boolean }; Returns: {
+              "completed_at": string,
+"created_at": string,
+"hints_used": number,
+"id": number,
+"lab_id": string,
+"succeeded": boolean,
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_attempts"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"record_quiz_attempt":
+{ Args: { "p_answers": Json,"p_lesson_id": string }; Returns: {
+              "correct_question_ids": (string)[],
+"created_at": string,
+"id": number,
+"lesson_id": string,
+"question_ids": (string)[],
+"submitted_at": string,
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "quiz_attempts"
+        isOneToOne: true
+        isSetofReturn: false
+      } }
           }
           Enums: {
             "app_role": "apprenant"|"admin"

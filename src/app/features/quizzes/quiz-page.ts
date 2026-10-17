@@ -17,6 +17,12 @@ import { RouterLink } from '@angular/router';
 import { CATALOG, findLesson } from '../../content/catalog';
 import { QuizAttempt } from '../../core/models/progress.model';
 import { quizScore, summarizeProgress } from '../../core/progress/progress';
+import {
+  AccountProgress,
+  RecordError,
+  recordMessage,
+  toAnswerPayload,
+} from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import {
   Answer,
@@ -44,6 +50,7 @@ export class QuizPage {
   readonly lessonId = input.required<string>();
 
   private readonly progress = inject(ProgressStore);
+  private readonly account = inject(AccountProgress);
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');
@@ -92,6 +99,13 @@ export class QuizPage {
     return [];
   });
 
+  /** Envoi au compte en cours, et message si l'enregistrement a échoué. */
+  protected readonly saving = signal(false);
+  protected readonly saveError = linkedSignal(() => {
+    this.drawn();
+    return '';
+  });
+
   protected readonly score = computed(() => {
     const attempt = this.submitted();
     return attempt ? quizScore(attempt) : 0;
@@ -109,15 +123,20 @@ export class QuizPage {
     return this.answers().get(presented.question.id) ?? null;
   }
 
+  /** Après l'envoi : la correction enregistrée (celle du serveur avec un compte). */
   protected isCorrect(presented: PresentedQuestion): boolean {
-    return isAnswerCorrect(presented.question, this.answerOf(presented));
+    const attempt = this.submitted();
+    return attempt
+      ? attempt.correctQuestionIds.includes(presented.question.id)
+      : isAnswerCorrect(presented.question, this.answerOf(presented));
   }
 
   protected setAnswer(questionId: string, answer: Answer | null): void {
     this.answers.update((answers) => new Map(answers).set(questionId, answer));
   }
 
-  protected submit(): void {
+  protected async submit(): Promise<void> {
+    if (this.saving()) return;
     const drawn = this.drawn();
     const missing = drawn
       .map((p, i) => (isAnswerComplete(p.question, this.answerOf(p)) ? 0 : i + 1))
@@ -127,6 +146,31 @@ export class QuizPage {
       this.focusAfterRender(() => this.errorSummary());
       return;
     }
+    this.missing.set([]);
+    this.saveError.set('');
+    this.saving.set(true);
+    try {
+      // Avec un compte, le serveur corrige lui-même et enregistre ; sinon, ce navigateur.
+      const attempt = this.account.active()
+        ? await this.account.recordQuizAttempt(
+            this.lessonId(),
+            drawn.flatMap((p) => {
+              const answer = this.answerOf(p);
+              return answer ? [toAnswerPayload(p.question.id, answer)] : [];
+            }),
+          )
+        : this.recordLocally(drawn);
+      this.submitted.set(attempt);
+      this.focusAfterRender(() => this.resultHeading());
+    } catch (error) {
+      this.saveError.set(error instanceof RecordError ? error.message : recordMessage({}));
+      this.focusAfterRender(() => this.errorSummary());
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private recordLocally(drawn: readonly PresentedQuestion[]): QuizAttempt {
     const attempt: QuizAttempt = {
       lessonId: this.lessonId(),
       submittedAt: new Date().toISOString(),
@@ -134,9 +178,7 @@ export class QuizPage {
       correctQuestionIds: drawn.filter((p) => this.isCorrect(p)).map((p) => p.question.id),
     };
     this.progress.recordQuizAttempt(attempt);
-    this.missing.set([]);
-    this.submitted.set(attempt);
-    this.focusAfterRender(() => this.resultHeading());
+    return attempt;
   }
 
   protected retry(): void {

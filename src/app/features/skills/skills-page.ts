@@ -1,5 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/catalog';
+import { badges, experience } from '../../core/progress/achievements';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { Icon } from '../../shared/icon/icon';
@@ -7,7 +9,7 @@ import { ProgressBar } from '../../shared/progress-bar/progress-bar';
 
 @Component({
   selector: 'ca-skills-page',
-  imports: [Icon, ProgressBar],
+  imports: [RouterLink, Icon, ProgressBar],
   template: `
     <header class="page-header">
       <h1>Compétences</h1>
@@ -55,8 +57,85 @@ import { ProgressBar } from '../../shared/progress-bar/progress-bar';
         </li>
       }
     </ul>
+
+    <section class="card rewards" aria-labelledby="points-titre">
+      <h2 id="points-titre">Points d’expérience et badges</h2>
+      @if (progress.fromAccount()) {
+        <p class="summary">{{ xp().total }} points d’expérience</p>
+        <ul class="xp">
+          @for (line of xp().lines; track line.label) {
+            <li>{{ line.label }} : {{ line.count }} × {{ line.each }} = {{ line.points }} points</li>
+          }
+        </ul>
+      } @else {
+        <p>
+          Les points et les badges sont réservés aux comptes : ils sont calculés à partir de
+          tentatives vérifiées par le serveur, pas modifiables dans le navigateur.
+          <a routerLink="/inscription">Créer un compte gratuit</a>
+        </p>
+      }
+      <p class="muted">
+        Les points récompensent ce que vous avez démontré : une leçon validée, un laboratoire réussi,
+        une compétence acquise. Lire une page ou refaire un quiz déjà réussi ne rapporte rien.
+      </p>
+      <h3>Badges</h3>
+      <ul class="badges">
+        @for (badge of badgeList(); track badge.id) {
+          @let earned = badge.earned && progress.fromAccount();
+          <li [class.earned]="earned">
+            <ca-icon [name]="earned ? 'award' : 'lock'" />
+            <span>
+              <strong>{{ badge.title }}</strong>
+              <span class="badge-state">{{ earned ? 'Obtenu' : 'À obtenir' }}</span>
+              <br />
+              {{ badge.description }}
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
   `,
   styles: `
+    .rewards {
+      margin-top: var(--space-5);
+    }
+
+    .xp,
+    .badges {
+      padding: 0;
+      list-style: none;
+    }
+
+    .badges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+      gap: var(--space-3);
+    }
+
+    .badges li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-2);
+      padding: var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text-muted);
+    }
+
+    .badges li.earned {
+      border-color: var(--color-success);
+      color: var(--color-text);
+    }
+
+    .badges li.earned ca-icon {
+      color: var(--color-success);
+    }
+
+    .badge-state {
+      margin-left: var(--space-2);
+      font-size: var(--text-sm);
+    }
+
     .summary {
       margin-bottom: var(--space-1);
       font-size: var(--text-lg);
@@ -125,10 +204,15 @@ import { ProgressBar } from '../../shared/progress-bar/progress-bar';
   `,
 })
 export class SkillsPage {
-  private readonly progress = inject(ProgressStore);
+  protected readonly progress = inject(ProgressStore);
 
+  private readonly summary = computed(() =>
+    summarizeProgress(CATALOG, this.progress.state(), new Date()),
+  );
+  protected readonly xp = computed(() => experience(this.summary(), this.progress.state()));
+  protected readonly badgeList = computed(() => badges(this.summary(), this.progress.state()));
   protected readonly skills = computed(() =>
-    summarizeProgress(CATALOG, this.progress.state(), new Date()).skills.map((item) => ({
+    this.summary().skills.map((item) => ({
       ...item,
       done: item.activities.filter((activity) => activity.completed).length,
     })),
