@@ -11,6 +11,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter, map, skip } from 'rxjs';
+import { AuthService } from './core/auth/auth.service';
 import { ThemeService } from './core/theme/theme.service';
 import { Icon, IconName } from './shared/icon/icon';
 
@@ -41,6 +42,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
 })
 export class App {
   protected readonly theme = inject(ThemeService);
+  protected readonly auth = inject(AuthService);
   protected readonly navItems = NAV_ITEMS;
   protected readonly menuOpen = signal(false);
   protected readonly themeToggleLabel = computed(() =>

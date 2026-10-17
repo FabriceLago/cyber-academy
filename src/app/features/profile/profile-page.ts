@@ -8,13 +8,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
-import { EmptyState } from '../../shared/empty-state/empty-state';
 
 @Component({
   selector: 'ca-profile-page',
-  imports: [EmptyState],
+  imports: [RouterLink],
   template: `
     <header class="page-header">
       <h1>Profil et paramètres</h1>
@@ -81,12 +82,31 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
       <p role="status" class="hint">{{ resetMessage() }}</p>
     </section>
 
-    <ca-empty-state icon="user" heading="Compte utilisateur">
-      <p>
-        Le compte utilisateur arrive à l’étape 9 : votre progression pourra alors vous suivre d’un
-        appareil à l’autre.
-      </p>
-    </ca-empty-state>
+    <section class="card" aria-labelledby="compte">
+      <h2 id="compte">Compte</h2>
+      @if (auth.user(); as user) {
+        <p>
+          Session ouverte avec l’adresse <strong>{{ user.email }}</strong
+          >{{ auth.profile() ? ', au nom de ' + auth.profile()?.displayName : '' }}.
+        </p>
+        <p class="hint">
+          Pour l’instant, votre progression reste enregistrée dans ce navigateur : elle sera
+          rattachée à votre compte à l’étape 10.
+        </p>
+        <button type="button" class="btn btn-secondary" (click)="auth.signOut()">
+          Se déconnecter
+        </button>
+      } @else {
+        <p class="hint">
+          Sans compte, tout fonctionne : votre progression est gardée dans ce navigateur. Un compte
+          gratuit permettra bientôt de la retrouver sur vos autres appareils.
+        </p>
+        <div class="row">
+          <a class="btn btn-primary" routerLink="/connexion">Se connecter</a>
+          <a class="btn btn-secondary" routerLink="/inscription">Créer un compte</a>
+        </div>
+      }
+    </section>
   `,
   styles: `
     section {
@@ -169,6 +189,7 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
   `,
 })
 export class ProfilePage {
+  protected readonly auth = inject(AuthService);
   private readonly progress = inject(ProgressStore);
   protected readonly weeklyGoal = computed(() => this.progress.state().weeklyGoal);
   protected readonly goalOptions = [1, 2, 3, 4, 5, 6, 7];

@@ -23,6 +23,17 @@
       <ca-icon [name]="menuOpen() ? 'close' : 'menu'" />
       Menu
     </button>
+    @if (auth.user()) {
+      <a class="btn btn-ghost account" routerLink="/profil">
+        <ca-icon name="user" />
+        <span class="account-label">{{ auth.profile()?.displayName ?? 'Mon compte' }}</span>
+      </a>
+    } @else if (auth.ready()) {
+      <a class="btn btn-ghost account" routerLink="/connexion">
+        <ca-icon name="user" />
+        <span class="account-label">Se connecter</span>
+      </a>
+    }
     <button
       type="button"
       class="btn btn-ghost btn-icon"

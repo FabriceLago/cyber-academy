@@ -48,6 +48,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/lessons/lesson-page').then((m) => m.LessonPage),
   },
   {
+    path: 'connexion',
+    title: 'Connexion',
+    data: { mode: 'connexion' },
+    loadComponent: () => import('./features/auth/auth-page').then((m) => m.AuthPage),
+  },
+  {
+    path: 'inscription',
+    title: 'Créer un compte',
+    data: { mode: 'inscription' },
+    loadComponent: () => import('./features/auth/auth-page').then((m) => m.AuthPage),
+  },
+  {
     path: 'laboratoires',
     title: 'Laboratoires',
     loadComponent: () => import('./features/labs/labs-page').then((m) => m.LabsPage),

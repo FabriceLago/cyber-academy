@@ -50,6 +50,7 @@
   align-items: center;
   gap: var(--space-2);
   height: var(--topbar-height); /* en rem : suit la taille de texte choisie par l'utilisateur */
+  min-width: 0; /* sinon la grille s'élargit à la largeur du nom complet, sur un téléphone */
   padding: 0 var(--space-4);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -78,6 +79,28 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.account {
+  max-width: 14rem;
+}
+
+.account-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Sur un téléphone, l'icône seule : le texte reste lu par les lecteurs d'écran. */
+@media (max-width: 40rem) {
+  .account-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* Le menu se superpose au contenu, juste sous l'en-tête, même si la page a défilé. */

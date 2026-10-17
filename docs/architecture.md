@@ -4,7 +4,7 @@
 
 ## 1. Principes
 
-1. **Le MVP fonctionne entièrement dans le navigateur.** Supabase arrive à l'étape 9 sans changer le modèle de contenu.
+1. **La plateforme fonctionne sans compte.** Le compte (Supabase, étape 9) est facultatif ; jusqu'à l'étape 10, la progression reste dans le navigateur. Le modèle de contenu n'a pas changé.
 2. **Aucune commande réelle n'est exécutée**, ni dans le navigateur, ni dans une Edge Function, ni sur un serveur. Les laboratoires sont des simulations écrites en TypeScript.
 3. **On n'enregistre que des faits** (tentatives de quiz et de laboratoire). Leçon validée, points, compétences et révisions se calculent à partir d'eux.
 4. **Les points récompensent une compétence démontrée** (quiz réussi au-dessus du seuil, objectif de laboratoire atteint), jamais un clic ou une page vue.
@@ -24,7 +24,9 @@ Versions installées et vérifiées le 2026-10-16.
 | Lint | angular-eslint : TypeScript, templates et règles d'accessibilité des templates | 22.6.0 |
 | Styles | CSS natif ; les jetons du design system sont des variables CSS (étape 3) | — |
 | Animations | SVG, CSS, Web Animations API et `animate.enter` / `animate.leave` d'Angular | — |
-| Données (étape 9) | Supabase : PostgreSQL, Auth, Row Level Security | — |
+| Données (étape 9) | Supabase local : PostgreSQL, Auth, Row Level Security ; CLI en dépendance de développement | CLI 2.119.0 |
+| Client Supabase | `@supabase/supabase-js`, chargé à la demande (hors du premier affichage) | 2.118.0 |
+| Génération du catalogue SQL | esbuild (lit le contenu TypeScript depuis Node) | 0.28.2 |
 | Poste | Windows 11, Node 24.22.0, npm 11.19.1, VS Code | — |
 
 **Pas de Tailwind :** le CSS moderne (variables, `clamp()`, grilles, `prefers-color-scheme`) couvre le besoin sans dépendance.
@@ -41,6 +43,8 @@ src/app/
 │  ├─ progress/          règles de progression, stockage validé           (étape 4, fait)
 │  ├─ quiz/              tirage, correction, notions à revoir             (étape 6, fait)
 │  ├─ labs/              moteur du terminal simulé, correction phishing   (étape 8, fait)
+│  ├─ supabase/          client typé, types générés du schéma             (étape 9, fait)
+│  ├─ auth/              session, profil, messages d'erreur               (étape 9, fait)
 │  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
 ├─ shared/
 │  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
@@ -50,8 +54,9 @@ src/app/
 ├─ content/              catalogue, 5 leçons (lessons/), 2 labos (labs/)  (étapes 5 et 8, fait)
 └─ features/
    ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
+   ├─ auth/              connexion et création de compte                  (étape 9, fait)
    ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
-   ├─ profile/           thème, objectif hebdomadaire, réinitialisation   (étape 5, fait)
+   ├─ profile/           thème, objectif, réinitialisation, compte        (étapes 5 et 9, fait)
    ├─ dashboard/         tableau de bord                                  (étape 4, fait)
    ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours                               (étape 5, fait)
@@ -60,6 +65,9 @@ src/app/
    ├─ quizzes/           page de quiz, liste des quiz, saisie des réponses (étape 6, fait)
    ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8, fait)
    └─ projects/          projets pratiques                                (après le MVP)
+src/environments/        URL et clé publique de Supabase (local)          (étape 9, fait)
+supabase/                config locale, migrations, seed, tests RLS       (étape 9, fait)
+scripts/                 génération du catalogue SQL et des types         (étape 9, fait)
 e2e/                     tests Playwright
 docs/                    ce document
 ```
@@ -258,6 +266,55 @@ ou non) ; un laboratoire réussi, avec le quiz, valide la leçon.
 - **Limite connue** : l'ordre des e-mails est fixe ; la correction est dans le JavaScript envoyé au
   navigateur (comme pour les quiz, jusqu'à la vérification côté serveur).
 
+### Supabase et comptes (étape 9)
+
+**Où :** une pile Supabase **locale** (`npm run db:start`), sur les ports 546xx (API 54621, base
+54622) pour ne pas gêner les autres projets du poste, réduite à la base, l'authentification, l'API
+et la passerelle (Studio, temps réel, stockage, e-mails, fonctions et analytique désactivés). Le
+projet hébergé sera créé au déploiement (étape 13).
+
+**Schéma** (migrations versionnées dans [`supabase/migrations`](../supabase/migrations)) :
+
+| Table | Contenu | Accès depuis le navigateur |
+|---|---|---|
+| `profiles` | nom affiché, rôle (`apprenant` ou `admin`), objectif hebdomadaire | lire et modifier son seul profil, et seulement le nom et l'objectif |
+| `learning_paths`, `modules`, `lessons`, `labs` | structure du catalogue publié | lecture pour tous ; écriture réservée aux administrateurs |
+| `quiz_attempts`, `lab_attempts` | tentatives (faits datés) | lire les siennes ; aucune écriture (étape 10 : fonctions serveur qui corrigent elles-mêmes) |
+
+Clés étrangères, index sur `(user_id, …, date)`, horodatages, contraintes (bonnes réponses incluses
+dans les questions posées, sans doublon ; seuils entre 0 et 1 ; identifiants en minuscules). Le
+profil est créé par un déclencheur à l'inscription, toujours avec le rôle `apprenant` : le rôle
+`admin` ne s'attribue qu'en SQL. Tables du brief **non créées, volontairement** :
+`user_lesson_progress` (calculée à partir des tentatives), `lesson_content`, `quizzes`,
+`quiz_questions`, `quiz_options` (le contenu reste versionné avec l'application ; les clés de
+correction rejoindront la base à l'étape 10, dans une table illisible depuis le navigateur),
+`projects`, `project_submissions`, `achievements`, `user_achievements` (après le MVP et à
+l'étape 10).
+
+**Catalogue :** `supabase/seed.sql` est généré à partir du contenu TypeScript
+(`npm run db:catalog`, et `-- --check` pour vérifier qu'il est à jour) ; ses `insert … on conflict`
+peuvent être rejoués pour publier une mise à jour.
+
+**Authentification :** e-mail et mot de passe (10 caractères minimum, contrôlés dans le formulaire
+et par le serveur), limite de 30 connexions ou inscriptions par tranche de 5 minutes et par adresse
+IP (réglage Supabase), déconnexion de ce navigateur seulement. En local, la confirmation par e-mail
+est désactivée (aucun serveur de messagerie) ; l'application gère déjà le cas où elle est exigée.
+Pages `/connexion` et `/inscription` : résumé d'erreurs qui reçoit le focus, champs reliés à leur
+message, affichage du mot de passe à la demande, collage et gestionnaires de mots de passe permis
+(WCAG 3.3.8). Lien de compte dans l'en-tête, section « Compte » dans le profil.
+
+**Clés :** le navigateur n'a que l'URL et la clé « publishable » ([`environment.ts`](../src/environments/environment.ts)) ;
+la clé secrète n'est nulle part dans le dépôt. Le client est chargé à la demande : le premier
+affichage reste à environ 290 ko de JavaScript.
+
+**Tests :** [`supabase/tests/database/rls.test.sql`](../supabase/tests/database/rls.test.sql)
+(pgTAP, `npm run db:test`) vérifie l'isolation entre utilisateurs, le rôle non modifiable, les
+tentatives non modifiables, le catalogue en lecture seule et les contraintes. Les tests e2e de
+compte s'exécutent contre la pile locale et sont signalés « ignorés » si elle est arrêtée.
+
+Commandes : `npm run db:start`, `db:stop`, `db:reset` (réapplique migrations et catalogue),
+`db:test`, `db:catalog`, `db:types` (régénère `database.types.ts`).
+
 ## 5. Progression
 
 Fichiers : [`progress.model.ts`](../src/app/core/models/progress.model.ts) (format),
@@ -303,7 +360,7 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 
 Limites connues du MVP :
 - **Les réponses sont visibles par un apprenant curieux :** elles se trouvent dans le JavaScript envoyé au navigateur. Aucun badge ni examen ne sera présenté comme certifiant avant la correction côté serveur (étapes 9-10).
-- **Clé Supabase :** la clé de service ne sera jamais dans le front ; seule la clé publique, protégée par RLS, y figurera.
+- **Clé Supabase :** la clé secrète n'est jamais dans le front ni dans le dépôt ; seule la clé publique, protégée par RLS, y figure.
 
 ## 7. Feuille de route
 

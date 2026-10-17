@@ -11,6 +11,8 @@ const PATHS = [
   '/lecons/securite-et-risques/quiz', // quiz verrouillé
   '/laboratoires/lab-phishing', // laboratoire verrouillé
   '/laboratoires/inexistant',
+  '/connexion',
+  '/inscription',
   '/lecons/inexistante',
   '/adresse-inexistante',
   '/erreur',
