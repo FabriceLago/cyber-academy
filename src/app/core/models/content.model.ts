@@ -81,7 +81,9 @@ export type ContentBlock =
   | { readonly kind: 'heading'; readonly text: string }
   | { readonly kind: 'paragraph'; readonly text: string }
   | { readonly kind: 'list'; readonly items: readonly string[] }
-  | { readonly kind: 'callout'; readonly tone: 'info' | 'tip' | 'warning'; readonly text: string };
+  | { readonly kind: 'callout'; readonly tone: 'info' | 'tip' | 'warning'; readonly text: string }
+  /** Commande ou texte affiché tel quel, en police à chasse fixe (lignes séparées par \n). */
+  | { readonly kind: 'code'; readonly text: string };
 
 export interface GlossaryEntry {
   readonly term: string;

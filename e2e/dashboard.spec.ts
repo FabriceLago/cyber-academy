@@ -54,9 +54,7 @@ test('un nouvel apprenant voit la première leçon et des états vides expliqué
   await expect(page.getByText('Aucun quiz passé pour l’instant.')).toBeVisible();
   await expect(page.getByText('Verrouillée', { exact: false })).toHaveCount(4);
   await expect(page.getByText('temps de cours restant estimé : 1 h 55 min')).toBeVisible();
-  await expect(
-    page.getByText('Contenu en préparation : les leçons seront disponibles à l’étape 5.'),
-  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Commencer la leçon' })).toBeVisible();
 });
 
 test('la progression enregistrée met à jour le tableau de bord et les compétences', async ({

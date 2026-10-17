@@ -39,20 +39,21 @@ src/app/
 │  ├─ content/           validation automatique du contenu                (étape 2, fait)
 │  ├─ theme/             thème clair, sombre ou selon l'appareil          (étape 3, fait)
 │  ├─ progress/          règles de progression, stockage validé           (étape 4, fait)
+│  ├─ quiz/              correction des questions à options               (étape 5, fait)
 │  └─ page-title.strategy.ts  titre d'onglet « Page · Cyber Academy »     (étape 3, fait)
 ├─ shared/
 │  ├─ icon/              icônes SVG du design system                      (étape 3, fait)
 │  ├─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
 │  └─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
-├─ content/catalog.ts    plan du parcours « Découverte » (fait) ; contenu des leçons (étape 5)
+├─ content/              catalogue et 5 leçons complètes (lessons/)       (étape 5, fait)
 └─ features/
    ├─ coming-soon/       page provisoire des sections à venir             (étape 3, fait)
    ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
-   ├─ profile/           thème, objectif hebdomadaire (fait) ; réinitialisation (étape 5)
+   ├─ profile/           thème, objectif hebdomadaire, réinitialisation   (étape 5, fait)
    ├─ dashboard/         tableau de bord                                  (étape 4, fait)
    ├─ skills/            compétences                                      (étape 4, fait)
-   ├─ learning-paths/    carte des parcours                               (étape 5)
-   ├─ lessons/           page de leçon en 17 sections                     (étape 5)
+   ├─ learning-paths/    carte des parcours                               (étape 5, fait)
+   ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
    ├─ quizzes/           moteur et interface de quiz                      (étape 6)
    ├─ labs/              Cyber Lab : terminal et phishing simulés         (étape 8)
    └─ projects/          projets pratiques                                (après le MVP)
@@ -167,13 +168,25 @@ Au niveau du parcours, il refuse aussi :
 - un laboratoire ou une compétence inconnus ;
 - un seuil de réussite hors de ]0, 1].
 
-La structure est vérifiée dès maintenant sur le plan du catalogue (`validatePathStructure`,
-test [`catalog.spec.ts`](../src/app/content/catalog.spec.ts)). À l'étape 5, `validatePath` vérifiera
-aussi le contenu de chaque leçon : un contenu incomplet ne passera pas les tests.
+Le test [`catalog.spec.ts`](../src/app/content/catalog.spec.ts) applique `validatePath` à tout le
+catalogue : un contenu incomplet ne passe pas les tests.
 
 **Plan et contenu.** `PathOutline` (titres, durées, prérequis, laboratoires, compétences) suffit à la
-navigation et à la progression ; un `LearningPath` complet en est un cas particulier. Le parcours
-« Découverte » existe aujourd'hui sous forme de plan ; ses leçons sont rédigées à l'étape 5.
+navigation et à la progression ; un `LearningPath` complet en est un cas particulier. Les 5 leçons du
+parcours « Découverte » sont rédigées dans [`content/lessons/`](../src/app/content/lessons/) : tous les
+noms de domaine et adresses d'exemple sont réservés (`.example`, `203.0.113.x`), les organisations
+fictives.
+
+### Moteur de leçons (étape 5)
+
+- `/parcours` : carte des parcours (modules, leçons et statuts) et niveaux prévus, présentés comme tels.
+- `/lecons` : toutes les leçons ; seules les leçons accessibles sont des liens.
+- `/lecons/:id` : les 17 sections, un sommaire, l'exercice guidé (indices progressifs, correction
+  seulement après la réponse, rien d'enregistré), les critères de réussite, « Recommencer » et
+  « Leçon suivante » (actif seulement si la leçon est validée). Une leçon verrouillée affiche ce qu'il
+  faut valider d'abord, sans son contenu. Le titre d'onglet est celui de la leçon.
+- Annoncé dans la page, pas simulé : animation et démonstration illustrées (étape 7, la description
+  complète est affichée), quiz jouable (étape 6), laboratoire (étape 8).
 
 ## 5. Progression
 

@@ -1,4 +1,13 @@
-import { Component, computed, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { EmptyState } from '../../shared/empty-state/empty-state';
@@ -50,9 +59,32 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
       </p>
     </section>
 
-    <ca-empty-state icon="user" heading="Compte et progression">
+    <section class="card" aria-labelledby="progression">
+      <h2 id="progression">Progression</h2>
+      <p class="hint">Vos tentatives de quiz et de laboratoire sont gardées dans ce navigateur.</p>
+      @if (confirmingReset()) {
+        <p>
+          <strong>Effacer toutes vos tentatives de quiz et de laboratoire ?</strong> Cette action
+          est définitive ; votre objectif hebdomadaire est conservé.
+        </p>
+        <div class="row">
+          <button #confirmResetRef type="button" class="btn btn-primary" (click)="reset()">
+            Oui, réinitialiser
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelReset()">Annuler</button>
+        </div>
+      } @else {
+        <button #askResetRef type="button" class="btn btn-secondary" (click)="askReset()">
+          Réinitialiser ma progression
+        </button>
+      }
+      <p role="status" class="hint">{{ resetMessage() }}</p>
+    </section>
+
+    <ca-empty-state icon="user" heading="Compte utilisateur">
       <p>
-        La réinitialisation de la progression arrive à l’étape 5, le compte utilisateur à l’étape 9.
+        Le compte utilisateur arrive à l’étape 9 : votre progression pourra alors vous suivre d’un
+        appareil à l’autre.
       </p>
     </ca-empty-state>
   `,
@@ -124,6 +156,16 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
     select + .hint {
       margin: var(--space-2) 0 0;
     }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    [role='status'] {
+      margin: var(--space-2) 0 0;
+    }
   `,
 })
 export class ProfilePage {
@@ -134,6 +176,34 @@ export class ProfilePage {
   protected setWeeklyGoal(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.progress.setWeeklyGoal(value === '' ? null : Number(value));
+  }
+
+  private readonly injector = inject(Injector);
+  private readonly askResetButton = viewChild<ElementRef<HTMLButtonElement>>('askResetRef');
+  private readonly confirmResetButton = viewChild<ElementRef<HTMLButtonElement>>('confirmResetRef');
+  protected readonly confirmingReset = signal(false);
+  protected readonly resetMessage = signal('');
+
+  /** Le bouton cliqué disparaît : le focus passe au bouton suivant pour ne pas être perdu. */
+  protected askReset(): void {
+    this.resetMessage.set('');
+    this.confirmingReset.set(true);
+    this.focusAfterRender(() => this.confirmResetButton());
+  }
+
+  protected cancelReset(): void {
+    this.confirmingReset.set(false);
+    this.focusAfterRender(() => this.askResetButton());
+  }
+
+  protected reset(): void {
+    this.progress.reset();
+    this.resetMessage.set('Progression réinitialisée.');
+    this.cancelReset();
+  }
+
+  private focusAfterRender(target: () => ElementRef<HTMLButtonElement> | undefined): void {
+    afterNextRender(() => target()?.nativeElement.focus(), { injector: this.injector });
   }
 
   protected readonly theme = inject(ThemeService);

@@ -3,7 +3,14 @@ import { expect, test } from '@playwright/test';
 import { PAGES } from './pages';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const PATHS = [...PAGES.map((p) => p.path), '/adresse-inexistante', '/erreur'];
+const PATHS = [
+  ...PAGES.map((p) => p.path),
+  '/lecons/ordinateur-et-fichiers', // leçon ouverte, avec toutes ses sections
+  '/lecons/hameconnage', // leçon verrouillée
+  '/lecons/inexistante',
+  '/adresse-inexistante',
+  '/erreur',
+];
 
 for (const [colorScheme, name] of [
   ['dark', 'sombre'],

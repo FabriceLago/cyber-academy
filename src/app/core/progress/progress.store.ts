@@ -27,6 +27,11 @@ export class ProgressStore {
     this.save({ ...this.current(), weeklyGoal: isWeeklyGoal(goal) ? goal : null });
   }
 
+  /** Efface toutes les tentatives ; l'objectif hebdomadaire, qui est un réglage, est conservé. */
+  reset(): void {
+    this.save({ ...EMPTY_PROGRESS, weeklyGoal: this.current().weeklyGoal });
+  }
+
   private read(): ProgressState {
     try {
       return parseProgress(this.window?.localStorage.getItem(STORAGE_KEY) ?? null);

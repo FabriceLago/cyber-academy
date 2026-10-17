@@ -106,8 +106,8 @@ export function validateLesson(lesson: Lesson): string[] {
 /** Vérifie un parcours entier : sa structure, puis le contenu de chaque leçon. */
 export function validatePath(
   path: LearningPath,
-  labs: readonly Lab[],
-  skills: readonly Skill[],
+  labs: readonly Pick<Lab, 'id'>[],
+  skills: readonly Pick<Skill, 'id'>[],
 ): string[] {
   return [
     ...validatePathStructure(path, labs, skills),

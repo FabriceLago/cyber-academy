@@ -82,39 +82,8 @@
 }
 
 .lessons {
-  display: grid;
-  gap: var(--space-3);
-  margin: var(--space-4) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.lessons li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-3);
-}
-
-.lessons li > span {
-  display: grid;
-}
-
-.lessons ca-icon {
-  margin-top: 0.15em;
-  color: var(--color-accent);
-}
-
-.lessons .completed ca-icon {
-  color: var(--color-success);
-}
-
-.lessons .in-progress ca-icon {
-  color: var(--color-warning);
-}
-
-.lessons .locked,
-.lessons .locked ca-icon {
-  color: var(--color-text-muted);
+  display: block;
+  margin-top: var(--space-4);
 }
 
 table {

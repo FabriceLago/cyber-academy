@@ -21,9 +21,10 @@
         pour la valider.
       </p>
     }
-    <p class="notice">
-      <ca-icon name="book" />
-      Contenu en préparation : les leçons seront disponibles à l’étape 5.
+    <p>
+      <a class="btn btn-primary" [routerLink]="['/lecons', next.lesson.id]">
+        {{ next.status === 'in-progress' ? 'Reprendre la leçon' : 'Commencer la leçon' }}
+      </a>
     </p>
   } @else {
     <p class="eyebrow">Bravo</p>
@@ -75,22 +76,7 @@
         Leçons validées : {{ current.completed }} sur {{ current.lessons.length }} · temps de cours
         restant estimé : {{ duration(current.remainingMinutes) }}
       </p>
-      <ol class="lessons">
-        @for (item of current.lessons; track item.lesson.id) {
-          <li [class]="item.status">
-            <ca-icon [name]="status[item.status].icon" />
-            <span>
-              <span class="lesson-title">{{ item.lesson.title }}</span>
-              <span class="muted">
-                {{ status[item.status].label }}
-                @if (item.blockedBy.length > 0) {
-                  : après « {{ item.blockedBy[0].title }} »
-                }
-              </span>
-            </span>
-          </li>
-        }
-      </ol>
+      <ca-lesson-list class="lessons" [lessons]="current.lessons" />
     </section>
   }
 

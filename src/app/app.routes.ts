@@ -27,20 +27,26 @@ export const routes: Routes = [
     title: 'Tableau de bord',
     loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
   },
-  comingSoon(
-    'parcours',
-    'Parcours d’apprentissage',
-    'route',
-    'La carte des parcours, des premiers pas jusqu’aux spécialisations professionnelles.',
-    'à l’étape 5',
-  ),
-  comingSoon(
-    'lecons',
-    'Leçons',
-    'book',
-    'Des leçons progressives et illustrées, chacune suivie d’un quiz corrigé.',
-    'à l’étape 5',
-  ),
+  {
+    path: 'parcours',
+    title: 'Parcours d’apprentissage',
+    loadComponent: () => import('./features/learning-paths/paths-page').then((m) => m.PathsPage),
+  },
+  {
+    path: 'lecons',
+    title: 'Leçons',
+    loadComponent: () => import('./features/lessons/lessons-page').then((m) => m.LessonsPage),
+  },
+  {
+    path: 'lecons/:lessonId',
+    // Titre d'onglet = titre de la leçon ; le catalogue est chargé à la demande, pas au démarrage.
+    title: (route) =>
+      import('./content/catalog').then(
+        (m) =>
+          m.findLesson(route.paramMap.get('lessonId') ?? '')?.lesson.title ?? 'Leçon introuvable',
+      ),
+    loadComponent: () => import('./features/lessons/lesson-page').then((m) => m.LessonPage),
+  },
   comingSoon(
     'laboratoires',
     'Laboratoires',

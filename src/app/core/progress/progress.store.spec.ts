@@ -77,6 +77,17 @@ describe('ProgressStore', () => {
     expect(store.state().weeklyGoal).toBeNull();
   });
 
+  it('réinitialise les tentatives en gardant l’objectif hebdomadaire', () => {
+    localStorage.setItem(
+      'ca-progress',
+      stored({ quizAttempts: [validQuiz], labAttempts: [validLab], weeklyGoal: 2 }),
+    );
+    const store = TestBed.inject(ProgressStore);
+    store.reset();
+    expect(store.state()).toEqual({ ...EMPTY_PROGRESS, weeklyGoal: 2 });
+    expect(parseProgress(localStorage.getItem('ca-progress'))).toEqual(store.state());
+  });
+
   it('fonctionne quand le stockage du navigateur est bloqué', () => {
     const blocked = () => {
       throw new DOMException('Stockage bloqué', 'SecurityError');

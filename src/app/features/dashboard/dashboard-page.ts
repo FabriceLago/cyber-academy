@@ -2,17 +2,11 @@ import { DatePipe, PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/catalog';
-import { LessonStatus, summarizeProgress } from '../../core/progress/progress';
+import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
-import { Icon, IconName } from '../../shared/icon/icon';
+import { Icon } from '../../shared/icon/icon';
 import { ProgressBar } from '../../shared/progress-bar/progress-bar';
-
-const STATUS: Record<LessonStatus, { readonly label: string; readonly icon: IconName }> = {
-  completed: { label: 'Validée', icon: 'check' },
-  'in-progress': { label: 'Commencée', icon: 'clock' },
-  available: { label: 'Disponible', icon: 'circle' },
-  locked: { label: 'Verrouillée', icon: 'lock' },
-};
+import { LessonList } from '../lessons/lesson-list';
 
 /** 80 → « 1 h 20 min », 45 → « 45 min ». */
 export function formatDuration(minutes: number): string {
@@ -24,7 +18,7 @@ export function formatDuration(minutes: number): string {
 
 @Component({
   selector: 'ca-dashboard-page',
-  imports: [RouterLink, DatePipe, PercentPipe, Icon, ProgressBar],
+  imports: [RouterLink, DatePipe, PercentPipe, Icon, ProgressBar, LessonList],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
@@ -48,6 +42,5 @@ export class DashboardPage {
     () => this.summary().skills.filter((skill) => skill.acquired).length,
   );
 
-  protected readonly status = STATUS;
   protected readonly duration = formatDuration;
 }

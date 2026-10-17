@@ -1,0 +1,237 @@
+@if (entry(); as entry) {
+  @let lesson = entry.lesson;
+  @let status = state()?.status ?? 'locked';
+
+  <nav class="crumbs" aria-label="Fil d’Ariane">
+    <a routerLink="/parcours">{{ entry.path.title }}</a> › {{ entry.module.title }}
+  </nav>
+
+  <header class="page-header">
+    <h1 #title tabindex="-1">{{ lesson.title }}</h1>
+    <p class="meta">
+      Niveau : {{ levels[lesson.level] }} · Durée estimée : {{ lesson.durationMinutes }} min ·
+      Statut : {{ statuses[status].label }}
+    </p>
+    <p class="meta">
+      Prérequis :
+      @for (prerequisite of prerequisites(); track prerequisite.id; let last = $last) {
+        <a [routerLink]="['/lecons', prerequisite.id]">{{ prerequisite.title }}</a>{{ last ? '' : ', ' }}
+      } @empty {
+        aucun
+      }
+    </p>
+  </header>
+
+  @if (status === 'locked') {
+    <section class="card" aria-labelledby="verrou-titre">
+      <h2 id="verrou-titre">Leçon verrouillée</h2>
+      <p>Pour l’ouvrir, validez d’abord :</p>
+      <ul>
+        @for (blocking of state()?.blockedBy ?? []; track blocking.id) {
+          <li><a [routerLink]="['/lecons', blocking.id]">{{ blocking.title }}</a></li>
+        }
+      </ul>
+      <h3>Ce que vous apprendrez</h3>
+      <ul>
+        @for (objective of lesson.objectives; track objective.id) {
+          <li>{{ objective.text }}</li>
+        }
+      </ul>
+    </section>
+  } @else {
+    <nav class="card toc" aria-labelledby="sommaire-titre">
+      <h2 id="sommaire-titre" class="toc-title">Sommaire</h2>
+      <ol>
+        @for (section of sections(); track section.id) {
+          <li><a [href]="'#' + section.id" (click)="goTo($event, section.id)">{{ section.label }}</a></li>
+        }
+      </ol>
+    </nav>
+
+    <section aria-labelledby="objectifs-titre">
+      <h2 id="objectifs-titre" tabindex="-1">Objectifs</h2>
+      <p>À la fin de cette leçon, vous serez capable de :</p>
+      <ul>
+        @for (objective of lesson.objectives; track objective.id) {
+          <li>{{ objective.text }}.</li>
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="explication-titre">
+      <h2 id="explication-titre" tabindex="-1">Explication</h2>
+      @for (block of lesson.explanation; track $index) {
+        @switch (block.kind) {
+          @case ('heading') {
+            <h3>{{ block.text }}</h3>
+          }
+          @case ('paragraph') {
+            <p>{{ block.text }}</p>
+          }
+          @case ('list') {
+            <ul>
+              @for (item of block.items; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          }
+          @case ('callout') {
+            <p [class]="'callout ' + block.tone">
+              <strong>{{ callouts[block.tone] }} : </strong>{{ block.text }}
+            </p>
+          }
+          @case ('code') {
+            <pre class="code"><code>{{ block.text }}</code></pre>
+          }
+        }
+      }
+    </section>
+
+    <section aria-labelledby="glossaire-titre">
+      <h2 id="glossaire-titre" tabindex="-1">Glossaire</h2>
+      <dl class="glossary">
+        @for (entry of lesson.glossary; track entry.term) {
+          <div>
+            <dt>{{ entry.term }}</dt>
+            <dd>{{ entry.definition }}</dd>
+            <dd class="muted">Exemple : {{ entry.example }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section aria-labelledby="exemple-titre">
+      <h2 id="exemple-titre" tabindex="-1">Exemple concret</h2>
+      <div class="card">
+        <h3>{{ lesson.example.title }}</h3>
+        <p>{{ lesson.example.text }}</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="animation-titre">
+      <h2 id="animation-titre" tabindex="-1">Animation</h2>
+      <figure class="card visual">
+        <figcaption>{{ lesson.animation.title }}</figcaption>
+        <ol>
+          @for (step of animationSteps(); track $index) {
+            <li>{{ step }}</li>
+          }
+        </ol>
+        <p class="soon"><ca-icon name="clock" /> La version animée et interactive arrive à l’étape 7 ; voici sa description complète.</p>
+      </figure>
+    </section>
+
+    <section aria-labelledby="demonstration-titre">
+      <h2 id="demonstration-titre" tabindex="-1">Démonstration</h2>
+      <figure class="card visual">
+        <figcaption>{{ lesson.demonstration.title }}</figcaption>
+        <p>{{ lesson.demonstration.textAlternative }}</p>
+        <p class="soon"><ca-icon name="clock" /> Le schéma illustré arrive à l’étape 7 ; voici sa description complète.</p>
+      </figure>
+    </section>
+
+    <section aria-labelledby="exercice-titre">
+      <h2 id="exercice-titre" tabindex="-1">Exercice guidé</h2>
+      <p>{{ lesson.guidedExercise.intro }}</p>
+      <ol class="steps">
+        @for (step of guidedSteps(); track step.key; let i = $index, count = $count) {
+          <li class="card">
+            <p class="step-number">Question {{ i + 1 }} sur {{ count }}</p>
+            @if (step.question; as question) {
+              <ca-practice-question [question]="question" [hints]="step.hints" />
+            } @else {
+              <p>Ce type d’exercice sera disponible à l’étape 6.</p>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+
+    @if (lab(); as lab) {
+      <section aria-labelledby="laboratoire-titre">
+        <h2 id="laboratoire-titre" tabindex="-1">Laboratoire</h2>
+        <div class="card">
+          <h3>{{ lab.lab.title }}</h3>
+          <p>
+            {{ lab.completed ? 'Laboratoire réussi.' : 'Laboratoire pas encore réussi.' }} Il fait partie
+            des critères de réussite de cette leçon.
+          </p>
+          <p class="soon"><ca-icon name="clock" /> Le laboratoire simulé arrive à l’étape 8.</p>
+        </div>
+      </section>
+    }
+
+    <section aria-labelledby="quiz-titre">
+      <h2 id="quiz-titre" tabindex="-1">Quiz de validation</h2>
+      <div class="card">
+        <p>
+          {{ lesson.quiz.questions.length }} questions préparées ; {{ lesson.quiz.questionsPerAttempt }}
+          sont tirées à chaque tentative, avec une correction détaillée de chaque réponse. Pour valider :
+          au moins {{ entry.module.passThreshold | percent }} de bonnes réponses.
+        </p>
+        @if (quizResult(); as result) {
+          <p>Votre meilleur score : {{ result.bestScore | percent }} ({{ result.attempts }} tentative(s)).</p>
+        }
+        <p class="soon"><ca-icon name="clock" /> Le quiz jouable arrive à l’étape 6.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="resume-titre">
+      <h2 id="resume-titre" tabindex="-1">Résumé</h2>
+      <ul>
+        @for (point of lesson.summary; track $index) {
+          <li>{{ point }}</li>
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="criteres-titre">
+      <h2 id="criteres-titre" tabindex="-1">Critères de réussite</h2>
+      @let quizPassed = (quizResult()?.bestScore ?? 0) >= entry.module.passThreshold;
+      <ul class="criteria">
+        <li [class.met]="quizPassed">
+          <ca-icon [name]="quizPassed ? 'check' : 'circle'" />
+          <span>
+            Obtenir au moins {{ entry.module.passThreshold | percent }} au quiz
+            <span class="visually-hidden">{{ quizPassed ? '(rempli)' : '(pas encore rempli)' }}</span>
+          </span>
+        </li>
+        @if (lab(); as lab) {
+          <li [class.met]="lab.completed">
+            <ca-icon [name]="lab.completed ? 'check' : 'circle'" />
+            <span>
+              Réussir le laboratoire « {{ lab.lab.title }} »
+              <span class="visually-hidden">{{ lab.completed ? '(rempli)' : '(pas encore rempli)' }}</span>
+            </span>
+          </li>
+        }
+      </ul>
+      <p>
+        <strong>{{ status === 'completed' ? 'Leçon validée.' : 'Leçon pas encore validée.' }}</strong>
+      </p>
+      <div class="lesson-actions">
+        <button type="button" class="btn btn-secondary" (click)="restart()">Recommencer la leçon</button>
+        @if (next(); as next) {
+          @if (status === 'completed') {
+            <a class="btn btn-primary" [routerLink]="['/lecons', next.lesson.id]">
+              Leçon suivante : {{ next.lesson.title }}
+            </a>
+          } @else {
+            <button type="button" class="btn btn-primary" disabled aria-describedby="suite-condition">
+              Leçon suivante
+            </button>
+            <p id="suite-condition" class="muted">
+              Disponible quand les critères de réussite sont remplis.
+            </p>
+          }
+        }
+      </div>
+    </section>
+  }
+} @else {
+  <div class="status-page">
+    <h1>Leçon introuvable</h1>
+    <p>Cette leçon n’existe pas, ou son adresse a changé.</p>
+    <a class="btn btn-primary" routerLink="/lecons">Voir toutes les leçons</a>
+  </div>
+}

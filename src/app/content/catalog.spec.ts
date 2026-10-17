@@ -1,13 +1,18 @@
-import { validatePathStructure } from '../core/content/validate-content';
-import { CATALOG } from './catalog';
+import { validatePath } from '../core/content/validate-content';
+import { CATALOG, PATHS, findLesson } from './catalog';
 
 describe('Catalogue', () => {
-  it.each(CATALOG.paths.map((path) => [path.id, path] as const))(
-    'le parcours « %s » a une structure valide',
+  it.each(PATHS.map((path) => [path.id, path] as const))(
+    'le parcours « %s » et chacune de ses leçons sont complets et cohérents',
     (_, path) => {
-      expect(validatePathStructure(path, CATALOG.labs, CATALOG.skills)).toEqual([]);
+      expect(validatePath(path, CATALOG.labs, CATALOG.skills)).toEqual([]);
     },
   );
+
+  it('retrouve une leçon complète par son identifiant', () => {
+    expect(findLesson('hameconnage')?.module.id).toBe('internet-et-menaces');
+    expect(findLesson('inconnue')).toBeUndefined();
+  });
 
   it('chaque laboratoire vise des compétences connues', () => {
     const skillIds = CATALOG.skills.map((skill) => skill.id);

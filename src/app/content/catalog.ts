@@ -1,76 +1,53 @@
-import { Catalog } from '../core/models/content.model';
+import { Catalog, LearningPath, Lesson, Module } from '../core/models/content.model';
+import { ORDINATEUR_ET_FICHIERS } from './lessons/01-ordinateur-et-fichiers';
+import { DECOUVRIR_LE_TERMINAL } from './lessons/02-decouvrir-le-terminal';
+import { VOYAGE_D_UNE_INFORMATION } from './lessons/03-voyage-d-une-information';
+import { SECURITE_ET_RISQUES } from './lessons/04-securite-et-risques';
+import { HAMECONNAGE } from './lessons/05-hameconnage';
 
-/**
- * Catalogue de la plateforme.
- * Étape 4 : plan du parcours « Découverte » (titres, durées estimées, prérequis, laboratoires,
- * compétences). Le contenu des leçons est rédigé à l'étape 5, les laboratoires à l'étape 8.
- */
+/** Parcours complets, leçons rédigées. Les laboratoires sont développés à l'étape 8. */
+export const PATHS: readonly LearningPath[] = [
+  {
+    id: 'decouverte',
+    title: 'Découverte de la cybersécurité',
+    description:
+      'Les bases pour comprendre un ordinateur, Internet et les principales menaces, sans aucun prérequis.',
+    level: 'debutant',
+    modules: [
+      {
+        id: 'premiers-pas',
+        title: 'Premiers pas avec l’ordinateur',
+        description: 'Ce que contient un ordinateur, et comment lui parler avec un terminal.',
+        passThreshold: 0.8,
+        lessons: [ORDINATEUR_ET_FICHIERS, DECOUVRIR_LE_TERMINAL],
+      },
+      {
+        id: 'internet-et-menaces',
+        title: 'Internet et menaces',
+        description:
+          'Comment voyage une information, ce qu’il faut protéger, et comment repérer une arnaque.',
+        passThreshold: 0.8,
+        lessons: [VOYAGE_D_UNE_INFORMATION, SECURITE_ET_RISQUES, HAMECONNAGE],
+      },
+    ],
+  },
+];
+
+/** Leçon complète, avec son module et son parcours. */
+export function findLesson(
+  id: string,
+): { lesson: Lesson; module: Module; path: LearningPath } | undefined {
+  for (const path of PATHS) {
+    for (const module of path.modules) {
+      const lesson = module.lessons.find((l) => l.id === id);
+      if (lesson) return { lesson, module, path };
+    }
+  }
+  return undefined;
+}
+
 export const CATALOG: Catalog = {
-  paths: [
-    {
-      id: 'decouverte',
-      title: 'Découverte de la cybersécurité',
-      description:
-        'Les bases pour comprendre un ordinateur, Internet et les principales menaces, sans aucun prérequis.',
-      level: 'debutant',
-      modules: [
-        {
-          id: 'premiers-pas',
-          title: 'Premiers pas avec l’ordinateur',
-          description: 'Ce que contient un ordinateur, et comment lui parler avec un terminal.',
-          passThreshold: 0.8,
-          lessons: [
-            {
-              id: 'ordinateur-et-fichiers',
-              title: 'Comprendre un ordinateur, ses fichiers et ses dossiers',
-              durationMinutes: 20,
-              prerequisiteIds: [],
-              skillIds: ['decrire-un-ordinateur'],
-            },
-            {
-              id: 'decouvrir-le-terminal',
-              title: 'Découvrir le terminal',
-              durationMinutes: 25,
-              prerequisiteIds: ['ordinateur-et-fichiers'],
-              labId: 'lab-terminal',
-              skillIds: ['utiliser-un-terminal'],
-            },
-          ],
-        },
-        {
-          id: 'internet-et-menaces',
-          title: 'Internet et menaces',
-          description:
-            'Comment voyage une information, ce qu’il faut protéger, et comment repérer une arnaque.',
-          passThreshold: 0.8,
-          lessons: [
-            {
-              id: 'voyage-d-une-information',
-              title: 'Comment une information voyage sur Internet',
-              durationMinutes: 25,
-              prerequisiteIds: ['ordinateur-et-fichiers'],
-              skillIds: ['expliquer-le-reseau'],
-            },
-            {
-              id: 'securite-et-risques',
-              title: 'Confidentialité, intégrité, disponibilité : évaluer un risque',
-              durationMinutes: 20,
-              prerequisiteIds: ['voyage-d-une-information'],
-              skillIds: ['evaluer-un-risque'],
-            },
-            {
-              id: 'hameconnage',
-              title: 'Repérer l’hameçonnage et l’ingénierie sociale',
-              durationMinutes: 25,
-              prerequisiteIds: ['securite-et-risques'],
-              labId: 'lab-phishing',
-              skillIds: ['detecter-l-hameconnage'],
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  paths: PATHS,
   labs: [
     {
       id: 'lab-terminal',
