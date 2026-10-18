@@ -221,8 +221,11 @@ Fichier : [`quiz-engine.ts`](../src/app/core/quiz/quiz-engine.ts), testé dans `
   sans réponse.
 - **Avec un compte**, la tentative est corrigée et enregistrée par le serveur (étape 10) : la
   correction affichée est celle qu'il a retenue.
-- **Limite connue :** les réponses attendues sont encore dans le JavaScript envoyé au navigateur
-  (nécessaire à la correction sans compte). Les retirer est prévu à l'étape 12.
+- **Limite assumée (décision de l'étape 12) :** les réponses attendues restent dans le JavaScript
+  envoyé au navigateur, car elles servent à corriger sans compte. Les déplacer sur le serveur
+  obligerait à corriger aussi les visiteurs par le serveur ; ce correcteur ouvert permettrait de
+  récolter les corrigés en quelques appels, pour un coût élevé. Les comptes restent corrigés par le
+  serveur avec ses propres clés.
 
 ### Animations (étape 7)
 
@@ -341,11 +344,19 @@ affichage reste à environ 290 ko de JavaScript.
 
 **Tests :** [`supabase/tests/database/rls.test.sql`](../supabase/tests/database/rls.test.sql)
 (pgTAP, `npm run db:test`) vérifie l'isolation entre utilisateurs, le rôle non modifiable, les
-tentatives non modifiables, le catalogue en lecture seule et les contraintes. Les tests e2e de
-compte s'exécutent contre la pile locale et sont signalés « ignorés » si elle est arrêtée.
+tentatives non modifiables, le catalogue en lecture seule et les contraintes ;
+[`recording.test.sql`](../supabase/tests/database/recording.test.sql) la correction côté serveur et
+la limite de débit ; [`hardening.test.sql`](../supabase/tests/database/hardening.test.sql) les droits
+d'exécution, la taille des réponses et les noms affichés. Les tests e2e de compte s'exécutent contre
+la pile locale et sont signalés « ignorés » si elle est arrêtée.
 
 Commandes : `npm run db:start`, `db:stop`, `db:reset` (réapplique migrations et catalogue),
-`db:test`, `db:catalog`, `db:types` (régénère `database.types.ts`).
+`db:test`, `db:catalog`, `db:types` (régénère `database.types.ts`), `db:backup` et `db:restore`
+(voir la section 6).
+
+Contrôles d'ensemble, sans Docker : `npm run verify` (lint, tests unitaires avec seuils de
+couverture, build, recherche de secrets, audit des dépendances, catalogue à jour). Avec la pile
+locale : `npm run db:test` et `npm run e2e`.
 
 ## 5. Progression
 
@@ -412,10 +423,40 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 | Données fictives | E-mails, journaux et noms de domaine synthétiques (domaines réservés `.example` et `.test`, RFC 2606) |
 | Environnements isolés | Aucun. Si l'exécution réelle devient nécessaire : service séparé, éphémère et limité en ressources |
 
+### Mesures de sécurité (étape 12)
+
+| Principe (brief §14) | Mise en œuvre | Vérifié par |
+|---|---|---|
+| Protection contre les injections (XSS) | Politique de sécurité du contenu : scripts limités aux empreintes générées au build (`autoCsp`, `strict-dynamic`), `object-src 'none'`, `base-uri 'self'` ; connexions limitées au site et à Supabase, aucun cadre, aucun worker. Angular échappe tout affichage ; ni `innerHTML`, ni `eval`, ni contournement de la sanitisation dans le code | `e2e/security.spec.ts` : aucune violation sur les pages principales, script injecté bloqué |
+| Protection contre les injections (SQL) | Fonctions paramétrées, `search_path` vide, aucun SQL dynamique construit avec une saisie | relecture, pgTAP |
+| Validation côté client et côté serveur | Formulaires validés dans l'application ; côté serveur : contraintes de tables, réponses d'un quiz limitées à 8 Ko, questions vérifiées, nom affiché sans caractères de contrôle ou invisibles | pgTAP |
+| Contrôle d'accès systématique | RLS sur toutes les tables ; sans compte, aucune fonction appelable ; avec un compte, seulement `record_quiz_attempt`, `record_lab_attempt` et `is_admin` ; fonctions futures fermées par défaut | `hardening.test.sql`, `rls.test.sql` |
+| Limitation de débit | 30 tentatives de chaque sorte par heure et par compte, avec un verrou par compte : des envois simultanés ne la dépassent plus (mesuré avant : 37 acceptés sur 40) ; limites de Supabase Auth pour l'inscription et la connexion (`config.toml`) | `e2e/security.spec.ts` (40 envois simultanés, 30 acceptés) |
+| Gestion sécurisée des secrets | Seule la clé publique est dans le dépôt ; `npm run check:secrets` cherche clés secrètes, jetons `service_role`, clés privées et fichiers `.env` dans le dépôt (fichiers nouveaux compris) et le build | `npm run verify` |
+| Journaux sans données sensibles | Un seul `console.error` (échec de démarrage) ; les erreurs Supabase sont traduites sans afficher de jeton | relecture |
+| Dépendances maintenues | `npm run check:deps` (`npm audit`, 0 vulnérabilité) ; correctifs appliqués ; montées de version majeures (TypeScript 7) et du CLI Supabase décidées à part | `npm run verify` |
+| Sauvegardes et restauration | Voir ci-dessous | restauration vérifiée en local |
+| Tests des politiques RLS | 44 tests pgTAP | `npm run db:test` |
+| Isolation des futurs laboratoires exécutables | Aucun outil réellement exécuté ; si besoin : service séparé, éphémère, sans accès à la base | relecture |
+
+**Sauvegarde et restauration.** La sauvegarde ne contient que les données des apprenants (comptes,
+profils, tentatives) : le schéma et le catalogue se recréent depuis git.
+- Sauvegarder : `npm run db:backup` (local) ou `npm run db:backup -- --linked` (projet hébergé,
+  étape 13). Le fichier `backups/<date>/donnees.sql` contient des adresses e-mail et des empreintes
+  de mots de passe : `backups/` est exclu de git, et toute copie hors du poste doit être chiffrée.
+- Restaurer en local : `npx supabase db reset`, puis `npm run db:restore -- backups/<date>/donnees.sql`.
+  Le chargement se fait en une transaction, déclencheurs suspendus.
+- Restaurer un projet hébergé : `supabase db push` sur un projet vide, puis `psql` sur l'adresse de
+  la base avec `--single-transaction -v ON_ERROR_STOP=1`, la commande
+  `SET session_replication_role = replica` et le fichier `donnees.sql`. Les sauvegardes
+  automatiques de l'hébergeur dépendent de l'offre choisie (étape 13).
+
 Limites connues du MVP :
-- **Les réponses sont visibles par un apprenant curieux :** elles se trouvent dans le JavaScript envoyé au navigateur. Avec un compte, le serveur corrige lui-même, mais quelqu'un qui lit ce JavaScript peut envoyer les bonnes réponses. Les retirer du navigateur est prévu à l'étape 12 ; d'ici là, points et badges restent des repères pédagogiques, pas une certification.
+- **Les réponses de quiz sont lisibles par un apprenant curieux** dans le JavaScript envoyé au navigateur (décision de l'étape 12, voir « Moteur de quiz ») : points et badges restent des repères pédagogiques, pas une certification.
 - **La réussite d'un laboratoire est déclarée par le navigateur** (simulation côté client) : le serveur vérifie le laboratoire et la date, pas le travail fait.
 - **Clé Supabase :** la clé secrète n'est jamais dans le front ni dans le dépôt ; seule la clé publique, protégée par RLS, y figure.
+- **En-têtes HTTP** (`frame-ancestors`, HSTS, `X-Content-Type-Options`, politique de référent) : ils se posent sur l'hébergement, à l'étape 13 ; une balise `<meta>` ne peut pas les porter. L'adresse de Supabase dans la politique de connexions changera aussi au déploiement.
+- **Mots de passe :** 10 caractères au minimum, sans règle de composition (recommandation NIST) ; la vérification des mots de passe divulgués n'existe que sur certaines offres hébergées.
 
 ## 7. Feuille de route
 

@@ -1,15 +1,28 @@
 <!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <title>Cyber Academy</title>
-  <meta name="description" content="Apprendre la cybersécurité pas à pas, gratuitement et en français.">
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <ca-root></ca-root>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <!--
+    Politique de sécurité du contenu (CSP). Les scripts sont protégés par la politique stricte
+    qu'Angular génère au build de production (autoCsp : empreintes des scripts de cette page).
+    Celle-ci limite le reste : connexions au site et à Supabase seulement, aucun cadre, aucun
+    worker, aucun formulaire envoyé ailleurs. L'adresse de Supabase change au déploiement (étape 13).
+  -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="connect-src 'self' http://127.0.0.1:54621; img-src 'self'; font-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; form-action 'self'"
+    />
+    <title>Cyber Academy</title>
+    <meta
+      name="description"
+      content="Apprendre la cybersécurité pas à pas, gratuitement et en français."
+    />
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  </head>
+  <body>
+    <ca-root></ca-root>
+  </body>
 </html>

@@ -14,7 +14,13 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:catalog": "node scripts/generate-catalog-sql.mjs",
-    "db:types": "node scripts/generate-db-types.mjs"
+    "db:types": "node scripts/generate-db-types.mjs",
+    "db:backup": "node scripts/db-backup.mjs",
+    "db:restore": "node scripts/db-restore.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:deps": "npm audit --audit-level=moderate",
+    "test:coverage": "ng test --watch=false --coverage",
+    "verify": "npm run lint && npm run test:coverage && npm run build && npm run check:secrets && npm run check:deps && npm run db:catalog -- --check"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
@@ -36,6 +42,7 @@
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@vitest/coverage-v8": "^5.0.5",
     "angular-eslint": "22.6.0",
     "esbuild": "0.28.2",
     "eslint": "^10.12.0",
@@ -43,7 +50,7 @@
     "prettier": "^3.8.1",
     "supabase": "2.119.0",
     "typescript": "~6.0.2",
-    "typescript-eslint": "8.71.0",
+    "typescript-eslint": "^8.71.2",
     "vite": "8.3.4",
     "vitest": "^5.0.0"
   }

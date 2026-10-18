@@ -48,3 +48,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Sauvegardes de la base : adresses e-mail et empreintes de mots de passe
+/backups
