@@ -1,5 +1,8 @@
 /*
  * Cyber Academy : jetons du design system et styles de base.
+ * Direction « néon pédagogique » (UI UX Pro Max : plateforme de cybersécurité × apprentissage en
+ * ligne) : fond sombre profond avec aurore et grille, panneaux en verre dépoli, néons cyan, vert et
+ * violet, typographie technique. Le thème clair reprend la même structure en tons doux.
  *
  * Chaque couleur est définie une seule fois avec light-dark(clair, sombre).
  * La valeur utilisée dépend de color-scheme : réglage de l'appareil par défaut,
@@ -7,19 +10,23 @@
  * Contrastes vérifiés : texte ≥ 4,5:1 et anneau de focus ≥ 3:1, dans les deux thèmes.
  */
 
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/dm-sans';
+@import '@fontsource-variable/jetbrains-mono';
+
 :root {
   color-scheme: light dark;
 
-  /* Couleurs */
-  --color-bg: light-dark(#f4f7fb, #0b1220);
-  --color-surface: light-dark(#ffffff, #111b2e);
-  --color-surface-raised: light-dark(#eef3f9, #172338);
-  --color-border: light-dark(#d3dce8, #26344f);
-  --color-text: light-dark(#0f1b2d, #e6edf7);
-  --color-text-muted: light-dark(#4a5b74, #a3b3cb);
+  /* Couleurs (surfaces opaques : champs, terminal, menus) */
+  --color-bg: light-dark(#f3f6fb, #060a13);
+  --color-surface: light-dark(#ffffff, #0e1626);
+  --color-surface-raised: light-dark(#eef3f9, #152036);
+  --color-border: light-dark(#d3dce8, #22304a);
+  --color-text: light-dark(#0b1526, #e8eefb);
+  --color-text-muted: light-dark(#4a5b74, #9fb0c9);
   --color-accent: light-dark(#0e7490, #22d3ee);
   --color-accent-hover: light-dark(#155e75, #67e8f9);
-  --color-accent-soft: light-dark(#e0f5fa, #133145);
+  --color-accent-soft: light-dark(#e0f5fa, #10283a);
   --color-accent-track: light-dark(#cdeaf1, #1d3d52); /* piste des jauges : remplissage ≥ 4:1 */
   --color-control-border: light-dark(#7b8ba4, #6b7c99); /* bord des champs : ≥ 3:1 (WCAG 1.4.11) */
   --color-on-accent: light-dark(#ffffff, #04161c);
@@ -27,17 +34,41 @@
   --color-success: light-dark(#15803d, #4ade80);
   --color-warning: light-dark(#b45309, #fbbf24);
   --color-danger: light-dark(#b91c1c, #f87171);
-  --shadow-color: light-dark(rgb(15 27 45 / 0.08), rgb(0 0 0 / 0.45));
+  --color-violet: light-dark(#6d28d9, #a78bfa);
+  --shadow-color: light-dark(rgb(15 27 45 / 0.08), rgb(0 0 0 / 0.5));
 
-  /* Typographie : polices du système, aucun téléchargement */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  /* Verre dépoli, dégradés et lueurs */
+  --glass-bg: light-dark(rgb(255 255 255 / 0.74), rgb(14 22 38 / 0.62));
+  --glass-border: light-dark(rgb(15 27 45 / 0.09), rgb(148 163 184 / 0.16));
+  --glass-shine: light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.1));
+  --gradient-brand: linear-gradient(120deg, var(--color-accent), var(--color-violet));
+  --gradient-progress: linear-gradient(90deg, var(--color-accent), var(--color-success));
+  --gradient-primary: linear-gradient(
+    135deg,
+    light-dark(#0e7490, #22d3ee),
+    light-dark(#0f766e, #34d399)
+  );
+  --glow-accent: light-dark(rgb(14 116 144 / 0.22), rgb(34 211 238 / 0.32));
+  --glow-violet: light-dark(rgb(109 40 217 / 0.16), rgb(167 139 250 / 0.28));
+  --aurora-1: light-dark(rgb(14 116 144 / 0.12), rgb(34 211 238 / 0.16));
+  --aurora-2: light-dark(rgb(109 40 217 / 0.1), rgb(167 139 250 / 0.16));
+  --aurora-3: light-dark(rgb(21 128 61 / 0.07), rgb(52 211 153 / 0.1));
+  --grid-line: light-dark(rgb(15 27 45 / 0.045), rgb(148 163 184 / 0.06));
+
+  /* Typographie : polices embarquées dans le site (aucune requête externe) */
+  --font-display: 'Space Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans:
+    'DM Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
-  --text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  --text-2xl: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem);
-  --leading: 1.6;
+  --text-xl: clamp(1.3rem, 1.1rem + 0.7vw, 1.6rem);
+  --text-2xl: clamp(1.9rem, 1.4rem + 1.9vw, 2.9rem);
+  --leading: 1.65;
 
   /* Espacements, rayons, profondeur */
   --space-1: 0.25rem;
@@ -47,20 +78,23 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-7: 3rem;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --shadow-card: 0 1px 2px var(--shadow-color), 0 8px 24px var(--shadow-color);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-card:
+    0 1px 0 var(--glass-shine) inset, 0 1px 2px var(--shadow-color),
+    0 18px 40px -22px var(--shadow-color);
 
   /* Mouvement */
   --duration-fast: 150ms;
   --duration-base: 250ms;
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Mise en page */
   --topbar-height: 3.75rem;
   --sidebar-width: 16rem;
-  --content-max: 72rem;
+  --content-max: 76rem;
   --target-min: 2.75rem; /* 44 px : cible confortable au doigt (WCAG 2.5.8 exige 24 px) */
 }
 
@@ -86,6 +120,8 @@ html {
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -93,26 +129,66 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   accent-color: var(--color-accent);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Décor : aurore lente et grille technique, derrière tout le contenu (aucun clic intercepté). */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  inset: -20%;
+  background:
+    radial-gradient(40% 35% at 15% 10%, var(--aurora-1), transparent 70%),
+    radial-gradient(35% 30% at 85% 15%, var(--aurora-2), transparent 70%),
+    radial-gradient(45% 40% at 60% 95%, var(--aurora-3), transparent 70%);
+  /* Fixe, sans animation : sinon chaque élément flouté au-dessus serait recalculé à chaque image. */
+}
+
+body::after {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
   margin: 0 0 var(--space-3);
-  line-height: 1.25;
+  font-family: var(--font-display);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 
 h1 {
   font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 h2 {
   font-size: var(--text-xl);
+  font-weight: 650;
 }
 
 h3 {
   font-size: var(--text-lg);
+  font-weight: 600;
 }
 
 p {
@@ -122,11 +198,13 @@ p {
 
 a {
   color: var(--color-accent);
-  text-underline-offset: 0.2em;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
 }
 
 a:hover {
   color: var(--color-accent-hover);
+  text-decoration-thickness: 2px;
 }
 
 code,
@@ -137,7 +215,7 @@ pre {
 
 :focus-visible {
   outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .visually-hidden {
@@ -152,47 +230,80 @@ pre {
   border: 0;
 }
 
+/* Petits textes partagés */
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Texte en dégradé : chaque extrémité respecte seule le contraste exigé. */
+.gradient-text {
+  background: var(--gradient-brand);
+  background-clip: text;
+  color: transparent;
+}
+
 /* Boutons */
 
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   min-height: var(--target-min);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-5);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font: inherit;
-  font-weight: 600;
+  font-weight: 650;
   line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
   transition:
     background-color var(--duration-fast) var(--ease-out),
     border-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
+    box-shadow var(--duration-base) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: scale(0.97);
 }
 
 .btn-primary {
-  background: var(--color-accent);
+  background: var(--gradient-primary);
   color: var(--color-on-accent);
+  box-shadow:
+    0 0 0 1px var(--glow-accent),
+    0 10px 28px -12px var(--glow-accent);
 }
 
 .btn-primary:hover {
-  background: var(--color-accent-hover);
   color: var(--color-on-accent);
+  box-shadow:
+    0 0 0 1px var(--color-accent),
+    0 14px 36px -10px var(--glow-accent);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: var(--color-surface-raised);
-  border-color: var(--color-border);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
   color: var(--color-text);
 }
 
 .btn-secondary:hover {
   border-color: var(--color-accent);
   color: var(--color-text);
+  box-shadow: 0 0 22px -6px var(--glow-accent);
 }
 
 .btn-ghost {
@@ -201,7 +312,7 @@ pre {
 }
 
 .btn-ghost:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-accent-soft);
   color: var(--color-text);
 }
 
@@ -214,22 +325,58 @@ pre {
 .btn[aria-disabled='true'] {
   opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Cartes */
+/* Cartes : verre dépoli, liseré lumineux en dégradé */
 
 .card {
   padding: var(--space-5);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background:
+    linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box,
+    linear-gradient(
+        150deg,
+        var(--glass-shine),
+        var(--glass-border) 35%,
+        var(--glass-border) 65%,
+        var(--glow-accent)
+      )
+      border-box;
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
 
-/* En-tête de page */
+/* Cartes en grille (laboratoires, compétences, quiz, spécialisations) : elles s'élèvent au survol. */
+li.card {
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+li.card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    var(--shadow-card),
+    0 0 0 1px var(--glow-accent),
+    0 18px 40px -18px var(--glow-accent);
+}
+
+/* En-tête de page : un trait lumineux sous le titre. */
 
 .page-header {
   margin-bottom: var(--space-6);
+}
+
+.page-header h1::after {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  margin-top: var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--gradient-brand);
+  box-shadow: 0 0 14px var(--glow-accent);
 }
 
 .page-header p {
@@ -253,9 +400,10 @@ pre {
 }
 
 .status-page .status-icon {
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   color: var(--color-accent);
+  filter: drop-shadow(0 0 16px var(--glow-accent));
 }
 
 .status-page .actions {
@@ -263,6 +411,19 @@ pre {
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-3);
+}
+
+/* Contraste élevé (Windows) : les effets disparaissent, les contours restent visibles. */
+@media (forced-colors: active) {
+  .card,
+  .btn {
+    border: 1px solid CanvasText;
+  }
+
+  body::before,
+  body::after {
+    display: none;
+  }
 }
 
 /* Mouvement réduit : les animations et transitions deviennent instantanées. */
@@ -275,5 +436,11 @@ pre {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .btn:hover,
+  .btn:active:not(:disabled, [aria-disabled='true']),
+  li.card:hover {
+    transform: none;
   }
 }

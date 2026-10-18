@@ -170,7 +170,8 @@ let nextId = 0;
 
     .context {
       margin: 0 0 var(--space-2);
-      padding: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-left: 3px solid var(--color-accent);
       border-radius: var(--radius-md);
       background: var(--color-surface-raised);
       font-size: var(--text-sm);
@@ -192,18 +193,36 @@ let nextId = 0;
       align-items: center;
       gap: var(--space-3);
       min-height: var(--target-min);
-      padding: var(--space-2) var(--space-3);
+      padding: var(--space-3) var(--space-4);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
+      background: var(--color-surface);
+      transition:
+        border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-base) var(--ease-out);
     }
 
+    /* Réponses en tuiles : survol, puis choix illuminé (bord, fond et lueur, pas la couleur seule). */
     .option {
       cursor: pointer;
+    }
+
+    .option:hover {
+      border-color: var(--color-accent);
     }
 
     .option:has(input:checked) {
       border-color: var(--color-accent);
       background: var(--color-accent-soft);
+      box-shadow:
+        inset 3px 0 0 var(--color-accent),
+        0 0 22px -8px var(--glow-accent);
+      font-weight: 600;
+    }
+
+    fieldset:disabled .option {
+      cursor: default;
     }
 
     input {
@@ -250,6 +269,8 @@ let nextId = 0;
 
     .correction {
       padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--glass-border);
+      border-left: 3px solid var(--color-violet);
       border-radius: var(--radius-md);
       background: var(--color-surface-raised);
       font-size: var(--text-sm);

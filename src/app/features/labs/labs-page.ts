@@ -22,7 +22,7 @@ import { LAB_KINDS } from './lab-page';
     <ul class="labs">
       @for (row of rows(); track row.lab.id) {
         <li class="card">
-          <p class="kind">{{ kinds[row.lab.kind].label }}</p>
+          <p class="kind eyebrow">{{ kinds[row.lab.kind].label }}</p>
           <h2>{{ row.lab.title }}</h2>
           <p>{{ row.lab.scenario }}</p>
           <p class="muted">

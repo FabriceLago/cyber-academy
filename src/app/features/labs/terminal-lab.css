@@ -23,24 +23,72 @@
 
 .tasks li.done ca-icon {
   color: var(--color-success);
+  filter: drop-shadow(0 0 6px var(--color-success));
 }
 
 /* Un terminal reste sombre dans les deux thèmes : couleurs fixes, contrastes ≥ 7:1 sur ce fond. */
 .terminal {
-  --term-bg: #0b1220;
+  --term-bg: #070c16;
   --term-text: #e6edf7;
   --term-muted: #a3b3cb;
   --term-prompt: #22d3ee;
   --term-error: #fca5a5;
   --term-success: #4ade80;
 
+  position: relative;
   min-width: 0;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--term-bg);
+  padding: 0 var(--space-4) var(--space-3);
+  overflow: hidden;
+  border: 1px solid rgb(34 211 238 / 0.35);
+  border-radius: var(--radius-lg);
+  background: radial-gradient(120% 80% at 50% 0%, #0d1a2b, var(--term-bg) 60%);
   color: var(--term-text);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.4),
+    0 24px 60px -24px rgb(34 211 238 / 0.35);
+}
+
+/* Lignes de balayage d'écran, à peine visibles et sans effet sur la lecture. */
+.terminal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(transparent 0 3px, rgb(255 255 255 / 0.018) 3px 4px);
+  pointer-events: none;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 calc(-1 * var(--space-4)) var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: rgb(255 255 255 / 0.04);
+  border-bottom: 1px solid rgb(148 163 184 / 0.14);
+}
+
+.dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #f87171;
+}
+
+.dot:nth-child(2) {
+  background: #fbbf24;
+}
+
+.dot:nth-child(3) {
+  background: #4ade80;
+}
+
+.title {
+  margin-inline: auto;
+  color: var(--term-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
 }
 
 .screen {
@@ -68,6 +116,7 @@ input:focus-visible {
 .prompt {
   color: var(--term-prompt);
   font-weight: 700;
+  text-shadow: 0 0 8px rgb(34 211 238 / 0.55);
 }
 
 [data-tone='error'] .out {

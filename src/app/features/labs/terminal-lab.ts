@@ -50,6 +50,10 @@ let nextId = 0;
     </section>
 
     <div class="terminal">
+      <div class="titlebar" aria-hidden="true">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="title">eleve&#64;cyberlab — terminal simulé</span>
+      </div>
       <!-- tabindex : la zone défile, elle doit donc pouvoir être atteinte au clavier. -->
       <div #screen class="screen" role="log" aria-label="Sortie du terminal" tabindex="0">
         @for (entry of entries(); track entry.id) {

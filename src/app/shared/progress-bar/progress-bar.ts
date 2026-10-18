@@ -19,17 +19,39 @@ import { Component, computed, input } from '@angular/core';
   styles: `
     :host {
       display: block;
-      height: 0.5rem;
+      height: 0.625rem;
       overflow: hidden;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       background: var(--color-accent-track);
+      box-shadow: inset 0 1px 2px var(--shadow-color);
     }
 
+    /* Remplissage en dégradé lumineux ; un reflet le parcourt (coupé en mouvement réduit). */
     .fill {
+      position: relative;
       display: block;
       height: 100%;
+      overflow: hidden;
       border-radius: inherit;
-      background: var(--color-accent);
+      background: var(--gradient-progress);
+      box-shadow: 0 0 12px var(--glow-accent);
+      transition: width 700ms var(--ease-out);
+    }
+
+    .fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+      transform: translateX(-100%);
+      animation: shine 2.8s ease-in-out 600ms infinite;
+    }
+
+    @keyframes shine {
+      60%,
+      to {
+        transform: translateX(100%);
+      }
     }
   `,
 })

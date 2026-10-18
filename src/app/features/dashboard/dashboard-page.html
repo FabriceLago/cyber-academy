@@ -1,5 +1,8 @@
 <header class="page-header">
-  <h1>Tableau de bord</h1>
+  <p class="eyebrow prompt" aria-hidden="true">
+    ~/cyber-academy $ statut<span class="cursor"></span>
+  </p>
+  <h1>Tableau de <span class="gradient-text">bord</span></h1>
   <p>Votre progression et la prochaine étape, en un coup d’œil.</p>
 </header>
 
@@ -7,12 +10,13 @@
 
 @if (account.status() === 'error') {
   <p class="card load-error" role="alert">
-    La progression enregistrée sur votre compte n’a pas pu être chargée : celle de ce navigateur
-    est affichée. Vérifiez votre connexion, puis rechargez la page.
+    La progression enregistrée sur votre compte n’a pas pu être chargée : celle de ce navigateur est
+    affichée. Vérifiez votre connexion, puis rechargez la page.
   </p>
 }
 
 <section class="card next" aria-labelledby="next-title">
+  <ca-icon class="next-icon" name="compass" />
   @if (s.nextLesson; as next) {
     <p class="eyebrow">Prochaine étape recommandée</p>
     <h2 id="next-title">{{ next.lesson.title }}</h2>
@@ -43,32 +47,34 @@
 <section aria-labelledby="stats-title">
   <h2 id="stats-title" class="visually-hidden">Vos chiffres clés</h2>
   <ul class="stats">
-    <li class="card stat">
-      <span class="label">Progression globale</span>
-      <span class="hero">{{ globalRatio() | percent }}</span>
+    <li class="card stat stat-hero">
+      <span class="label"><ca-icon name="route" /> Progression globale</span>
+      <span class="hero gradient-text">{{ globalRatio() | percent }}</span>
       <ca-progress-bar
         label="Progression globale"
         [value]="globalRatio()"
         [valueText]="'Leçons validées : ' + s.completedLessons + ' sur ' + s.lessons.length"
       />
-      <span class="muted">Leçons validées : {{ s.completedLessons }} sur {{ s.lessons.length }}</span>
+      <span class="muted"
+        >Leçons validées : {{ s.completedLessons }} sur {{ s.lessons.length }}</span
+      >
     </li>
     <li class="card stat">
-      <span class="label">Quiz réussis</span>
+      <span class="label"><ca-icon name="quiz" /> Quiz réussis</span>
       <span class="value">{{ passedQuizzes() }} sur {{ s.lessons.length }}</span>
     </li>
     <li class="card stat">
-      <span class="label">Laboratoires terminés</span>
+      <span class="label"><ca-icon name="flask" /> Laboratoires terminés</span>
       <span class="value">{{ completedLabs() }} sur {{ s.labs.length }}</span>
     </li>
     <li class="card stat">
-      <span class="label">Compétences acquises</span>
+      <span class="label"><ca-icon name="award" /> Compétences acquises</span>
       <span class="value">{{ acquiredSkills() }} sur {{ s.skills.length }}</span>
       <a routerLink="/competences">Voir le détail</a>
     </li>
     @if (fromAccount()) {
       <li class="card stat">
-        <span class="label">Points d’expérience</span>
+        <span class="label"><ca-icon name="shield" /> Points d’expérience</span>
         <span class="value">{{ xp() }}</span>
         <a routerLink="/competences">Badges obtenus : {{ earnedBadges() }}</a>
       </li>
@@ -143,7 +149,9 @@
     <ca-progress-bar
       label="Objectif de la semaine"
       [value]="weekly.completedThisWeek / weekly.goal"
-      [valueText]="'Leçons validées depuis lundi : ' + weekly.completedThisWeek + ' sur ' + weekly.goal"
+      [valueText]="
+        'Leçons validées depuis lundi : ' + weekly.completedThisWeek + ' sur ' + weekly.goal
+      "
     />
     <p class="muted">
       Leçons validées depuis lundi : {{ weekly.completedThisWeek }} sur {{ weekly.goal }}.

@@ -6,9 +6,11 @@
     <a routerLink="/laboratoires">Laboratoires</a> › {{ lab.title }}
   </nav>
   <header class="page-header">
-    <p class="kind">Cyber Lab · {{ kind.label }}</p>
+    <p class="kind eyebrow">Cyber Lab · {{ kind.label }}</p>
     <h1 #title tabindex="-1">{{ lab.title }}</h1>
-    <p class="simulated"><ca-icon name="shield" /> <span>{{ kind.simulated }}</span></p>
+    <p class="simulated">
+      <ca-icon name="shield" /> <span>{{ kind.simulated }}</span>
+    </p>
   </header>
 
   @if (owner?.status === 'locked') {
@@ -36,8 +38,8 @@
       <p class="muted">{{ kind.actions }}</p>
       @if (completed()) {
         <p class="already">
-          <ca-icon name="check" /> Vous avez déjà réussi ce laboratoire : vous pouvez le refaire pour
-          vous entraîner.
+          <ca-icon name="check" /> Vous avez déjà réussi ce laboratoire : vous pouvez le refaire
+          pour vous entraîner.
         </p>
       }
     </section>
@@ -64,7 +66,10 @@
         </h2>
         @if (saveError()) {
           <div class="save-error" role="alert">
-            <p><strong>Ce résultat n’a pas été enregistré sur votre compte.</strong> {{ saveError() }}</p>
+            <p>
+              <strong>Ce résultat n’a pas été enregistré sur votre compte.</strong>
+              {{ saveError() }}
+            </p>
             <button type="button" class="btn btn-secondary" (click)="save(outcome)">
               Réessayer l’enregistrement
             </button>
@@ -77,11 +82,16 @@
           <li>Indices utilisés : {{ shownHints() }} sur {{ lab.hints.length }}.</li>
         </ul>
         @if (owner?.status === 'completed') {
-          <p><strong>La leçon « {{ owner?.lesson?.title }} » est validée.</strong></p>
+          <p>
+            <strong>La leçon « {{ owner?.lesson?.title }} » est validée.</strong>
+          </p>
         } @else if (outcome.succeeded && owner) {
           <p>Pour valider la leçon « {{ owner.lesson.title }} », il faut aussi réussir son quiz.</p>
         } @else if (!outcome.succeeded) {
-          <p>Relisez la correction de chaque élément, puis recommencez : le laboratoire est réussi quand toutes les analyses sont justes.</p>
+          <p>
+            Relisez la correction de chaque élément, puis recommencez : le laboratoire est réussi
+            quand toutes les analyses sont justes.
+          </p>
         }
 
         <h3>Explications</h3>
@@ -93,9 +103,13 @@
           </button>
           @if (owner) {
             @if (owner.status !== 'completed' && outcome.succeeded) {
-              <a class="btn btn-secondary" [routerLink]="['/lecons', owner.lesson.id, 'quiz']">Passer le quiz</a>
+              <a class="btn btn-secondary" [routerLink]="['/lecons', owner.lesson.id, 'quiz']"
+                >Passer le quiz</a
+              >
             }
-            <a class="btn btn-secondary" [routerLink]="['/lecons', owner.lesson.id]">Revenir à la leçon</a>
+            <a class="btn btn-secondary" [routerLink]="['/lecons', owner.lesson.id]"
+              >Revenir à la leçon</a
+            >
           }
         </div>
       </section>
@@ -107,10 +121,16 @@
           apparaîtra dans votre bilan.
         </p>
         @for (hint of lab.hints.slice(0, shownHints()); track $index) {
-          <p class="hint"><strong>Indice {{ $index + 1 }} :</strong> {{ hint }}</p>
+          <p class="hint">
+            <strong>Indice {{ $index + 1 }} :</strong> {{ hint }}
+          </p>
         }
         @if (shownHints() < lab.hints.length) {
-          <button type="button" class="btn btn-secondary" (click)="shownHints.set(shownHints() + 1)">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="shownHints.set(shownHints() + 1)"
+          >
             Afficher un indice ({{ lab.hints.length - shownHints() }} restant{{
               lab.hints.length - shownHints() > 1 ? 's' : ''
             }})

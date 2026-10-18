@@ -85,15 +85,15 @@ test('le thème choisi dans le profil s’applique et persiste après rechargeme
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/profil');
   const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  await expect.poll(background).toBe('rgb(11, 18, 32)'); // #0b1220, bleu nuit
+  await expect.poll(background).toBe('rgb(6, 10, 19)'); // #060a13, bleu nuit profond
 
   await page.getByRole('radio', { name: 'Clair', exact: true }).check();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await expect.poll(background).toBe('rgb(244, 247, 251)'); // #f4f7fb
+  await expect.poll(background).toBe('rgb(243, 246, 251)'); // #f3f6fb
 
   await page.reload();
   await expect(page.getByRole('radio', { name: 'Clair', exact: true })).toBeChecked();
-  await expect.poll(background).toBe('rgb(244, 247, 251)');
+  await expect.poll(background).toBe('rgb(243, 246, 251)');
 });
 
 test('le bouton de l’en-tête bascule entre thème sombre et thème clair', async ({ page }) => {
