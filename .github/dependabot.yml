@@ -7,6 +7,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # TypeScript suit Angular : @angular/build 22 n'accepte que typescript 6.0.x. Il montera avec
+    # `ng update` vers Angular 23 ; retirer alors cette règle.
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
 
   # Les actions de la CI sont épinglées par empreinte de commit : Dependabot met l'empreinte à jour.
   - package-ecosystem: github-actions
