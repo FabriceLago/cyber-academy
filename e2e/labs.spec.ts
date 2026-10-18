@@ -76,6 +76,25 @@ test('le terminal simulé se pilote au clavier, valide la mission et la leçon',
   await expect(page.getByRole('link', { name: 'Refaire le laboratoire' })).toBeVisible();
 });
 
+test('le terminal vide le champ même quand Entrée suit la frappe avant tout rendu', async ({
+  page,
+}) => {
+  await seed(page, TERMINAL_OPEN);
+  await page.goto(`/laboratoires/${TERMINAL_LAB.id}`);
+  const input = page.getByLabel(/Commande à exécuter/);
+  // Frappe et Entrée dans la même tâche, comme un poste chargé qui les traite d'un bloc :
+  // aucun rendu ne passe entre les deux.
+  await input.evaluate((el: HTMLInputElement) => {
+    el.value = 'ls';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.form?.requestSubmit();
+  });
+  await expect(page.getByRole('log', { name: 'Sortie du terminal' })).toContainText(
+    'Documents/  Images/  notes.txt',
+  );
+  await expect(input).toHaveValue('');
+});
+
 test('le détecteur d’hameçonnage ne corrige qu’après l’analyse, puis dresse le bilan', async ({
   page,
 }) => {

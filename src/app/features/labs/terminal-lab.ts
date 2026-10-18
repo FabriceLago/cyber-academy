@@ -69,16 +69,14 @@ let nextId = 0;
           </div>
         }
       </div>
-      <form class="input-line" (submit)="run($event)">
+      <form class="input-line" (submit)="run($event, input)">
         <label class="prompt" [for]="inputId">
           {{ promptText() }}<span class="visually-hidden"> Commande à exécuter</span>
         </label>
         <input
           #input
           [id]="inputId"
-          [value]="draft()"
-          (input)="draft.set(input.value)"
-          (keydown)="recall($event)"
+          (keydown)="recall($event, input)"
           [disabled]="finished()"
           autocomplete="off"
           autocapitalize="off"
@@ -102,7 +100,6 @@ export class TerminalLabView {
   private readonly screen = viewChild.required<ElementRef<HTMLElement>>('screen');
 
   protected readonly inputId = `terminal-${++nextId}`;
-  protected readonly draft = signal('');
   protected readonly finished = signal(false);
   // linkedSignal : calculés au premier affichage, quand l'entrée `lab` est disponible.
   private readonly state = linkedSignal(() => startTerminal(this.lab()));
@@ -125,9 +122,12 @@ export class TerminalLabView {
   private historyIndex = 0;
   private errors = 0;
 
-  protected run(event: Event): void {
+  // Le texte tapé vit seulement dans le champ, jamais dans un signal relié par [value] : si la
+  // frappe et Entrée arrivent avant le rendu suivant, ce signal reviendrait à '' sans changement
+  // visible pour Angular, et le champ garderait la commande déjà exécutée.
+  protected run(event: Event, input: HTMLInputElement): void {
     event.preventDefault();
-    const text = this.draft();
+    const text = input.value;
     const before = this.tasks();
     const result = runCommand(this.lab(), this.state(), text);
     if (text.trim() !== '') {
@@ -149,7 +149,7 @@ export class TerminalLabView {
     const added: Entry[] =
       reached.length > 0 ? [{ id: ++nextId, lines: reached, tone: 'success' }] : [];
     this.entries.update((entries) => (result.clear ? added : [...entries, echo, ...added]));
-    this.draft.set('');
+    input.value = '';
 
     if (this.tasks().every((item) => item.done)) this.finish();
     afterNextRender(
@@ -162,12 +162,12 @@ export class TerminalLabView {
   }
 
   /** Flèches haut et bas : parcourir les commandes déjà tapées, comme dans un vrai terminal. */
-  protected recall(event: KeyboardEvent): void {
+  protected recall(event: KeyboardEvent, input: HTMLInputElement): void {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     event.preventDefault();
     const step = event.key === 'ArrowUp' ? -1 : 1;
     this.historyIndex = Math.min(Math.max(this.historyIndex + step, 0), this.history.length);
-    this.draft.set(this.history[this.historyIndex] ?? '');
+    input.value = this.history[this.historyIndex] ?? '';
   }
 
   private finish(): void {
