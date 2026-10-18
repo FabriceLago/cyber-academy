@@ -1,3 +1,4 @@
+import { ViewportScroller } from '@angular/common';
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -54,6 +55,7 @@ export class App {
 
   private readonly router = inject(Router);
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
+  private readonly topbar = viewChild.required<ElementRef<HTMLElement>>('topbar');
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
 
   /** Vrai pendant le chargement d'une page : affiche la barre de progression. */
@@ -72,6 +74,9 @@ export class App {
   );
 
   constructor() {
+    // Lien vers une ancre (/parcours/x#projet) : la section s'arrête sous la barre fixe du haut.
+    inject(ViewportScroller).setOffset(() => [0, this.topbar().nativeElement.offsetHeight + 16]);
+
     // Après chaque changement de page (sauf le premier affichage) : refermer le menu mobile et
     // placer le focus sur le contenu, pour que clavier et lecteurs d'écran repartent du début.
     this.router.events

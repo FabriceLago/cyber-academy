@@ -222,8 +222,8 @@ export function summarizeProgress(
   };
 }
 
-/** Lundi 0 h, heure locale. */
-function startOfWeek(now: Date): Date {
+/** Lundi 0 h (heure locale) de la semaine de `now`. */
+export function startOfWeek(now: Date): Date {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7));

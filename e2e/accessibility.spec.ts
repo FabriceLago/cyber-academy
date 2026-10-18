@@ -12,6 +12,7 @@ const PATHS = [
   '/laboratoires/lab-phishing', // laboratoire verrouillé
   '/laboratoires/lab-journaux', // laboratoire d'une spécialisation verrouillée
   '/parcours/analyste-soc-junior', // spécialisation verrouillée, avec sa fiche métier
+  '/glossaire',
   '/parcours/inexistant',
   '/laboratoires/inexistant',
   '/connexion',
@@ -29,6 +30,9 @@ for (const [colorScheme, name] of [
     page,
     isMobile,
   }) => {
+    // Un seul test parcourt toutes les pages : son délai grandit avec leur nombre (≈ 1 s par page
+    // mesurée, 3 s de marge sur un poste chargé).
+    test.setTimeout(PATHS.length * 3_000);
     await page.emulateMedia({ colorScheme });
 
     for (const path of PATHS) {

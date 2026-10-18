@@ -83,6 +83,67 @@
 </section>
 
 <div class="columns">
+  <section class="card" aria-labelledby="review-title">
+    <h2 id="review-title">À réviser</h2>
+    @if (reviews().length > 0) {
+      <ul class="reviews">
+        @for (item of reviews(); track item.lesson.id) {
+          <li>
+            <p>
+              <strong>{{ item.lesson.title }}</strong>
+            </p>
+            @if (item.reason === 'notions') {
+              <p class="muted">Notions manquées à la dernière tentative :</p>
+              <ul class="objectives">
+                @for (objective of item.objectives; track objective.id) {
+                  <li>{{ objective.text }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="muted">
+                Leçon validée, sans quiz depuis {{ item.daysSince }} jours : un rappel aide à
+                retenir.
+              </p>
+            }
+            <p class="review-actions">
+              <a class="btn btn-secondary" [routerLink]="['/lecons', item.lesson.id, 'quiz']">
+                Refaire le quiz<span class="visually-hidden"> : {{ item.lesson.title }}</span>
+              </a>
+              <a [routerLink]="['/lecons', item.lesson.id]">
+                Relire la leçon<span class="visually-hidden"> : {{ item.lesson.title }}</span>
+              </a>
+            </p>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">
+        Rien à réviser pour l’instant. Les notions manquées à un quiz apparaîtront ici, ainsi que
+        les leçons validées depuis plus de deux semaines.
+      </p>
+    }
+  </section>
+
+  @let c = challenge();
+  <section class="card challenge" aria-labelledby="challenge-title">
+    <p class="eyebrow">Défi de la semaine · facultatif</p>
+    <h2 id="challenge-title">{{ c.title }}</h2>
+    <p>{{ c.description }}</p>
+    @if (c.done) {
+      <p class="result passed">
+        <ca-icon name="check" /> Défi relevé cette semaine. Un nouveau défi arrive lundi.
+      </p>
+    } @else {
+      <p class="muted">
+        Relevé automatiquement par une tentative réussie d’ici dimanche soir : ouvrir une page ne
+        suffit pas.
+      </p>
+      <p><a class="btn btn-secondary" [routerLink]="c.link">Relever le défi</a></p>
+    }
+  </section>
+</div>
+
+<div class="columns">
   @if (s.currentPath; as current) {
     <section class="card" aria-labelledby="path-title">
       <h2 id="path-title">Parcours en cours</h2>

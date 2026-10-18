@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/catalog';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
@@ -6,7 +7,7 @@ import { LessonList } from './lesson-list';
 
 @Component({
   selector: 'ca-lessons-page',
-  imports: [LessonList],
+  imports: [RouterLink, LessonList],
   template: `
     <header class="page-header">
       <h1>Leçons</h1>
@@ -14,6 +15,7 @@ import { LessonList } from './lesson-list';
         Toutes les leçons, dans l’ordre conseillé. Une leçon s’ouvre quand ses prérequis sont
         validés.
       </p>
+      <p><a routerLink="/glossaire">Consulter le glossaire de tous les termes</a></p>
     </header>
     @for (group of modules(); track group.module.id) {
       <section class="card" [attr.aria-labelledby]="'module-' + group.module.id">

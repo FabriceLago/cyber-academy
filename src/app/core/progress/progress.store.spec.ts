@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { EMPTY_PROGRESS, ProgressStore, parseProgress } from './progress.store';
+import { EMPTY_PROGRESS, ProgressStore, parseProgress, readBackup } from './progress.store';
 
 const validQuiz = {
   lessonId: 'A',
@@ -59,8 +59,42 @@ describe('parseProgress', () => {
   });
 });
 
+describe('readBackup', () => {
+  it.each([
+    ['du JSON invalide', '{oups'],
+    ['un autre fichier JSON', '{"name":"package"}'],
+    ['une autre version du format', JSON.stringify({ schemaVersion: 2 })],
+  ])('refuse %s', (_, text) => {
+    expect(readBackup(text)).toBeNull();
+  });
+
+  it('garde les entrées valides et compte celles qui sont ignorées', () => {
+    const backup = readBackup(
+      stored({
+        quizAttempts: [validQuiz, { lessonId: 3 }],
+        labAttempts: [validLab],
+        weeklyGoal: 4,
+      }),
+    );
+    expect(backup?.state.quizAttempts).toEqual([validQuiz]);
+    expect(backup?.state.labAttempts).toHaveLength(1);
+    expect(backup?.state.weeklyGoal).toBe(4);
+    expect(backup?.ignored).toBe(1);
+  });
+});
+
 describe('ProgressStore', () => {
   beforeEach(() => localStorage.clear());
+
+  it('restaure une sauvegarde à la place de la progression du navigateur', () => {
+    localStorage.setItem('ca-progress', stored({ labAttempts: [validLab] }));
+    const store = TestBed.inject(ProgressStore);
+    const backup = readBackup(stored({ quizAttempts: [validQuiz], weeklyGoal: 2 }));
+    if (!backup) throw new Error('Sauvegarde refusée');
+    store.restore(backup.state);
+    expect(store.state()).toEqual(backup.state);
+    expect(parseProgress(localStorage.getItem('ca-progress'))).toEqual(backup.state);
+  });
   afterEach(() => vi.restoreAllMocks());
 
   it('relit la progression du navigateur', () => {

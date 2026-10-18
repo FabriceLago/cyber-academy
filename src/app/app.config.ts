@@ -28,7 +28,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
-      withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
+      // anchorScrolling : un lien vers /parcours/x#projet ouvre la page à la bonne section.
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' }),
       // Échec de chargement d'une page (réseau coupé…) : page d'erreur, en affichant l'adresse
       // demandée dans la barre du navigateur pour que « Recharger » réessaie la bonne page.
       withNavigationErrorHandler(

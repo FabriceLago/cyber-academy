@@ -83,6 +83,25 @@ test('le parcours Découverte terminé ouvre la spécialisation', async ({ page 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(FIRST_LESSON);
 });
 
+test('la page Projets mène au projet final, affiché sous la barre du haut', async ({ page }) => {
+  await page.goto('/projets');
+  await expect(page.getByText('Pas encore commencé')).toBeVisible();
+  await page.getByRole('link', { name: /^Ouvrir le projet/ }).click();
+  await expect(page).toHaveURL(new RegExp(`${SOC}#projet$`));
+  const title = page.getByRole('heading', { name: /^Projet final :/ });
+  await expect(title).toBeInViewport();
+  // Le titre n'est pas caché sous la barre fixe (défilement d'ancre décalé).
+  await expect
+    .poll(() =>
+      title.evaluate(
+        (el) =>
+          el.getBoundingClientRect().top -
+          (document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0),
+      ),
+    )
+    .toBeGreaterThanOrEqual(0);
+});
+
 test('le laboratoire de journaux se filtre puis se résout jusqu’au verdict', async ({ page }) => {
   await seedCompleted(page, ['soc-et-journaux']);
   await page.goto(`/laboratoires/${LOGS_LAB.id}`);

@@ -236,6 +236,31 @@ td {
   color: var(--color-success);
 }
 
+.reviews {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reviews p,
+.challenge p {
+  margin: 0 0 var(--space-2);
+}
+
+.objectives {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .load-error {
   border-color: var(--color-danger);
 }

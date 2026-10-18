@@ -1,24 +1,5 @@
-import { Route, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { ErrorPage } from './features/errors/error-page';
-import { IconName } from './shared/icon/icon';
-
-/** Section pas encore développée : page provisoire qui annonce l'étape prévue. */
-function comingSoon(
-  path: string,
-  title: string,
-  icon: IconName,
-  intro: string,
-  availability: string,
-): Route {
-  return {
-    path,
-    pathMatch: 'full',
-    title,
-    data: { heading: title, intro, icon, availability },
-    loadComponent: () =>
-      import('./features/coming-soon/coming-soon-page').then((m) => m.ComingSoonPage),
-  };
-}
 
 export const routes: Routes = [
   {
@@ -54,6 +35,11 @@ export const routes: Routes = [
           m.findLesson(route.paramMap.get('lessonId') ?? '')?.lesson.title ?? 'Leçon introuvable',
       ),
     loadComponent: () => import('./features/lessons/lesson-page').then((m) => m.LessonPage),
+  },
+  {
+    path: 'glossaire',
+    title: 'Glossaire',
+    loadComponent: () => import('./features/glossary/glossary-page').then((m) => m.GlossaryPage),
   },
   {
     path: 'connexion',
@@ -94,13 +80,11 @@ export const routes: Routes = [
     title: 'Quiz et examens',
     loadComponent: () => import('./features/quizzes/quizzes-page').then((m) => m.QuizzesPage),
   },
-  comingSoon(
-    'projets',
-    'Projets pratiques',
-    'folder',
-    'Des projets concrets pour construire votre portfolio.',
-    'après la première version (MVP)',
-  ),
+  {
+    path: 'projets',
+    title: 'Projets pratiques',
+    loadComponent: () => import('./features/projects/projects-page').then((m) => m.ProjectsPage),
+  },
   {
     path: 'competences',
     title: 'Compétences',

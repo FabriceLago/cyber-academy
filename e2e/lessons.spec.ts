@@ -111,8 +111,11 @@ test('la carte des parcours et la liste des leçons reflètent les verrous', asy
     page.getByRole('main').getByRole('link', { name: 'Découvrir le terminal' }),
   ).toHaveCount(0);
 
+  // Seule la première leçon est un lien ; le lien vers le glossaire est toujours présent.
   await page.goto('/lecons');
-  await expect(page.getByRole('main').getByRole('link')).toHaveCount(1);
+  await expect(
+    page.getByRole('main').getByRole('link').filter({ hasNotText: 'glossaire' }),
+  ).toHaveCount(1);
 });
 
 test('la progression peut être réinitialisée depuis le profil', async ({ page }) => {
@@ -130,6 +133,19 @@ test('la progression peut être réinitialisée depuis le profil', async ({ page
     'aria-valuenow',
     '0',
   );
+});
+
+test('le glossaire rassemble les termes des leçons et se filtre sans accents', async ({ page }) => {
+  await page.goto('/lecons');
+  await page.getByRole('link', { name: 'Consulter le glossaire de tous les termes' }).click();
+  await expect(h1(page)).toHaveText('Glossaire');
+  const count = page.getByRole('status').filter({ hasText: 'terme' });
+  await expect(count).toHaveText(/\d+ termes/);
+
+  await page.getByLabel('Rechercher un terme ou une définition').fill('HAMECON');
+  await expect(count).toHaveText(/1 terme trouvé sur \d+/);
+  await page.getByRole('link', { name: 'Repérer l’hameçonnage et l’ingénierie sociale' }).click();
+  await expect(page).toHaveURL(/\/lecons\/hameconnage$/);
 });
 
 test('une adresse de leçon inconnue est signalée', async ({ page }) => {

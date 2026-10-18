@@ -55,6 +55,11 @@ export class ProgressStore {
     this.save({ ...EMPTY_PROGRESS, weeklyGoal: this.current().weeklyGoal });
   }
 
+  /** Remplace la progression de ce navigateur par une sauvegarde lue avec readBackup. */
+  restore(state: ProgressState): void {
+    this.save(state);
+  }
+
   private read(): ProgressState {
     try {
       return parseProgress(this.window?.localStorage.getItem(STORAGE_KEY) ?? null);
@@ -91,6 +96,28 @@ export function parseProgress(raw: string | null): ProgressState {
     labAttempts: validEntries(data['labAttempts'], toLabAttempt),
     weeklyGoal: isWeeklyGoal(data['weeklyGoal']) ? data['weeklyGoal'] : null,
   };
+}
+
+/**
+ * Fichier de sauvegarde importé (même format que le stockage du navigateur). null si ce n'est
+ * pas une sauvegarde lisible ; sinon la progression valide et le nombre d'entrées ignorées.
+ */
+export function readBackup(text: string): { state: ProgressState; ignored: number } | null {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!isRecord(data) || data['schemaVersion'] !== 1) return null;
+  const state = parseProgress(text);
+  const count = (value: unknown) => (Array.isArray(value) ? value.length : 0);
+  const ignored =
+    count(data['quizAttempts']) +
+    count(data['labAttempts']) -
+    state.quizAttempts.length -
+    state.labAttempts.length;
+  return { state, ignored };
 }
 
 function toQuizAttempt(value: unknown): QuizAttempt | null {

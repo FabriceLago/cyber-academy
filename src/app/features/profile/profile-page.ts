@@ -1,5 +1,6 @@
 import {
   Component,
+  DOCUMENT,
   ElementRef,
   Injector,
   afterNextRender,
@@ -11,8 +12,12 @@ import {
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AccountProgress, RecordError, recordMessage } from '../../core/progress/account-progress';
-import { ProgressStore } from '../../core/progress/progress.store';
+import { ProgressState } from '../../core/models/progress.model';
+import { ProgressStore, readBackup } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
+
+/** Une sauvegarde réelle pèse quelques dizaines de ko : au-delà, le fichier n'est pas lu. */
+const MAX_BACKUP_BYTES = 1_000_000;
 
 @Component({
   selector: 'ca-profile-page',
@@ -91,6 +96,53 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
         }
         <p role="status" class="hint">{{ resetMessage() }}</p>
       }
+
+      <h3>Sauvegarde</h3>
+      <p class="hint">
+        Téléchargez votre progression dans un fichier pour la garder, ou la reprendre dans un autre
+        navigateur sans compte. Il contient vos tentatives et votre objectif hebdomadaire, sans
+        adresse e-mail. Le rapport du projet final s’exporte depuis sa page, avec le portfolio.
+      </p>
+      <button type="button" class="btn btn-secondary" (click)="download()">
+        Télécharger une sauvegarde
+      </button>
+      @if (progress.fromAccount()) {
+        <p class="hint">
+          La restauration ne concerne que la progression sans compte : celle de votre compte est
+          vérifiée par le serveur.
+        </p>
+      } @else {
+        <label class="field-label backup-label" for="backup-file">
+          Restaurer une sauvegarde (fichier .json, 1 Mo au plus)
+        </label>
+        <input
+          #backupFile
+          id="backup-file"
+          type="file"
+          accept=".json,application/json"
+          (change)="readFile(backupFile)"
+        />
+        @if (pendingBackup(); as pending) {
+          <p>
+            <strong>Remplacer la progression de ce navigateur ?</strong> Le fichier contient
+            {{ pending.state.quizAttempts.length }} tentative(s) de quiz et
+            {{ pending.state.labAttempts.length }} de laboratoire{{
+              pending.ignored > 0
+                ? ' ; ' + pending.ignored + ' entrée(s) invalide(s) seront ignorée(s)'
+                : ''
+            }}. Vos {{ localAttempts() }} tentative(s) actuelle(s) seront remplacées.
+          </p>
+          <div class="row">
+            <button #confirmRestoreRef type="button" class="btn btn-primary" (click)="restore()">
+              Oui, remplacer
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelRestore()">
+              Annuler
+            </button>
+          </div>
+        }
+      }
+      <p role="status" class="hint">{{ backupMessage() }}</p>
     </section>
 
     <section class="card" aria-labelledby="compte">
@@ -160,10 +212,25 @@ import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
       background: var(--color-accent-soft);
     }
 
-    input {
+    input[type='radio'] {
       width: 1.25rem;
       height: 1.25rem;
       margin: 0;
+    }
+
+    h3 {
+      margin: var(--space-5) 0 var(--space-2);
+    }
+
+    .backup-label {
+      margin-top: var(--space-4);
+    }
+
+    input[type='file'] {
+      display: block;
+      max-width: 100%;
+      margin-bottom: var(--space-3);
+      font: inherit;
     }
 
     label {
@@ -257,6 +324,60 @@ export class ProfilePage {
     this.progress.reset();
     this.resetMessage.set('Progression réinitialisée.');
     this.cancelReset();
+  }
+
+  private readonly document = inject(DOCUMENT);
+  private readonly confirmRestoreButton =
+    viewChild<ElementRef<HTMLButtonElement>>('confirmRestoreRef');
+  private readonly backupInput = viewChild<ElementRef<HTMLInputElement>>('backupFile');
+  /** Sauvegarde lue et validée, en attente de confirmation. */
+  protected readonly pendingBackup = signal<{ state: ProgressState; ignored: number } | null>(null);
+  protected readonly backupMessage = signal('');
+
+  protected download(): void {
+    const state = this.progress.state();
+    const name = `cyber-academy-progression-${new Date().toISOString().slice(0, 10)}.json`;
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = this.document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url));
+    this.backupMessage.set(`Fichier « ${name} » téléchargé.`);
+  }
+
+  /** Lit le fichier choisi ; rien n'est remplacé avant la confirmation. */
+  protected async readFile(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = ''; // Le même fichier pourra être choisi de nouveau.
+    this.pendingBackup.set(null);
+    if (!file) return;
+    if (file.size > MAX_BACKUP_BYTES) {
+      this.backupMessage.set('Fichier trop volumineux : une sauvegarde fait moins de 1 Mo.');
+      return;
+    }
+    const backup = readBackup(await file.text());
+    if (!backup) {
+      this.backupMessage.set('Ce fichier n’est pas une sauvegarde Cyber Academy lisible.');
+      return;
+    }
+    this.backupMessage.set('');
+    this.pendingBackup.set(backup);
+    this.focusAfterRender(() => this.confirmRestoreButton());
+  }
+
+  protected restore(): void {
+    const backup = this.pendingBackup();
+    if (!backup) return;
+    this.progress.restore(backup.state);
+    this.backupMessage.set('Progression restaurée depuis le fichier.');
+    this.cancelRestore();
+  }
+
+  protected cancelRestore(): void {
+    this.pendingBackup.set(null);
+    afterNextRender(() => this.backupInput()?.nativeElement.focus(), { injector: this.injector });
   }
 
   private focusAfterRender(target: () => ElementRef<HTMLButtonElement> | undefined): void {
