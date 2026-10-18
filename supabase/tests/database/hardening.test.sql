@@ -3,7 +3,15 @@
 -- e2e/security.spec.ts : une seule session SQL ne peut pas simuler des envois simultanés.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(10);
+
+select is_empty(
+  $$ select table_name || ' : ' || grantee || ' : ' || privilege_type
+     from information_schema.role_table_grants
+     where table_schema = 'public' and grantee in ('anon', 'authenticated')
+       and privilege_type in ('TRUNCATE', 'TRIGGER', 'REFERENCES') $$,
+  'les rôles de l’API n’ont ni TRUNCATE (qui ignore la RLS), ni TRIGGER, ni REFERENCES'
+);
 
 -- Fonctions du schéma public qu'un rôle peut appeler.
 create function pg_temp.callable(r text) returns setof text language sql as $$

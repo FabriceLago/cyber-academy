@@ -57,6 +57,11 @@ export class AuthService {
           emailRedirectTo: `${this.document.location.origin}/profil`,
         },
       });
+      // Adresse déjà inscrite : même réponse que pour une nouvelle, pour ne pas révéler qui a un
+      // compte (énumération), même si le serveur était configuré pour le dire.
+      if (error?.code === 'user_already_exists' || error?.code === 'email_exists') {
+        return { ok: true, needsConfirmation: true };
+      }
       if (error) return { ok: false, message: authMessage(error) };
       // Si la confirmation par e-mail est exigée (en production), aucune session n'est ouverte.
       return { ok: true, needsConfirmation: data.session === null };
@@ -115,9 +120,6 @@ export function authMessage(error: {
   switch (error.code) {
     case 'invalid_credentials':
       return 'Adresse e-mail ou mot de passe incorrect.';
-    case 'user_already_exists':
-    case 'email_exists':
-      return 'Un compte existe déjà avec cette adresse : connectez-vous plutôt.';
     case 'weak_password':
       return 'Mot de passe trop faible : choisissez au moins 10 caractères.';
     case 'over_request_rate_limit':

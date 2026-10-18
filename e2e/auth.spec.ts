@@ -1,20 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
-import { environment } from '../src/environments/environment';
+import { PASSWORD, confirmationLink, confirmedSession, requireSupabase } from './account-helpers';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const PASSWORD = 'une phrase de passe solide';
-
-/** Les parcours de compte ont besoin de Supabase local (npm run db:start) ; sinon, ignorés. */
-async function requireSupabase(page: Page) {
-  const response = await page.request
-    .get(`${environment.supabaseUrl}/auth/v1/health`, {
-      headers: { apikey: environment.supabasePublishableKey },
-    })
-    .catch(() => null);
-  test.skip(!response?.ok(), 'Supabase local arrêté : lancez « npm run db:start ».');
-}
 
 async function fillForm(page: Page, fields: { name?: string; email: string; password: string }) {
   if (fields.name !== undefined) await page.getByLabel('Prénom ou pseudonyme').fill(fields.name);
@@ -22,14 +10,20 @@ async function fillForm(page: Page, fields: { name?: string; email: string; pass
   await page.getByLabel('Mot de passe', { exact: true }).fill(fields.password);
 }
 
-test('créer un compte, se déconnecter puis se reconnecter', async ({ page }, testInfo) => {
+test('créer un compte (e-mail de confirmation), se déconnecter puis se reconnecter', async ({
+  page,
+}, testInfo) => {
   await requireSupabase(page);
   const email = `eleve-${Date.now()}-${testInfo.project.name}@exemple.test`;
+  const confirmation = page.getByRole('heading', { name: 'Vérifiez votre boîte de réception' });
 
   await page.goto('/inscription');
   await fillForm(page, { name: 'Léa', email, password: PASSWORD });
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(confirmation).toBeVisible();
 
+  // Le lien de l'e-mail ramène sur le profil, session ouverte, sans code laissé dans l'adresse.
+  await page.goto(await confirmationLink(page.request, email));
   await expect(page).toHaveURL(/\/profil$/);
   const account = page.getByRole('region', { name: 'Compte' });
   await expect(account).toContainText(`Session ouverte avec l’adresse ${email}, au nom de Léa.`);
@@ -41,11 +35,13 @@ test('créer un compte, se déconnecter puis se reconnecter', async ({ page }, t
   await expect(account.getByRole('link', { name: 'Se connecter' })).toBeVisible();
   await expect(page.getByRole('banner').getByRole('link', { name: 'Se connecter' })).toBeVisible();
 
-  // La même adresse ne peut pas servir deux fois.
+  // Une adresse déjà inscrite reçoit exactement la même réponse qu'une nouvelle : l'inscription
+  // ne permet pas de savoir qui a un compte (énumération).
   await page.goto('/inscription');
   await fillForm(page, { name: 'Léa', email, password: PASSWORD });
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
-  await expect(page.getByRole('alert')).toContainText('Un compte existe déjà avec cette adresse');
+  await expect(confirmation).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
 
   await page.goto('/connexion');
   await fillForm(page, { email, password: 'mauvais mot de passe' });
@@ -78,50 +74,29 @@ test('un formulaire incomplet est expliqué, champ par champ', async ({ page }) 
   await expect(page.getByLabel('Mot de passe', { exact: true })).toHaveAttribute('type', 'text');
 });
 
-/** Clé d'administration de la pile LOCALE, lue au moment du test : jamais écrite dans le dépôt. */
-function localServiceKey(): string {
-  try {
-    const status = execFileSync(
-      process.execPath,
-      ['node_modules/supabase/dist/supabase.js', 'status', '-o', 'env'],
-      { encoding: 'utf8' },
-    );
-    return /^SERVICE_ROLE_KEY="?([^"\r\n]+)"?/m.exec(status)?.[1] ?? '';
-  } catch {
-    return '';
-  }
-}
-
-test('le lien de confirmation reçu par e-mail ouvre la session et quitte l’adresse', async ({
+test('un lien contenant les jetons d’un autre compte n’ouvre aucune session (connexion forcée)', async ({
   page,
-  baseURL,
-}, testInfo) => {
+}) => {
   await requireSupabase(page);
-  const key = localServiceKey();
-  test.skip(key === '', 'Clé de la pile locale indisponible.');
-  const email = `confirmation-${Date.now()}-${testInfo.project.name}@exemple.test`;
+  // L'attaquant prend les jetons de son propre compte et les glisse dans un lien qui imite le
+  // retour d'un e-mail de confirmation, puis l'envoie à sa victime.
+  const attacker = await confirmedSession(page.request, 'attaquant');
+  const fragment = new URLSearchParams({
+    access_token: attacker.access_token,
+    refresh_token: attacker.refresh_token,
+    expires_in: String(attacker.expires_in),
+    expires_at: String(attacker.expires_at),
+    token_type: 'bearer',
+    type: 'signup',
+  });
 
-  // Le même lien que celui de l'e-mail de confirmation, demandé à l'API d'administration locale.
-  const response = await page.request.post(
-    `${environment.supabaseUrl}/auth/v1/admin/generate_link`,
-    {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-      data: {
-        type: 'signup',
-        email,
-        password: PASSWORD,
-        data: { display_name: 'Léa' },
-        redirect_to: new URL('/profil', baseURL).href,
-      },
-    },
-  );
-  expect(response.ok()).toBe(true);
-  const { action_link } = (await response.json()) as { action_link: string };
-
-  await page.goto(action_link);
-  await expect(page).toHaveURL(/\/profil#?$/);
-  await expect(page.getByRole('region', { name: 'Compte' })).toContainText(
-    `Session ouverte avec l’adresse ${email}, au nom de Léa.`,
-  );
-  expect(page.url()).not.toMatch(/access_token|refresh_token/);
+  await page.goto(`/profil#${fragment}`);
+  // Laisse au client le temps de traiter l'adresse : en flux implicite, la session pirate
+  // s'ouvrait à ce moment-là (vérifié par mutation).
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+  const account = page.getByRole('region', { name: 'Compte' });
+  await expect(account.getByRole('link', { name: 'Se connecter' })).toBeVisible();
+  await expect(account).not.toContainText(attacker.email);
+  await expect(page.getByRole('banner').getByRole('link', { name: 'Se connecter' })).toBeVisible();
 });

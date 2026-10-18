@@ -39,7 +39,10 @@ automatiquement : chaque étape ci-dessous se fait à la main, dans l'ordre.
 | Emails → SMTP Settings | votre serveur SMTP : le service d'envoi fourni par défaut est limité à quelques messages par heure et n'est pas fait pour un site public |
 | Mot de passe → longueur minimale | 10 caractères (comme en local) |
 | Connexions anonymes | désactivées (réglage par défaut) |
+| Sign In / Providers → Phone → Confirm phone | activé, même sans inscription par SMS : sinon l'inscription d'une adresse déjà confirmée répond « User already registered » et révèle qui a un compte |
+| Mot de passe → Secure password change | activé : un jeton de session volé ne suffit pas à changer le mot de passe |
 | Rate Limits | vérifier les limites d'inscription, de connexion et d'envoi d'e-mails |
+| Attack Protection → Captcha | recommandé avant d'ouvrir l'inscription au public (Turnstile ou hCaptcha) : l'API d'inscription laisse deviner qu'une adresse a déjà un compte (comportement de Supabase), le captcha empêche de le tester en masse ; il faudra autoriser son domaine dans la politique de sécurité du contenu |
 
 Traduisez aussi le modèle d'e-mail « Confirm signup » en français. Le lien de confirmation ramène
 sur `/profil` : l'application ouvre la session et retire les jetons de l'adresse (testé de bout en

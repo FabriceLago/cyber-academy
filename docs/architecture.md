@@ -439,6 +439,18 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 | Tests des politiques RLS | 44 tests pgTAP | `npm run db:test` |
 | Isolation des futurs laboratoires exécutables | Aucun outil réellement exécuté ; si besoin : service séparé, éphémère, sans accès à la base | relecture |
 
+**Audit offensif (après l'étape 13).** Failles trouvées, prouvées puis corrigées :
+
+| Faille | Gravité | Correction | Vérifié par |
+|---|---|---|---|
+| Connexion forcée (CWE-352) : un lien contenant les jetons du compte d'un attaquant connectait la victime à ce compte (flux implicite) | moyenne | flux PKCE : le retour d'e-mail n'est accepté que par le navigateur qui a lancé l'inscription | `e2e/auth.spec.ts` (attaque rejouée, échoue sans PKCE) |
+| Énumération des comptes : l'inscription d'une adresse déjà confirmée répondait « compte existant » | faible | confirmation e-mail et téléphone exigée en local comme en production ; l'interface répond pareil dans tous les cas | `e2e/auth.spec.ts`, test unitaire de `AuthService` |
+| Droits TRUNCATE (ignore la RLS), TRIGGER et REFERENCES pour les rôles de l'API | faible | migration `20261018120000_droits_tables.sql` | `hardening.test.sql` |
+| Chaîne d'approvisionnement de la CI : actions sur étiquettes déplaçables (CWE-829), scripts d'installation exécutés | faible | actions épinglées par commit, `npm ci --ignore-scripts`, Dependabot | relecture, CI |
+| Mot de passe modifiable avec un simple jeton de session | faible | `secure_password_change` | configuration |
+
+Risque résiduel : l'API d'inscription de Supabase renvoie un utilisateur factice sans identité pour une adresse déjà inscrite ; un script peut donc encore le deviner. Parade en production : captcha à l'inscription (voir docs/deploiement.md).
+
 **Sauvegarde et restauration.** La sauvegarde ne contient que les données des apprenants (comptes,
 profils, tentatives) : le schéma et le catalogue se recréent depuis git.
 - Sauvegarder : `npm run db:backup` (local) ou `npm run db:backup -- --linked` (projet hébergé,

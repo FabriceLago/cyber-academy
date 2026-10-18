@@ -1,6 +1,6 @@
 import { APIRequestContext, Page, expect, test } from '@playwright/test';
 import { environment } from '../src/environments/environment';
-import { PASSWORD } from './account-helpers';
+import { confirmedSession } from './account-helpers';
 import { PAGES } from './pages';
 
 const PATHS = [
@@ -59,7 +59,7 @@ test('un script injecté dans la page est bloqué', async ({ page }) => {
   expect(await page.evaluate(() => 'pwned' in window)).toBe(false);
 });
 
-/** Compte de test créé par l'API d'authentification locale ; renvoie son jeton d'accès. */
+/** Compte de test confirmé (pile locale) ; renvoie son jeton d'accès. */
 async function apiAccount(request: APIRequestContext, prefix: string): Promise<string> {
   const health = await request
     .get(`${environment.supabaseUrl}/auth/v1/health`, {
@@ -67,15 +67,7 @@ async function apiAccount(request: APIRequestContext, prefix: string): Promise<s
     })
     .catch(() => null);
   test.skip(!health?.ok(), 'Supabase local arrêté : lancez « npm run db:start ».');
-  const response = await request.post(`${environment.supabaseUrl}/auth/v1/signup`, {
-    headers: { apikey: environment.supabasePublishableKey },
-    data: {
-      email: `${prefix}-${Date.now()}-${test.info().project.name}@exemple.test`,
-      password: PASSWORD,
-    },
-  });
-  expect(response.ok()).toBe(true);
-  return ((await response.json()) as { access_token: string }).access_token;
+  return (await confirmedSession(request, prefix)).access_token;
 }
 
 test('la limite de 30 tentatives par heure tient face à des envois simultanés', async ({

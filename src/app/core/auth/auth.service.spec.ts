@@ -86,6 +86,18 @@ describe('AuthService', () => {
     });
   });
 
+  it('une adresse déjà inscrite reçoit la même réponse qu’une nouvelle (pas d’énumération)', async () => {
+    const { auth, client } = setup();
+    client.auth.signUp.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { code: 'user_already_exists', status: 422, message: 'User already registered' },
+    });
+    expect(await auth.signUp('lea@exemple.test', 'une phrase longue', 'Léa')).toEqual({
+      ok: true,
+      needsConfirmation: true,
+    });
+  });
+
   it('reste utilisable si la bibliothèque ne peut pas être chargée', async () => {
     TestBed.configureTestingModule({
       providers: [{ provide: SUPABASE, useValue: Promise.reject(new Error('hors ligne')) }],
@@ -100,10 +112,6 @@ describe('AuthService', () => {
 
 describe('authMessage', () => {
   it.each([
-    [
-      { code: 'user_already_exists' },
-      'Un compte existe déjà avec cette adresse : connectez-vous plutôt.',
-    ],
     [{ code: 'weak_password' }, 'Mot de passe trop faible : choisissez au moins 10 caractères.'],
     [
       { code: 'over_request_rate_limit' },

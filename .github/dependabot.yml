@@ -1,0 +1,15 @@
+# Veille des dépendances : chaque semaine, une demande de mise à jour par dépendance à jour de
+# sécurité ou de version, testée par la CI avant toute fusion.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # Les actions de la CI sont épinglées par empreinte de commit : Dependabot met l'empreinte à jour.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

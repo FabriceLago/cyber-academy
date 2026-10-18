@@ -104,7 +104,8 @@ openai_api_key = "env(OPENAI_API_KEY)"
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
 [local_smtp]
-enabled = false
+# Activé : la confirmation des e-mails est exigée en local comme en production (tests de parcours).
+enabled = true
 # Port to use for the email testing server web interface.
 port = 54624
 # Uncomment to expose additional ports for testing user applications that send emails.
@@ -224,9 +225,11 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+# Activé comme en production : sinon l'inscription révèle si une adresse a déjà un compte.
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = false
+# Activé : un jeton de session volé ne suffit pas à changer durablement le mot de passe.
+secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
@@ -259,7 +262,9 @@ otp_expiry = 3600
 # Allow/disallow new user signups via SMS to your project.
 enable_signup = false
 # If enabled, users need to confirm their phone number before signing in.
-enable_confirmations = false
+# Activé même sans inscription par SMS : sinon le service d'authentification répond « User already
+# registered » à l'inscription d'une adresse e-mail déjà confirmée, et révèle qui a un compte.
+enable_confirmations = true
 # Template for sending OTP to users
 template = "Your code is {{ .Code }}"
 # Controls the minimum amount of time that must pass before sending another sms otp.
