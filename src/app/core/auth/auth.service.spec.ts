@@ -79,7 +79,10 @@ describe('AuthService', () => {
     expect(client.auth.signUp).toHaveBeenCalledWith({
       email: 'lea@exemple.test',
       password: 'une phrase longue',
-      options: { data: { display_name: 'Léa' } },
+      options: {
+        data: { display_name: 'Léa' },
+        emailRedirectTo: `${document.location.origin}/profil`,
+      },
     });
   });
 

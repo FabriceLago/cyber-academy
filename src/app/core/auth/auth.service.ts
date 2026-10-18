@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import type { Session } from '@supabase/supabase-js';
 import { AppSupabaseClient, SUPABASE } from '../supabase/supabase';
 
@@ -15,6 +15,7 @@ export type AuthResult =
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly client = inject(SUPABASE);
+  private readonly document = inject(DOCUMENT);
   private readonly session = signal<Session | null>(null);
 
   /** Faux tant que la session gardée par le navigateur n'a pas été relue. */
@@ -50,7 +51,11 @@ export class AuthService {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { display_name: displayName } },
+        // Le lien de confirmation (en production) ramène sur le profil, session ouverte.
+        options: {
+          data: { display_name: displayName },
+          emailRedirectTo: `${this.document.location.origin}/profil`,
+        },
       });
       if (error) return { ok: false, message: authMessage(error) };
       // Si la confirmation par e-mail est exigée (en production), aucune session n'est ouverte.

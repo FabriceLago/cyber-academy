@@ -3,7 +3,10 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Tests de parcours utilisateur, sur bureau et sur mobile, exécutés sur le build de production
  * (ce qui sera déployé), servi par vite preview.
+ * E2E_BASE_URL : vise un site déjà servi (Apache local, site en ligne), sans build ni serveur.
  */
+const external = process.env['E2E_BASE_URL'];
+
 export default defineConfig({
   testDir: './e2e',
   forbidOnly: !!process.env['CI'],
@@ -15,19 +18,21 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4201',
+    baseURL: external ?? 'http://localhost:4201',
     trace: 'on-first-retry',
   },
   projects: [
     { name: 'bureau', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
-  webServer: {
-    // vite preview renvoie index.html pour les adresses de l'application (/profil, /lecons…).
-    command:
-      'npm run build && vite preview --outDir dist/cyber-academy/browser --port 4201 --strictPort',
-    url: 'http://localhost:4201',
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  webServer: external
+    ? undefined
+    : {
+        // vite preview renvoie index.html pour les adresses de l'application (/profil, /lecons…).
+        command:
+          'npm run build && vite preview --outDir dist/cyber-academy/browser --port 4201 --strictPort',
+        url: 'http://localhost:4201',
+        reuseExistingServer: false,
+        timeout: 120_000,
+      },
 });

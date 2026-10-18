@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { environment } from '../src/environments/environment';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -75,4 +76,52 @@ test('un formulaire incomplet est expliqué, champ par champ', async ({ page }) 
 
   await page.getByLabel('Afficher le mot de passe').check();
   await expect(page.getByLabel('Mot de passe', { exact: true })).toHaveAttribute('type', 'text');
+});
+
+/** Clé d'administration de la pile LOCALE, lue au moment du test : jamais écrite dans le dépôt. */
+function localServiceKey(): string {
+  try {
+    const status = execFileSync(
+      process.execPath,
+      ['node_modules/supabase/dist/supabase.js', 'status', '-o', 'env'],
+      { encoding: 'utf8' },
+    );
+    return /^SERVICE_ROLE_KEY="?([^"\r\n]+)"?/m.exec(status)?.[1] ?? '';
+  } catch {
+    return '';
+  }
+}
+
+test('le lien de confirmation reçu par e-mail ouvre la session et quitte l’adresse', async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  await requireSupabase(page);
+  const key = localServiceKey();
+  test.skip(key === '', 'Clé de la pile locale indisponible.');
+  const email = `confirmation-${Date.now()}-${testInfo.project.name}@exemple.test`;
+
+  // Le même lien que celui de l'e-mail de confirmation, demandé à l'API d'administration locale.
+  const response = await page.request.post(
+    `${environment.supabaseUrl}/auth/v1/admin/generate_link`,
+    {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      data: {
+        type: 'signup',
+        email,
+        password: PASSWORD,
+        data: { display_name: 'Léa' },
+        redirect_to: new URL('/profil', baseURL).href,
+      },
+    },
+  );
+  expect(response.ok()).toBe(true);
+  const { action_link } = (await response.json()) as { action_link: string };
+
+  await page.goto(action_link);
+  await expect(page).toHaveURL(/\/profil#?$/);
+  await expect(page.getByRole('region', { name: 'Compte' })).toContainText(
+    `Session ouverte avec l’adresse ${email}, au nom de Léa.`,
+  );
+  expect(page.url()).not.toMatch(/access_token|refresh_token/);
 });

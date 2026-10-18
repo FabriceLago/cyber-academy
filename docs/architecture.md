@@ -305,7 +305,7 @@ terminés, toutes ses leçons restent verrouillées, avec la liste de ce qui man
 **Où :** une pile Supabase **locale** (`npm run db:start`), sur les ports 546xx (API 54621, base
 54622) pour ne pas gêner les autres projets du poste, réduite à la base, l'authentification, l'API
 et la passerelle (Studio, temps réel, stockage, e-mails, fonctions et analytique désactivés). Le
-projet hébergé sera créé au déploiement (étape 13).
+projet hébergé se crée et se configure selon [docs/deploiement.md](deploiement.md) (étape 13).
 
 **Schéma** (migrations versionnées dans [`supabase/migrations`](../supabase/migrations)) :
 
@@ -455,8 +455,32 @@ Limites connues du MVP :
 - **Les réponses de quiz sont lisibles par un apprenant curieux** dans le JavaScript envoyé au navigateur (décision de l'étape 12, voir « Moteur de quiz ») : points et badges restent des repères pédagogiques, pas une certification.
 - **La réussite d'un laboratoire est déclarée par le navigateur** (simulation côté client) : le serveur vérifie le laboratoire et la date, pas le travail fait.
 - **Clé Supabase :** la clé secrète n'est jamais dans le front ni dans le dépôt ; seule la clé publique, protégée par RLS, y figure.
-- **En-têtes HTTP** (`frame-ancestors`, HSTS, `X-Content-Type-Options`, politique de référent) : ils se posent sur l'hébergement, à l'étape 13 ; une balise `<meta>` ne peut pas les porter. L'adresse de Supabase dans la politique de connexions changera aussi au déploiement.
+- **En-têtes HTTP** (`frame-ancestors`, HSTS, `X-Content-Type-Options`, politique de référent) : une balise `<meta>` ne peut pas les porter ; ils sont posés par le `.htaccess` du site (étape 13, ci-dessous).
 - **Mots de passe :** 10 caractères au minimum, sans règle de composition (recommandation NIST) ; la vérification des mots de passe divulgués n'existe que sur certaines offres hébergées.
+
+### Déploiement (étape 13)
+
+Procédure complète, pas à pas : [docs/deploiement.md](deploiement.md). Rien n'est publié
+automatiquement.
+
+- **Configuration de production** : la configuration de build `deploy` remplace `environment.ts`
+  par `environment.prod.ts`, dont les valeurs sont injectées par `npm run build:prod` (`--define`)
+  à partir de `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`. Le script refuse une clé secrète et une
+  adresse en `http`, remplace l'adresse de Supabase dans la politique de sécurité du contenu, écrit
+  le `.htaccess` et vérifie qu'aucune adresse locale ni aucun secret ne part en ligne.
+- **Hébergement (Hostinger, LiteSpeed compatible Apache)** :
+  [`deploy/hostinger.htaccess`](../deploy/hostinger.htaccess) force HTTPS, sert `index.html` pour
+  les adresses de l'application (un fichier absent reste une vraie erreur 404), pose les en-têtes
+  de sécurité (CSP avec `frame-ancestors 'none'`, HSTS, `nosniff`, `X-Frame-Options`, politique de
+  référent, `Permissions-Policy`, `Cross-Origin-Opener-Policy`) et règle le cache (fichiers à
+  empreinte : un an ; `index.html` : toujours revalidé). Vérifié sur Apache 2.4 dans Docker : en-têtes,
+  404, redirection HTTPS, et toute la suite e2e (`E2E_BASE_URL`).
+- **Confirmation par e-mail** : à activer en production. Le lien ramène sur `/profil` ; le client
+  Supabase (`detectSessionInUrl`) ouvre la session et retire les jetons de l'adresse. Testé de
+  bout en bout avec un lien généré par la pile locale.
+- **Intégration continue** : [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), à
+  l'activation du dépôt GitHub : `npm run verify`, puis pile Supabase éphémère, pgTAP et Playwright.
+- **Tests sur le site en ligne** : `E2E_BASE_URL=https://<domaine>` vise le site publié, sans build.
 
 ## 7. Feuille de route
 
@@ -472,4 +496,4 @@ Limites connues du MVP :
 | 10 | Progression et résultats enregistrés côté serveur |
 | 11 | Parcours spécialisés |
 | 12 | Renforcement de la sécurité et des tests |
-| 13 | Déploiement |
+| 13 | Préparation du déploiement : build de production, `.htaccess` Hostinger, CI, procédure de mise en ligne |
