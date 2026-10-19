@@ -54,7 +54,8 @@ bout dans `e2e/auth.spec.ts`).
 Complétez d'abord les mentions légales et la politique de confidentialité : remplacez chaque
 `A_COMPLETER` de `src/app/features/legal/legal-pages.ts` (éditeur, adresse, contact, coordonnées
 des hébergeurs, durée de conservation des sauvegardes). Le script refuse de construire tant qu'il
-en reste un.
+en reste un. Pour une préproduction sur un domaine temporaire, `npm run build:prod -- --apercu`
+les accepte et ajoute `X-Robots-Tag: noindex, nofollow` au `.htaccess`.
 
 La clé à utiliser est la **clé publique** (Project Settings → API Keys → Publishable key,
 `sb_publishable_…`). Le script refuse une clé secrète et une adresse en `http`.
