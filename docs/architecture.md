@@ -527,3 +527,23 @@ automatiquement.
 | 11 | Parcours spécialisés |
 | 12 | Renforcement de la sécurité et des tests |
 | 13 | Préparation du déploiement : build de production, `.htaccess` Hostinger, CI, procédure de mise en ligne |
+
+## 8. Abonnement Premium
+
+- **Contenu** : `premium: true` sur un parcours (`content.model.ts`), recopié dans
+  `learning_paths.premium` par `npm run db:catalog`.
+- **État** : table `subscriptions` (une ligne par compte : client Stripe, statut, fin de période,
+  résiliation en fin de période). Lisible par son seul propriétaire ; écrite uniquement par la
+  fonction `stripe-webhook` (clé service_role), qui relit l'abonnement chez Stripe à chaque
+  événement (doublons et désordre sans effet).
+- **Accès** : `has_active_subscription` (statut `active` ou `trialing`, période non échue). Les
+  fonctions d'enregistrement refusent une tentative premium sans abonnement (code `CA402`) ;
+  l'application affiche à la place l'offre (`ca-paywall`) sur les pages de leçon, de quiz et de
+  laboratoire. `delete_my_account` refuse un compte encore facturé (`CA409`).
+- **Paiement** : `create-checkout` (page de paiement Stripe, retour sur `SITE_URL`, jamais
+  l'adresse de la requête) et `customer-portal` (gestion, résiliation). La case de renonciation au
+  droit de rétractation (contenu numérique fourni immédiatement) conditionne le choix d'une formule.
+- **Limite connue** : comme les quiz, le texte des leçons est dans le JavaScript du site ; un
+  visiteur technique peut le lire sans abonnement. L'abonnement protège la progression, les
+  laboratoires enregistrés et l'accès dans l'interface, pas le texte. Si besoin : servir le
+  contenu premium depuis la base, derrière une politique RLS.

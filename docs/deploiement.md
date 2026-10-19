@@ -120,3 +120,35 @@ remplacez les versions des actions (`@v4`) par leur empreinte de commit.
 
 La publication automatique vers Hostinger depuis la CI n'est pas mise en place : elle demanderait
 de confier un accès FTP ou SSH à GitHub. C'est une décision à prendre à part.
+
+## 9. Abonnement Premium (Stripe)
+
+Le parcours Découverte est gratuit ; les parcours marqués `premium: true` dans le contenu (pour
+l'instant « Analyste SOC junior ») demandent un abonnement actif. Le serveur le vérifie à chaque
+enregistrement (`record_quiz_attempt`, `record_lab_attempt`), pas seulement l'affichage.
+
+1. **Compte Stripe** (stripe.com), en mode test d'abord. Créez un produit « Cyber Academy Premium »
+   avec deux prix récurrents : 9,90 € par mois et 99 € par an. Ces montants sont affichés par
+   `src/app/features/subscription/subscription-page.ts` (constante `PLANS`) : gardez-les identiques.
+2. **Secrets des fonctions** (jamais dans le dépôt) :
+
+   ```bash
+   npx supabase secrets set --project-ref <projet> \
+     STRIPE_SECRET_KEY=sk_test_... STRIPE_PRICE_MENSUEL=price_... STRIPE_PRICE_ANNUEL=price_... \
+     SITE_URL=https://<votre-domaine>
+   ```
+
+3. **Fonctions** : `npx supabase functions deploy create-checkout customer-portal stripe-webhook --project-ref <projet>`.
+4. **Webhook Stripe** (Developers → Webhooks → Add endpoint) :
+   `https://<projet>.supabase.co/functions/v1/stripe-webhook`, événements
+   `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+   Copiez son secret de signature, puis `npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`.
+5. **Portail client Stripe** (Settings → Billing → Customer portal) : activez la résiliation et le
+   changement de formule ; c'est la page ouverte par « Gérer mon abonnement ».
+6. **Essai** avec la carte de test `4242 4242 4242 4242` : après le paiement, la page Abonnement
+   indique « Votre abonnement est actif » et la spécialisation s'ouvre.
+7. **Avant de vendre** : conditions générales de vente (CGV), mentions légales complètes, puis
+   clés Stripe en mode réel (`sk_live_…`, nouveaux prix, nouveau webhook).
+
+Contrôles locaux : `supabase/tests/database/subscriptions.test.sql` (accès, enregistrements,
+suppression du compte) et les tests de parcours de `e2e/specialization.spec.ts`.

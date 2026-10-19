@@ -25,6 +25,8 @@
       </p>
       <a class="btn btn-primary" routerLink="/parcours">Voir le parcours</a>
     </section>
+  } @else if (subscriptions.locked(owner?.path)) {
+    <ca-paywall [pathTitle]="owner?.path?.title ?? ''" />
   } @else {
     <section class="card" aria-labelledby="scenario-titre">
       <h2 id="scenario-titre">Scénario</h2>

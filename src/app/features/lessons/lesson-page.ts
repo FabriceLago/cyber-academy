@@ -17,6 +17,8 @@ import { ProgressStore } from '../../core/progress/progress.store';
 import { presentQuestion } from '../../core/quiz/quiz-engine';
 import { Icon } from '../../shared/icon/icon';
 import { PacketJourney } from './animations/packet-journey';
+import { SubscriptionService } from '../../core/subscription/subscription.service';
+import { Paywall } from '../../shared/paywall/paywall';
 import { LESSON_STATUS, LEVELS } from './lesson-list';
 import { PracticeQuestion } from './practice-question';
 
@@ -30,7 +32,7 @@ function splitSteps(text: string): string[] {
 /** Page d'une leçon : les 17 sections du modèle pédagogique, ou l'explication du verrouillage. */
 @Component({
   selector: 'ca-lesson-page',
-  imports: [RouterLink, DatePipe, PercentPipe, Icon, PacketJourney, PracticeQuestion],
+  imports: [RouterLink, DatePipe, PercentPipe, Icon, PacketJourney, PracticeQuestion, Paywall],
   templateUrl: './lesson-page.html',
   styleUrl: './lesson-page.css',
 })
@@ -38,6 +40,7 @@ export class LessonPage {
   readonly lessonId = input.required<string>();
 
   private readonly progress = inject(ProgressStore);
+  protected readonly subscriptions = inject(SubscriptionService);
   private readonly document = inject(DOCUMENT);
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');
   private readonly summary = computed(() =>
