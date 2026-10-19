@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
-import { PASSWORD, confirmationLink, confirmedSession, requireSupabase } from './account-helpers';
+import {
+  PASSWORD,
+  confirmationLink,
+  confirmedSession,
+  requireSupabase,
+  signUp,
+} from './account-helpers';
+
+/** Supabase refuse deux e-mails à la même adresse à moins d'une seconde (max_frequency). */
+const EMAIL_INTERVAL_MS = 1_100;
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -99,4 +108,129 @@ test('un lien contenant les jetons d’un autre compte n’ouvre aucune session 
   await expect(account.getByRole('link', { name: 'Se connecter' })).toBeVisible();
   await expect(account).not.toContainText(attacker.email);
   await expect(page.getByRole('banner').getByRole('link', { name: 'Se connecter' })).toBeVisible();
+});
+
+test('mot de passe oublié : le lien reçu par e-mail permet d’en choisir un nouveau', async ({
+  page,
+}, testInfo) => {
+  await requireSupabase(page);
+  const email = `oubli-${Date.now()}-${testInfo.project.name}@exemple.test`;
+  const nouveau = 'une toute nouvelle phrase de passe';
+  await signUp(page, email);
+  await page
+    .getByRole('region', { name: 'Compte' })
+    .getByRole('button', { name: 'Se déconnecter' })
+    .click();
+
+  await page.goto('/connexion');
+  await page.getByRole('link', { name: 'Mot de passe oublié ?' }).click();
+  await expect(page).toHaveURL(/\/mot-de-passe-oublie$/);
+  await page.getByLabel('Adresse e-mail').fill(email);
+  await page.getByRole('button', { name: 'Recevoir le lien' }).click();
+  await expect(page.getByRole('status')).toContainText(`Si un compte existe pour ${email}`);
+
+  await page.goto(await confirmationLink(page.request, email, { subject: 'Reset' }));
+  await expect(page).toHaveURL(/\/nouveau-mot-de-passe$/);
+  const field = page.getByLabel('Nouveau mot de passe');
+  await field.fill('court');
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(page.getByRole('alert')).toContainText('au moins 10 caractères');
+  await field.fill(nouveau);
+  await page.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(page.getByRole('heading', { name: 'Mot de passe modifié' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Voir mon compte' }).click();
+  await page
+    .getByRole('region', { name: 'Compte' })
+    .getByRole('button', { name: 'Se déconnecter' })
+    .click();
+  await page.goto('/connexion');
+  await page.getByLabel('Adresse e-mail').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await expect(page.getByRole('alert')).toContainText('incorrect');
+  await page.getByLabel('Mot de passe', { exact: true }).fill(nouveau);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await expect(page).toHaveURL(/\/profil$/);
+});
+
+test('une adresse inconnue reçoit la même réponse, et un lien ouvert ailleurs est expliqué', async ({
+  page,
+}) => {
+  await requireSupabase(page);
+  await page.goto('/mot-de-passe-oublie');
+  await page.getByLabel('Adresse e-mail').fill(`inconnu-${Date.now()}@exemple.test`);
+  await page.getByRole('button', { name: 'Recevoir le lien' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Vérifiez votre boîte de réception' }),
+  ).toBeVisible();
+
+  // Sans la session ouverte par le lien (autre navigateur, lien expiré) : on explique quoi faire.
+  await page.goto('/nouveau-mot-de-passe');
+  await expect(page.getByRole('heading', { name: 'Lien expiré ou déjà utilisé' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Demander un nouveau lien' })).toBeVisible();
+});
+
+test('le message de confirmation se renvoie, y compris depuis la connexion', async ({
+  page,
+}, testInfo) => {
+  await requireSupabase(page);
+  // Trois envois d'e-mail, deux pages et la lecture de Mailpit : plus long qu'un test ordinaire.
+  test.setTimeout(60_000);
+  const email = `renvoi-${Date.now()}-${testInfo.project.name}@exemple.test`;
+  await page.goto('/inscription');
+  await fillForm(page, { name: 'Léa', email, password: PASSWORD });
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Vérifiez votre boîte de réception' }),
+  ).toBeVisible();
+  await page.waitForTimeout(EMAIL_INTERVAL_MS);
+  await page.getByRole('button', { name: 'Renvoyer le message' }).click();
+  // Texte exact : attend la fin de l'envoi (quitter la page avant l'annulerait).
+  await expect(page.getByText(`Nouveau message envoyé à ${email}.`)).toBeVisible();
+
+  // Plus tard, sans avoir confirmé : la connexion l'explique et propose de renvoyer le message.
+  await page.goto('/connexion');
+  await fillForm(page, { email, password: PASSWORD });
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await expect(page.getByRole('alert')).toContainText('Confirmez d’abord votre adresse');
+  await page.waitForTimeout(EMAIL_INTERVAL_MS);
+  await page.getByRole('button', { name: 'Renvoyer le message de confirmation' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Vérifiez votre boîte de réception' }),
+  ).toBeVisible();
+
+  // Le dernier message renvoyé ouvre la session, comme celui de l'inscription.
+  await page.goto(await confirmationLink(page.request, email, { count: 3 }));
+  await expect(page).toHaveURL(/\/profil$/);
+  await expect(page.getByRole('region', { name: 'Compte' })).toContainText(
+    `Session ouverte avec l’adresse ${email}`,
+  );
+});
+
+test('supprimer son compte efface le compte : la connexion n’est plus possible', async ({
+  page,
+}, testInfo) => {
+  await requireSupabase(page);
+  const email = `suppression-${Date.now()}-${testInfo.project.name}@exemple.test`;
+  await signUp(page, email);
+  const account = page.getByRole('region', { name: 'Compte' });
+
+  await account.getByRole('button', { name: 'Supprimer mon compte' }).click();
+  const confirm = account.getByRole('button', { name: 'Oui, supprimer mon compte' });
+  await expect(confirm).toBeFocused();
+  await account.getByRole('button', { name: 'Annuler' }).click();
+  await expect(account.getByRole('button', { name: 'Supprimer mon compte' })).toBeFocused();
+
+  await account.getByRole('button', { name: 'Supprimer mon compte' }).click();
+  await confirm.click();
+  await expect(account.getByRole('status')).toHaveText(
+    'Votre compte et ses données ont été supprimés.',
+  );
+  await expect(account.getByRole('link', { name: 'Se connecter' })).toBeVisible();
+
+  await page.goto('/connexion');
+  await fillForm(page, { email, password: PASSWORD });
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await expect(page.getByRole('alert')).toContainText('Adresse e-mail ou mot de passe incorrect.');
 });

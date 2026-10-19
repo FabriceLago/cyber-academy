@@ -29,6 +29,7 @@ export type Database = {
                   Row: {
                     "completed_at": string,"created_at": string,"hints_used": number,"id": number,"lab_id": string,"succeeded": boolean,"user_id": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "completed_at"?: string,"created_at"?: string,"hints_used": number,"id"?: never,"lab_id": string,"succeeded": boolean,"user_id": string
                   }
@@ -48,6 +49,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"id": string,"kind": string,"lesson_id": string,"title": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id": string,"kind": string,"lesson_id": string,"title": string,"updated_at"?: string
                   }
@@ -67,6 +69,7 @@ isOneToOne: true
                   Row: {
                     "created_at": string,"id": string,"level": string,"position": number,"title": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id": string,"level": string,"position": number,"title": string,"updated_at"?: string
                   }
@@ -80,6 +83,7 @@ isOneToOne: true
                   Row: {
                     "created_at": string,"duration_minutes": number,"id": string,"module_id": string,"position": number,"quiz_size": number,"title": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"duration_minutes": number,"id": string,"module_id": string,"position": number,"quiz_size"?: number,"title": string,"updated_at"?: string
                   }
@@ -99,6 +103,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"id": string,"pass_threshold": number,"path_id": string,"position": number,"title": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"id": string,"pass_threshold": number,"path_id": string,"position": number,"title": string,"updated_at"?: string
                   }
@@ -118,6 +123,7 @@ isOneToOne: false
                   Row: {
                     "created_at": string,"display_name": string,"id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string,"weekly_goal": number | null
                   }
+                  ComputedFields: never
                   Insert: {
                     "created_at"?: string,"display_name": string,"id": string,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string,"weekly_goal"?: number | null
                   }
@@ -131,6 +137,7 @@ isOneToOne: false
                   Row: {
                     "answer": NonNullable<Json>,"created_at": string,"lesson_id": string,"question_id": string,"updated_at": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "answer": NonNullable<Json>,"created_at"?: string,"lesson_id": string,"question_id": string,"updated_at"?: string
                   }
@@ -150,6 +157,7 @@ isOneToOne: false
                   Row: {
                     "correct_question_ids": (string)[],"created_at": string,"id": number,"lesson_id": string,"question_ids": (string)[],"submitted_at": string,"user_id": string
                   }
+                  ComputedFields: never
                   Insert: {
                     "correct_question_ids": (string)[],"created_at"?: string,"id"?: never,"lesson_id": string,"question_ids": (string)[],"submitted_at"?: string,"user_id": string
                   }
@@ -173,6 +181,9 @@ isOneToOne: false
           Functions: {
             "check_attempt_rate":
 { Args: { "recent": number }; Returns: undefined
+                           },
+"delete_my_account":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "has_distinct_elements":
 { Args: { "items": (string)[] }; Returns: boolean

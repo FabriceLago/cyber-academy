@@ -54,6 +54,29 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/auth-page').then((m) => m.AuthPage),
   },
   {
+    path: 'mot-de-passe-oublie',
+    title: 'Mot de passe oublié',
+    data: { mode: 'demande' },
+    loadComponent: () => import('./features/auth/password-page').then((m) => m.PasswordPage),
+  },
+  {
+    // Ouverte par le lien de réinitialisation reçu par e-mail.
+    path: 'nouveau-mot-de-passe',
+    title: 'Nouveau mot de passe',
+    data: { mode: 'nouveau' },
+    loadComponent: () => import('./features/auth/password-page').then((m) => m.PasswordPage),
+  },
+  {
+    path: 'mentions-legales',
+    title: 'Mentions légales',
+    loadComponent: () => import('./features/legal/legal-pages').then((m) => m.LegalNoticePage),
+  },
+  {
+    path: 'confidentialite',
+    title: 'Politique de confidentialité',
+    loadComponent: () => import('./features/legal/legal-pages').then((m) => m.PrivacyPage),
+  },
+  {
     path: 'laboratoires',
     title: 'Laboratoires',
     loadComponent: () => import('./features/labs/labs-page').then((m) => m.LabsPage),

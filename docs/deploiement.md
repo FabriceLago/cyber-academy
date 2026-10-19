@@ -44,11 +44,17 @@ automatiquement : chaque étape ci-dessous se fait à la main, dans l'ordre.
 | Rate Limits | vérifier les limites d'inscription, de connexion et d'envoi d'e-mails |
 | Attack Protection → Captcha | recommandé avant d'ouvrir l'inscription au public (Turnstile ou hCaptcha) : l'API d'inscription laisse deviner qu'une adresse a déjà un compte (comportement de Supabase), le captcha empêche de le tester en masse ; il faudra autoriser son domaine dans la politique de sécurité du contenu |
 
-Traduisez aussi le modèle d'e-mail « Confirm signup » en français. Le lien de confirmation ramène
+Traduisez aussi en français les modèles d'e-mail « Confirm signup » et « Reset password » (lien
+de réinitialisation, qui ramène sur `/nouveau-mot-de-passe`). Le lien de confirmation ramène
 sur `/profil` : l'application ouvre la session et retire les jetons de l'adresse (testé de bout en
 bout dans `e2e/auth.spec.ts`).
 
 ## 4. Construire le site
+
+Complétez d'abord les mentions légales et la politique de confidentialité : remplacez chaque
+`A_COMPLETER` de `src/app/features/legal/legal-pages.ts` (éditeur, adresse, contact, coordonnées
+des hébergeurs, durée de conservation des sauvegardes). Le script refuse de construire tant qu'il
+en reste un.
 
 La clé à utiliser est la **clé publique** (Project Settings → API Keys → Publishable key,
 `sb_publishable_…`). Le script refuse une clé secrète et une adresse en `http`.

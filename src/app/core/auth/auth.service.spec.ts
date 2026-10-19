@@ -19,8 +19,12 @@ function fakeSupabase() {
       signInWithPassword: vi.fn(),
       signUp: vi.fn(),
       signOut: vi.fn().mockResolvedValue({ error: null }),
+      resend: vi.fn(),
+      resetPasswordForEmail: vi.fn(),
+      updateUser: vi.fn(),
     },
     from: vi.fn(() => query),
+    rpc: vi.fn(),
   };
   return { client, emit: (session: unknown) => notify('SIGNED_IN', session) };
 }
@@ -37,6 +41,64 @@ function setup() {
   });
   return { ...fake, auth: TestBed.inject(AuthService) };
 }
+
+describe('AuthService : mot de passe, confirmation, suppression', () => {
+  it('répond pareil qu’une adresse ait un compte ou non, sauf réseau ou limite de débit', async () => {
+    const { auth, client } = setup();
+    client.auth.resetPasswordForEmail.mockResolvedValue({
+      error: { code: 'user_not_found', status: 400 },
+    });
+    expect(await auth.requestPasswordReset('x@exemple.test')).toEqual({
+      ok: true,
+      needsConfirmation: false,
+    });
+    client.auth.resend.mockResolvedValue({ error: { code: 'email_exists', status: 400 } });
+    expect((await auth.resendConfirmation('x@exemple.test')).ok).toBe(true);
+
+    client.auth.resetPasswordForEmail.mockResolvedValue({
+      error: { code: 'over_email_send_rate_limit', status: 429 },
+    });
+    expect(await auth.requestPasswordReset('x@exemple.test')).toEqual({
+      ok: false,
+      message: 'Trop de tentatives : patientez quelques minutes avant de réessayer.',
+    });
+    expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith('x@exemple.test', {
+      redirectTo: expect.stringMatching(/\/nouveau-mot-de-passe$/),
+    });
+  });
+
+  it('signale une adresse non confirmée, pour proposer de renvoyer le message', async () => {
+    const { auth, client } = setup();
+    client.auth.signInWithPassword.mockResolvedValue({
+      error: { code: 'email_not_confirmed', status: 400 },
+    });
+    expect(await auth.signIn('x@exemple.test', 'phrase de passe')).toMatchObject({
+      ok: false,
+      unconfirmed: true,
+    });
+  });
+
+  it('explique un nouveau mot de passe refusé', async () => {
+    const { auth, client } = setup();
+    client.auth.updateUser.mockResolvedValue({ error: { code: 'same_password', status: 422 } });
+    expect(await auth.updatePassword('la même phrase')).toEqual({
+      ok: false,
+      message: 'Choisissez un mot de passe différent de l’actuel.',
+    });
+  });
+
+  it('ne ferme la session qu’une fois le compte supprimé par le serveur', async () => {
+    const { auth, client } = setup();
+    client.rpc.mockResolvedValue({ error: { code: '42501' } });
+    expect((await auth.deleteAccount()).ok).toBe(false);
+    expect(client.auth.signOut).not.toHaveBeenCalled();
+
+    client.rpc.mockResolvedValue({ error: null });
+    expect((await auth.deleteAccount()).ok).toBe(true);
+    expect(client.rpc).toHaveBeenCalledWith('delete_my_account');
+    expect(client.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+  });
+});
 
 describe('AuthService', () => {
   it('relit la session puis charge le profil', async () => {

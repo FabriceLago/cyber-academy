@@ -65,6 +65,9 @@ export class AuthPage {
   protected readonly fieldErrors = signal<FieldErrors>({});
   protected readonly serverError = signal('');
   protected readonly confirmationSent = signal(false);
+  /** La connexion a échoué parce que l'adresse n'est pas encore confirmée. */
+  protected readonly unconfirmed = signal(false);
+  protected readonly resendMessage = signal('');
   protected readonly errors = computed(() => [
     ...(Object.entries(this.fieldErrors()) as [Field, string][]).map(([field, text]) => ({
       field,
@@ -90,6 +93,7 @@ export class AuthPage {
     const errors = validateAuthForm(values, this.signup());
     this.fieldErrors.set(errors);
     this.serverError.set('');
+    this.unconfirmed.set(false);
     if (Object.keys(errors).length > 0) {
       this.focusSummary();
       return;
@@ -104,11 +108,30 @@ export class AuthPage {
 
     if (!result.ok) {
       this.serverError.set(result.message);
+      this.unconfirmed.set(result.unconfirmed === true);
       this.focusSummary();
     } else if (result.needsConfirmation) {
       this.confirmationSent.set(true);
     } else {
       await this.router.navigateByUrl('/profil');
+    }
+  }
+
+  /** Message de confirmation perdu ou expiré : on en renvoie un à la même adresse. */
+  protected async resend(): Promise<void> {
+    if (this.pending()) return;
+    this.pending.set(true);
+    this.resendMessage.set('');
+    const result = await this.auth.resendConfirmation(this.email().trim());
+    this.pending.set(false);
+    if (!result.ok) {
+      this.resendMessage.set(result.message);
+    } else if (this.confirmationSent()) {
+      this.resendMessage.set(`Nouveau message envoyé à ${this.email().trim()}.`);
+    } else {
+      this.serverError.set('');
+      this.unconfirmed.set(false);
+      this.confirmationSent.set(true);
     }
   }
 

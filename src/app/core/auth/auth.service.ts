@@ -9,7 +9,26 @@ export interface Profile {
 
 export type AuthResult =
   | { readonly ok: true; readonly needsConfirmation: boolean }
-  | { readonly ok: false; readonly message: string };
+  | { readonly ok: false; readonly message: string; readonly unconfirmed?: boolean };
+
+const OK: AuthResult = { ok: true, needsConfirmation: false };
+
+/**
+ * Erreurs qui ne disent rien de l'adresse (réseau, limite de débit) : les seules montrées pour
+ * un envoi d'e-mail. Les autres reçoivent la même réponse qu'un succès (énumération).
+ */
+function isTransient(error: {
+  readonly code?: string;
+  readonly status?: number;
+  readonly name?: string;
+}) {
+  return (
+    error.code === 'over_request_rate_limit' ||
+    error.code === 'over_email_send_rate_limit' ||
+    error.name === 'AuthRetryableFetchError' ||
+    error.status === 0
+  );
+}
 
 /** Compte de l'apprenant : facultatif, la plateforme reste utilisable sans. */
 @Injectable({ providedIn: 'root' })
@@ -71,9 +90,57 @@ export class AuthService {
   async signIn(email: string, password: string): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return error
-        ? { ok: false, message: authMessage(error) }
-        : { ok: true, needsConfirmation: false };
+      if (!error) return OK;
+      const message = authMessage(error);
+      return error.code === 'email_not_confirmed'
+        ? { ok: false, message, unconfirmed: true }
+        : { ok: false, message };
+    });
+  }
+
+  /** Renvoie le message de confirmation d'inscription (perdu, ou lien expiré). */
+  async resendConfirmation(email: string): Promise<AuthResult> {
+    return this.attempt(async (supabase) => {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${this.document.location.origin}/profil` },
+      });
+      return error && isTransient(error) ? { ok: false, message: authMessage(error) } : OK;
+    });
+  }
+
+  /**
+   * Envoie un lien de réinitialisation. Même réponse que l'adresse ait un compte ou non. Flux
+   * PKCE : le lien n'est accepté que par ce navigateur, comme celui de l'inscription.
+   */
+  async requestPasswordReset(email: string): Promise<AuthResult> {
+    return this.attempt(async (supabase) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${this.document.location.origin}/nouveau-mot-de-passe`,
+      });
+      return error && isTransient(error) ? { ok: false, message: authMessage(error) } : OK;
+    });
+  }
+
+  /**
+   * Nouveau mot de passe pour la session ouverte : celle du lien de réinitialisation, ou une
+   * connexion récente (secure_password_change : le serveur refuse si la session est ancienne).
+   */
+  async updatePassword(password: string): Promise<AuthResult> {
+    return this.attempt(async (supabase) => {
+      const { error } = await supabase.auth.updateUser({ password });
+      return error ? { ok: false, message: authMessage(error) } : OK;
+    });
+  }
+
+  /** Supprime le compte, son profil et ses tentatives (serveur), puis ferme la session. */
+  async deleteAccount(): Promise<AuthResult> {
+    return this.attempt(async (supabase) => {
+      const { error } = await supabase.rpc('delete_my_account');
+      if (error) return { ok: false, message: authMessage({}) };
+      await supabase.auth.signOut({ scope: 'local' });
+      return OK;
     });
   }
 
@@ -123,7 +190,13 @@ export function authMessage(error: {
     case 'weak_password':
       return 'Mot de passe trop faible : choisissez au moins 10 caractères.';
     case 'over_request_rate_limit':
+    case 'over_email_send_rate_limit':
       return 'Trop de tentatives : patientez quelques minutes avant de réessayer.';
+    case 'same_password':
+      return 'Choisissez un mot de passe différent de l’actuel.';
+    case 'reauthentication_needed':
+    case 'session_not_found':
+      return 'Par sécurité, demandez un lien de réinitialisation : votre session est trop ancienne pour changer le mot de passe directement.';
     case 'email_address_invalid':
       return 'Cette adresse e-mail n’est pas valide.';
     case 'email_not_confirmed':

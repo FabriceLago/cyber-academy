@@ -17,6 +17,10 @@ const PATHS = [
   '/laboratoires/inexistant',
   '/connexion',
   '/inscription',
+  '/mot-de-passe-oublie',
+  '/nouveau-mot-de-passe', // sans session : lien expiré
+  '/mentions-legales',
+  '/confidentialite',
   '/lecons/inexistante',
   '/adresse-inexistante',
   '/erreur',
@@ -26,16 +30,11 @@ for (const [colorScheme, name] of [
   ['dark', 'sombre'],
   ['light', 'clair'],
 ] as const) {
-  test(`aucune violation WCAG 2.2 AA détectable par axe, thème ${name}`, async ({
-    page,
-    isMobile,
-  }) => {
-    // Un seul test parcourt toutes les pages : son délai grandit avec leur nombre (≈ 1 s par page
-    // mesurée, 3 s de marge sur un poste chargé).
-    test.setTimeout(PATHS.length * 3_000);
-    await page.emulateMedia({ colorScheme });
-
-    for (const path of PATHS) {
+  // Un test par page : chacune a son propre délai. Un test unique pour toutes les pages dépassait
+  // son délai global sur un poste chargé (échecs au hasard, mesurés : 5 sur 8).
+  for (const path of PATHS) {
+    test(`WCAG 2.2 AA (axe), thème ${name} : ${path}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme });
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
@@ -45,12 +44,15 @@ for (const [colorScheme, name] of [
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow, `défilement horizontal sur ${path}`).toBeLessThanOrEqual(0);
-    }
+    });
+  }
 
-    if (isMobile) {
-      await page.getByRole('button', { name: 'Menu' }).click();
-      const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-      expect(violations, 'menu mobile ouvert').toEqual([]);
-    }
+  test(`WCAG 2.2 AA (axe), thème ${name} : menu mobile ouvert`, async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Le menu n’est replié que sur petit écran.');
+    await page.emulateMedia({ colorScheme });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Menu' }).click();
+    const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+    expect(violations, 'menu mobile ouvert').toEqual([]);
   });
 }

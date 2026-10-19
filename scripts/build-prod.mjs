@@ -3,6 +3,8 @@
 // des valeurs publiques, construit l'application, adapte la politique de sécurité (CSP) et écrit
 // le .htaccess : dist/cyber-academy/browser est alors prêt à copier dans public_html.
 // --essai-local : accepte la pile locale (http://127.0.0.1:54621), pour un essai sur ce poste.
+// --apercu : site de préproduction (domaine temporaire) ; accepte les mentions légales encore
+// incomplètes et interdit l'indexation par les moteurs de recherche.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,6 +12,7 @@ import { join } from 'node:path';
 const LOCAL_URL = 'http://127.0.0.1:54621';
 const OUT = 'dist/cyber-academy/browser';
 const localTest = process.argv.includes('--essai-local');
+const preview = process.argv.includes('--apercu');
 
 function fail(message) {
   console.error(`build:prod — ${message}`);
@@ -62,7 +65,10 @@ if (!html.includes(`connect-src 'self' ${LOCAL_URL}`)) {
 writeFileSync(index, html.replaceAll(LOCAL_URL, origin));
 writeFileSync(
   join(OUT, '.htaccess'),
-  readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin),
+  readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin) +
+    (preview
+      ? '\n# Aperçu : aucune indexation.\n<IfModule mod_headers.c>\n  Header always set X-Robots-Tag "noindex, nofollow"\n</IfModule>\n'
+      : ''),
 );
 
 // Rien de ce qui sera publié ne doit viser la pile locale ni contenir de secret.
@@ -70,6 +76,11 @@ const files = walk(OUT);
 if (!localTest) {
   const local = files.filter((file) => readFileSync(file, 'utf8').includes(LOCAL_URL));
   if (local.length > 0) fail(`adresse locale encore présente dans : ${local.join(', ')}`);
+  // Mentions légales et politique de confidentialité : obligatoires et complètes avant publication.
+  const todo = files.filter((file) => readFileSync(file, 'utf8').includes('A_COMPLETER'));
+  if (todo.length > 0 && !preview) {
+    fail('complétez les informations A_COMPLETER de src/app/features/legal/legal-pages.ts.');
+  }
 }
 execFileSync(process.execPath, ['scripts/check-secrets.mjs', ...files], { stdio: 'inherit' });
 console.log(`Prêt à publier : copiez le contenu de ${OUT} (y compris .htaccess) dans public_html.`);

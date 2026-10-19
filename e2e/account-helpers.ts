@@ -17,17 +17,26 @@ export async function requireSupabase(page: Page) {
   test.skip(!response?.ok(), 'Supabase local arrêté : lancez « npm run db:start ».');
 }
 
-/** Lien du dernier e-mail de confirmation reçu par cette adresse. */
-export async function confirmationLink(request: APIRequestContext, email: string) {
+/**
+ * Lien du dernier e-mail reçu par cette adresse (confirmation par défaut). `subject` filtre les
+ * messages (« Reset » : réinitialisation) ; `count` attend qu'il y en ait au moins autant
+ * (un message renvoyé).
+ */
+export async function confirmationLink(
+  request: APIRequestContext,
+  email: string,
+  { subject = '', count = 1 }: { subject?: string; count?: number } = {},
+) {
   let link = '';
+  const query = `to:"${email}"${subject ? ` subject:"${subject}"` : ''}`;
   await expect
     .poll(
       async () => {
         const search = await request.get(
-          `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`,
+          `${MAILPIT}/api/v1/search?query=${encodeURIComponent(query)}`,
         );
         const { messages } = (await search.json()) as { messages?: { ID: string }[] };
-        if (!messages?.length) return '';
+        if (!messages || messages.length < count) return '';
         const message = await request.get(`${MAILPIT}/api/v1/message/${messages[0].ID}`);
         const { Text } = (await message.json()) as { Text: string };
         link = /https?:\/\/\S+\/auth\/v1\/verify\?[^\s)\]]+/.exec(Text)?.[0] ?? '';

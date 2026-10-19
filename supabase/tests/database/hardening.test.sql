@@ -3,7 +3,7 @@
 -- e2e/security.spec.ts : une seule session SQL ne peut pas simuler des envois simultanés.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(14);
 
 select is_empty(
   $$ select table_name || ' : ' || grantee || ' : ' || privilege_type
@@ -22,8 +22,8 @@ $$;
 select is_empty($$ select * from pg_temp.callable('anon') $$, 'sans compte, aucune fonction n’est appelable');
 select results_eq(
   $$ select * from pg_temp.callable('authenticated') $$,
-  $$ values ('is_admin'), ('record_lab_attempt'), ('record_quiz_attempt') $$,
-  'avec un compte : seulement les deux enregistrements et is_admin'
+  $$ values ('delete_my_account'), ('is_admin'), ('record_lab_attempt'), ('record_quiz_attempt') $$,
+  'avec un compte : seulement les deux enregistrements, la suppression du compte et is_admin'
 );
 
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -70,6 +70,32 @@ select throws_ok(
   $$ select public.handle_new_user() $$,
   '42501', null,
   'la fonction de création de profil n’est pas appelable depuis le navigateur'
+);
+
+-- Suppression du compte : celui de Chloé seulement, avec son profil et ses tentatives.
+reset role;
+insert into public.lab_attempts (user_id, lab_id, succeeded, hints_used)
+values ('33333333-3333-3333-3333-333333333333', 'lab-terminal', true, 0);
+set local role authenticated;
+select lives_ok($$ select public.delete_my_account() $$, 'un apprenant supprime son compte');
+reset role;
+select is_empty(
+  $$ select 'compte' from auth.users where id = '33333333-3333-3333-3333-333333333333'
+     union all select 'profil' from public.profiles where id = '33333333-3333-3333-3333-333333333333'
+     union all select 'tentative' from public.lab_attempts
+       where user_id = '33333333-3333-3333-3333-333333333333' $$,
+  'le compte supprimé emporte son profil et ses tentatives'
+);
+select isnt_empty(
+  $$ select 1 from auth.users where id = '44444444-4444-4444-4444-444444444444' $$,
+  'les autres comptes restent'
+);
+select set_config('request.jwt.claims', '{"role": "authenticated"}', true);
+set local role authenticated;
+select throws_ok(
+  $$ select public.delete_my_account() $$,
+  '42501', 'Connexion requise.',
+  'sans utilisateur identifié, rien n’est supprimé'
 );
 
 select * from finish();

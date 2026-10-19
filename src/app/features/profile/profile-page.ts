@@ -163,9 +163,40 @@ const MAX_BACKUP_BYTES = 1_000_000;
             réapparaissent si vous vous déconnectez.
           </p>
         }
-        <button type="button" class="btn btn-secondary" (click)="auth.signOut()">
-          Se déconnecter
-        </button>
+        <div class="row">
+          <button type="button" class="btn btn-secondary" (click)="auth.signOut()">
+            Se déconnecter
+          </button>
+          <a class="btn btn-secondary" routerLink="/nouveau-mot-de-passe">
+            Changer de mot de passe
+          </a>
+        </div>
+
+        <h3>Supprimer le compte</h3>
+        @if (confirmingDelete()) {
+          <p>
+            <strong>Supprimer définitivement votre compte ?</strong> Votre adresse, votre profil,
+            vos tentatives, vos points et vos badges seront effacés du serveur. Cette action ne peut
+            pas être annulée. Pensez à télécharger une sauvegarde avant, si vous voulez la garder.
+          </p>
+          <div class="row">
+            <button
+              #confirmDeleteRef
+              type="button"
+              class="btn btn-primary"
+              (click)="deleteAccount()"
+            >
+              {{ deleting() ? 'Patientez…' : 'Oui, supprimer mon compte' }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelDelete()">
+              Annuler
+            </button>
+          </div>
+        } @else {
+          <button #askDeleteRef type="button" class="btn btn-secondary" (click)="askDelete()">
+            Supprimer mon compte
+          </button>
+        }
       } @else {
         <p class="hint">
           Sans compte, tout fonctionne : votre progression est gardée dans ce navigateur. Un compte
@@ -177,6 +208,7 @@ const MAX_BACKUP_BYTES = 1_000_000;
           <a class="btn btn-secondary" routerLink="/inscription">Créer un compte</a>
         </div>
       }
+      <p role="status" class="hint">{{ accountMessage() }}</p>
     </section>
   `,
   styles: `
@@ -324,6 +356,35 @@ export class ProfilePage {
     this.progress.reset();
     this.resetMessage.set('Progression réinitialisée.');
     this.cancelReset();
+  }
+
+  private readonly askDeleteButton = viewChild<ElementRef<HTMLButtonElement>>('askDeleteRef');
+  private readonly confirmDeleteButton =
+    viewChild<ElementRef<HTMLButtonElement>>('confirmDeleteRef');
+  protected readonly confirmingDelete = signal(false);
+  protected readonly deleting = signal(false);
+  protected readonly accountMessage = signal('');
+
+  protected askDelete(): void {
+    this.accountMessage.set('');
+    this.confirmingDelete.set(true);
+    this.focusAfterRender(() => this.confirmDeleteButton());
+  }
+
+  protected cancelDelete(): void {
+    this.confirmingDelete.set(false);
+    this.focusAfterRender(() => this.askDeleteButton());
+  }
+
+  protected async deleteAccount(): Promise<void> {
+    if (this.deleting()) return;
+    this.deleting.set(true);
+    const result = await this.auth.deleteAccount();
+    this.deleting.set(false);
+    this.confirmingDelete.set(false);
+    this.accountMessage.set(
+      result.ok ? 'Votre compte et ses données ont été supprimés.' : result.message,
+    );
   }
 
   private readonly document = inject(DOCUMENT);

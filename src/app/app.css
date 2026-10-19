@@ -38,8 +38,23 @@
   display: grid;
   grid-template:
     'top' auto
-    'main' 1fr / 1fr;
+    'main' 1fr
+    'foot' auto / 1fr;
   min-height: 100dvh;
+}
+
+.footer {
+  grid-area: foot;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-4) var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+}
+
+.footer a {
+  color: var(--color-text-muted);
 }
 
 /* En-tête et navigation : verre dépoli au-dessus de l'aurore. */
@@ -211,7 +226,8 @@ main:focus {
   .layout {
     grid-template:
       'top top' auto
-      'nav main' 1fr / var(--sidebar-width) 1fr;
+      'nav main' 1fr
+      'nav foot' auto / var(--sidebar-width) 1fr;
   }
 
   .menu-toggle {

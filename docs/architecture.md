@@ -339,6 +339,22 @@ Pages `/connexion` et `/inscription` : résumé d'erreurs qui reçoit le focus, 
 message, affichage du mot de passe à la demande, collage et gestionnaires de mots de passe permis
 (WCAG 3.3.8). Lien de compte dans l'en-tête, section « Compte » dans le profil.
 
+Cycle de vie du compte ([`password-page.ts`](../src/app/features/auth/password-page.ts), profil) :
+- **Mot de passe oublié** (`/mot-de-passe-oublie`) : lien envoyé par e-mail, qui ouvre
+  `/nouveau-mot-de-passe` dans le navigateur de la demande (PKCE). Même réponse qu'une adresse ait
+  un compte ou non ; seules les erreurs de réseau et de limite de débit sont montrées.
+- **Changer de mot de passe** : lien du profil vers `/nouveau-mot-de-passe`. Le serveur
+  (`secure_password_change`) refuse si la connexion date de plus de 24 h ; la page propose alors
+  le lien par e-mail.
+- **Message de confirmation perdu** : renvoyé depuis l'écran « Vérifiez votre boîte de réception »,
+  ou depuis la connexion quand elle échoue pour une adresse non confirmée.
+- **Suppression du compte** (RGPD, article 17) : depuis le profil, en deux temps ;
+  `delete_my_account()` supprime l'utilisateur, et par cascade son profil, ses tentatives et ses
+  sessions. La progression gardée dans le navigateur sans compte reste, effaçable depuis le profil.
+- **Mentions légales et politique de confidentialité** : `/mentions-legales`, `/confidentialite`,
+  liées depuis le pied de page. Les informations de l'éditeur sont marquées `A_COMPLETER` ;
+  `npm run build:prod` refuse de construire tant qu'il en reste une.
+
 **Clés :** le navigateur n'a que l'URL et la clé « publishable » ([`environment.ts`](../src/environments/environment.ts)) ;
 la clé secrète n'est nulle part dans le dépôt. Le client est chargé à la demande : le premier
 affichage reste à environ 290 ko de JavaScript.
@@ -431,7 +447,7 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 | Protection contre les injections (XSS) | Politique de sécurité du contenu : scripts limités aux empreintes générées au build (`autoCsp`, `strict-dynamic`), `object-src 'none'`, `base-uri 'self'` ; connexions limitées au site et à Supabase, aucun cadre, aucun worker. Angular échappe tout affichage ; ni `innerHTML`, ni `eval`, ni contournement de la sanitisation dans le code | `e2e/security.spec.ts` : aucune violation sur les pages principales, script injecté bloqué |
 | Protection contre les injections (SQL) | Fonctions paramétrées, `search_path` vide, aucun SQL dynamique construit avec une saisie | relecture, pgTAP |
 | Validation côté client et côté serveur | Formulaires validés dans l'application ; côté serveur : contraintes de tables, réponses d'un quiz limitées à 8 Ko, questions vérifiées, nom affiché sans caractères de contrôle ou invisibles | pgTAP |
-| Contrôle d'accès systématique | RLS sur toutes les tables ; sans compte, aucune fonction appelable ; avec un compte, seulement `record_quiz_attempt`, `record_lab_attempt` et `is_admin` ; fonctions futures fermées par défaut | `hardening.test.sql`, `rls.test.sql` |
+| Contrôle d'accès systématique | RLS sur toutes les tables ; sans compte, aucune fonction appelable ; avec un compte, seulement `record_quiz_attempt`, `record_lab_attempt`, `delete_my_account` (son propre compte) et `is_admin` ; fonctions futures fermées par défaut | `hardening.test.sql`, `rls.test.sql` |
 | Limitation de débit | 30 tentatives de chaque sorte par heure et par compte, avec un verrou par compte : des envois simultanés ne la dépassent plus (mesuré avant : 37 acceptés sur 40) ; limites de Supabase Auth pour l'inscription et la connexion (`config.toml`) | `e2e/security.spec.ts` (40 envois simultanés, 30 acceptés) |
 | Gestion sécurisée des secrets | Seule la clé publique est dans le dépôt ; `npm run check:secrets` cherche clés secrètes, jetons `service_role`, clés privées et fichiers `.env` dans le dépôt (fichiers nouveaux compris) et le build | `npm run verify` |
 | Journaux sans données sensibles | Un seul `console.error` (échec de démarrage) ; les erreurs Supabase sont traduites sans afficher de jeton | relecture |
@@ -470,6 +486,7 @@ Limites connues du MVP :
 - **Clé Supabase :** la clé secrète n'est jamais dans le front ni dans le dépôt ; seule la clé publique, protégée par RLS, y figure.
 - **En-têtes HTTP** (`frame-ancestors`, HSTS, `X-Content-Type-Options`, politique de référent) : une balise `<meta>` ne peut pas les porter ; ils sont posés par le `.htaccess` du site (étape 13, ci-dessous).
 - **Mots de passe :** 10 caractères au minimum, sans règle de composition (recommandation NIST) ; la vérification des mots de passe divulgués n'existe que sur certaines offres hébergées.
+- **Suppression du compte :** une session volée suffit pour supprimer le compte (aucun mot de passe redemandé). Choix assumé : le compte ne contient que la progression, et redemander le mot de passe dans une fonction SQL ouvrirait un moyen de le deviner sans la limite de débit de la connexion.
 
 ### Déploiement (étape 13)
 
