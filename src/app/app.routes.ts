@@ -67,6 +67,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/password-page').then((m) => m.PasswordPage),
   },
   {
+    path: 'abonnement',
+    title: 'Abonnement Premium',
+    loadComponent: () =>
+      import('./features/subscription/subscription-page').then((m) => m.SubscriptionPage),
+  },
+  {
     path: 'mentions-legales',
     title: 'Mentions légales',
     loadComponent: () => import('./features/legal/legal-pages').then((m) => m.LegalNoticePage),

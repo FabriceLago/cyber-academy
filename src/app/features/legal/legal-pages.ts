@@ -103,6 +103,12 @@ export class LegalNoticePage {}
         conservées jusqu’à la suppression de votre compte, puis disparaissent des sauvegardes au
         bout de A_COMPLETER : durée de conservation des sauvegardes.
       </p>
+      <p>
+        Abonnement : le paiement est traité par Stripe (Stripe Payments Europe), qui reçoit votre
+        adresse e-mail et vos données de paiement. Cyber Academy ne voit ni ne garde votre numéro de
+        carte : seulement l’état de l’abonnement (actif, date de fin). Les factures sont conservées
+        dix ans, comme l’exige la loi pour les pièces comptables.
+      </p>
     </section>
     <section class="card prose" aria-labelledby="droits">
       <h2 id="droits">Vos droits</h2>

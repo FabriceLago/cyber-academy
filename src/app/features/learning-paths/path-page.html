@@ -25,6 +25,10 @@
     </section>
   }
 
+  @if (subscriptions.locked(path)) {
+    <ca-paywall [pathTitle]="path.title" />
+  }
+
   @if (overview(); as overview) {
     <section class="card" aria-labelledby="programme">
       <h2 id="programme">Programme</h2>

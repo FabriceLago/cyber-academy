@@ -138,6 +138,13 @@ export class AuthService {
   async deleteAccount(): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
       const { error } = await supabase.rpc('delete_my_account');
+      if (error?.code === 'CA409') {
+        return {
+          ok: false,
+          message:
+            'Résiliez d’abord votre abonnement (page Abonnement) : le compte pourra ensuite être supprimé.',
+        };
+      }
       if (error) return { ok: false, message: authMessage({}) };
       await supabase.auth.signOut({ scope: 'local' });
       return OK;
