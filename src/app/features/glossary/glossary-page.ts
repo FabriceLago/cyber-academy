@@ -47,7 +47,8 @@ export function searchGlossary(terms: readonly GlossaryTerm[], query: string): G
     : terms.filter((t) => normalize(t.term).includes(q) || normalize(t.definition).includes(q));
 }
 
-const TERMS = buildGlossary(GLOSSARY);
+/** Glossaire complet, partagé avec les cartes mémoire. */
+export const TERMS = buildGlossary(GLOSSARY);
 
 @Component({
   selector: 'ca-glossary-page',
@@ -57,6 +58,7 @@ const TERMS = buildGlossary(GLOSSARY);
       <p class="eyebrow">Référence</p>
       <h1>Glossaire</h1>
       <p>Tous les termes définis dans les leçons, avec un exemple et la leçon où les revoir.</p>
+      <p><a routerLink="/cartes-memoire">Réviser ces termes avec les cartes mémoire</a></p>
     </header>
 
     <div class="search card" role="search">

@@ -77,7 +77,8 @@ export class LegalNoticePage {}
       <p>
         Rien ne quitte votre navigateur : votre progression et le thème choisi y sont gardés
         (stockage local), uniquement pour faire fonctionner la plateforme. Aucun cookie
-        publicitaire, aucune mesure d’audience, aucun service tiers de suivi.
+        publicitaire, aucune mesure d’audience, aucun service tiers de suivi. L’avancement dans les
+        cartes mémoire reste lui aussi dans le navigateur, même avec un compte.
       </p>
     </section>
     <section class="card prose" aria-labelledby="avec-compte">
