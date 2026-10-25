@@ -45,7 +45,7 @@ select throws_ok(
 
 -- Visiteur sans compte
 set local role anon;
-select is((select count(*) from public.lessons), 7::bigint, 'sans compte, le catalogue est lisible');
+select is((select count(*) from public.lessons), 8::bigint, 'sans compte, le catalogue est lisible');
 select is(
   (select kind from public.labs where id = 'lab-journaux'), 'logs',
   'le laboratoire d’analyse de journaux est publié'

@@ -113,9 +113,14 @@
       <h2 id="animation-titre" tabindex="-1">Animation</h2>
       <figure class="card visual">
         <figcaption>{{ lesson.animation.title }}</figcaption>
-        @let animated = lesson.animation.id === 'trajet-paquet';
-        @if (animated) {
-          <ca-packet-journey />
+        @let animated = ['trajet-paquet', 'sauvegarde-3-2-1'].includes(lesson.animation.id);
+        @switch (lesson.animation.id) {
+          @case ('trajet-paquet') {
+            <ca-packet-journey />
+          }
+          @case ('sauvegarde-3-2-1') {
+            <ca-backup-rule />
+          }
         }
         <details class="description" [open]="!animated">
           <summary>Description textuelle, étape par étape</summary>

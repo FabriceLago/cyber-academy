@@ -1,14 +1,24 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
-import { findLesson } from '../src/app/content/catalog';
+import { findLesson, findPath } from '../src/app/content/catalog';
 import { PHISHING_LAB } from '../src/app/content/labs/lab-phishing';
+import { SAUVEGARDE_LAB } from '../src/app/content/labs/lab-sauvegarde';
 import { TERMINAL_LAB } from '../src/app/content/labs/lab-terminal';
 import { EMAIL_ZONES } from '../src/app/core/labs/phishing';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
-/** Démarre avec les quiz de ces leçons réussis à 100 % (une seule fois : les tentatives restent). */
-async function seed(page: Page, lessonIds: string[]) {
+/**
+ * Démarre avec les quiz de ces leçons réussis à 100 % et ces laboratoires réussis (une seule
+ * fois : les tentatives restent).
+ */
+async function seed(page: Page, lessonIds: string[], labIds: string[] = []) {
+  const labAttempts = labIds.map((labId) => ({
+    labId,
+    completedAt: new Date().toISOString(),
+    succeeded: true,
+    hintsUsed: 0,
+  }));
   const quizAttempts = lessonIds.map((lessonId) => {
     const ids = (findLesson(lessonId)?.lesson.quiz.questions ?? []).slice(0, 5).map((q) => q.id);
     return {
@@ -25,7 +35,7 @@ async function seed(page: Page, lessonIds: string[]) {
         sessionStorage.setItem('seeded', '1');
       }
     },
-    JSON.stringify({ schemaVersion: 1, weeklyGoal: null, labAttempts: [], quizAttempts }),
+    JSON.stringify({ schemaVersion: 1, weeklyGoal: null, labAttempts, quizAttempts }),
   );
 }
 
@@ -162,9 +172,54 @@ test('une analyse fausse fait échouer le laboratoire, et la tentative est enreg
   await expect(page.getByText('Pas encore réussi · Tentatives : 1')).toBeVisible();
 });
 
+test('niveau 1 : la leçon pilote, son animation 3-2-1 et le laboratoire de sauvegarde', async ({
+  page,
+}) => {
+  // Le niveau 1 s'ouvre quand le parcours Découverte est terminé (quiz et laboratoires).
+  const decouverte = (findPath('decouverte')?.modules ?? []).flatMap((m) =>
+    m.lessons.map((l) => l.id),
+  );
+  await seed(page, decouverte, [TERMINAL_LAB.id, PHISHING_LAB.id]);
+  await page.goto('/lecons/mises-a-jour-et-sauvegardes');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mises à jour et sauvegardes');
+
+  // Animation : les copies changent d'étape en étape.
+  // exact : le titre du schéma, pour les lecteurs d'écran, reprend aussi ce décompte.
+  const count = (text: string) => page.getByText(text, { exact: true });
+  await expect(count('Copies intactes : 1 sur 3')).toBeVisible();
+  const next = page.getByRole('button', { name: 'Étape suivante' });
+  await next.click();
+  await next.click();
+  await expect(count('Copies intactes : 3 sur 3')).toBeVisible();
+  const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+  expect(violations, 'leçon pilote').toEqual([]);
+
+  // Laboratoire : fichiers cachés, déplacement, copies récursives.
+  await page.goto(`/laboratoires/${SAUVEGARDE_LAB.id}`);
+  const log = page.getByRole('log', { name: 'Sortie du terminal' });
+  await type(page, 'ls');
+  await expect(log).not.toContainText('.consignes');
+  await type(page, 'ls -a');
+  await expect(log).toContainText('.consignes');
+  await type(page, 'cp Documents /media/cle-usb/');
+  await expect(log).toContainText('cp: -r non spécifié');
+  for (const command of [
+    'cat .consignes',
+    'mv Téléchargements/facture-octobre.pdf Documents/',
+    'mkdir /media/cle-usb/Sauvegarde-2026',
+    'cp -r Documents /media/cle-usb/Sauvegarde-2026/',
+    'cp -r Images /media/cle-usb/Sauvegarde-2026/',
+  ]) {
+    await type(page, command);
+  }
+  await expect(page.getByRole('heading', { level: 2, name: 'Laboratoire réussi' })).toBeFocused();
+  const audit = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+  expect(audit.violations, 'laboratoire de sauvegarde').toEqual([]);
+});
+
 test('sans progression, les laboratoires sont verrouillés et le disent', async ({ page }) => {
   await page.goto('/laboratoires');
-  await expect(page.getByText(/^Accessible après la leçon/)).toHaveCount(3);
+  await expect(page.getByText(/^Accessible après la leçon/)).toHaveCount(4);
   await expect(page.getByRole('link', { name: 'Ouvrir le laboratoire' })).toHaveCount(0);
   await page.goto(`/laboratoires/${PHISHING_LAB.id}`);
   await expect(
