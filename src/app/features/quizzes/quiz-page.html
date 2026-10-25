@@ -108,6 +108,13 @@
             (answerChange)="setAnswer(presented.question.id, $event)"
             [corrected]="submitted() !== null"
           />
+          @if (submitted()) {
+            <ca-report-error
+              [lessonId]="entry.lesson.id"
+              [questionId]="presented.question.id"
+              [about]="'sur la question ' + (i + 1)"
+            />
+          }
         </li>
       }
     </ol>

@@ -21,6 +21,7 @@ import { BackupRule } from './animations/backup-rule';
 import { PacketJourney } from './animations/packet-journey';
 import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Paywall } from '../../shared/paywall/paywall';
+import { ReportError } from '../../shared/report-error/report-error';
 import { LESSON_STATUS, LEVELS } from './lesson-list';
 import { PracticeQuestion } from './practice-question';
 
@@ -43,6 +44,7 @@ function splitSteps(text: string): string[] {
     BackupRule,
     PracticeQuestion,
     Paywall,
+    ReportError,
   ],
   templateUrl: './lesson-page.html',
   styleUrl: './lesson-page.css',

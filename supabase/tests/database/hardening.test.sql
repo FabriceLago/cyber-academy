@@ -22,8 +22,9 @@ $$;
 select is_empty($$ select * from pg_temp.callable('anon') $$, 'sans compte, aucune fonction n’est appelable');
 select results_eq(
   $$ select * from pg_temp.callable('authenticated') $$,
-  $$ values ('delete_my_account'), ('is_admin'), ('record_lab_attempt'), ('record_quiz_attempt') $$,
-  'avec un compte : seulement les deux enregistrements, la suppression du compte et is_admin'
+  $$ values ('delete_my_account'), ('is_admin'), ('record_lab_attempt'), ('record_quiz_attempt'),
+       ('report_content') $$,
+  'avec un compte : seulement les deux enregistrements, le signalement, la suppression du compte et is_admin'
 );
 
 insert into auth.users (id, email, raw_user_meta_data) values

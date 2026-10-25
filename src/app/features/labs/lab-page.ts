@@ -21,6 +21,7 @@ import { ProgressStore } from '../../core/progress/progress.store';
 import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Icon } from '../../shared/icon/icon';
 import { Paywall } from '../../shared/paywall/paywall';
+import { ReportError } from '../../shared/report-error/report-error';
 import { LogsLabView } from './logs-lab';
 import { PhishingLabView } from './phishing-lab';
 import { TerminalLabView } from './terminal-lab';
@@ -73,7 +74,16 @@ export const LAB_KINDS: Record<
  */
 @Component({
   selector: 'ca-lab-page',
-  imports: [RouterLink, DatePipe, Icon, TerminalLabView, PhishingLabView, LogsLabView, Paywall],
+  imports: [
+    RouterLink,
+    DatePipe,
+    Icon,
+    TerminalLabView,
+    PhishingLabView,
+    LogsLabView,
+    Paywall,
+    ReportError,
+  ],
   templateUrl: './lab-page.html',
   styleUrl: './lab-page.css',
 })

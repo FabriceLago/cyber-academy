@@ -25,7 +25,39 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "lab_attempts": {
+            "content_reports": {
+                  Row: {
+                    "created_at": string,"id": number,"lab_id": string | null,"lesson_id": string | null,"message": string,"question_id": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: never,"lab_id"?: string | null,"lesson_id"?: string | null,"message": string,"question_id"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: never,"lab_id"?: string | null,"lesson_id"?: string | null,"message"?: string,"question_id"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_reports_lab_id_fkey"
+      columns: ["lab_id"]
+isOneToOne: false
+      referencedRelation: "labs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_reports_lesson_id_fkey"
+      columns: ["lesson_id"]
+isOneToOne: false
+      referencedRelation: "lessons"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_reports_lesson_id_question_id_fkey"
+      columns: ["lesson_id","question_id"]
+isOneToOne: false
+      referencedRelation: "quiz_answer_keys"
+      referencedColumns: ["lesson_id","question_id"]
+    }
+                  ]
+                },"lab_attempts": {
                   Row: {
                     "completed_at": string,"created_at": string,"hints_used": number,"id": number,"lab_id": string,"succeeded": boolean,"user_id": string
                   }
@@ -245,7 +277,10 @@ isOneToOne: false
         to: "quiz_attempts"
         isOneToOne: true
         isSetofReturn: false
-      } }
+      } },
+"report_content":
+{ Args: { "p_lab_id"?: string,"p_lesson_id"?: string,"p_message": string,"p_question_id"?: string }; Returns: undefined
+                           }
           }
           Enums: {
             "app_role": "apprenant"|"admin"
