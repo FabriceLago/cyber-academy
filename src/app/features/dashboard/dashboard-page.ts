@@ -1,7 +1,7 @@
 import { DatePipe, PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG, PATHS } from '../../content/catalog';
+import { CATALOG, REVIEW_INDEX } from '../../content/outline.generated';
 import { AccountProgress } from '../../core/progress/account-progress';
 import { badges, experience } from '../../core/progress/achievements';
 import { weeklyChallenge } from '../../core/progress/challenges';
@@ -12,7 +12,7 @@ import { Icon } from '../../shared/icon/icon';
 import { ProgressBar } from '../../shared/progress-bar/progress-bar';
 import { LessonList } from '../lessons/lesson-list';
 
-const LESSONS = PATHS.flatMap((path) => path.modules.flatMap((module) => module.lessons));
+const LESSONS = CATALOG.paths.flatMap((path) => path.modules.flatMap((module) => module.lessons));
 
 /** 80 → « 1 h 20 min », 45 → « 45 min ». */
 export function formatDuration(minutes: number): string {
@@ -43,7 +43,10 @@ export class DashboardPage {
         .lessons.filter((l) => l.status === 'completed')
         .map((l) => l.lesson.id),
     );
-    return reviewItems(LESSONS, this.progress.state(), completed, new Date()).slice(0, 3);
+    return reviewItems(LESSONS, REVIEW_INDEX, this.progress.state(), completed, new Date()).slice(
+      0,
+      3,
+    );
   });
   protected readonly challenge = computed(() =>
     weeklyChallenge(this.summary(), this.progress.state(), new Date()),

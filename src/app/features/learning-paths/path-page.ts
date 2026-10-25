@@ -1,7 +1,8 @@
 import { Component, DOCUMENT, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { PercentPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { CATALOG, findPath } from '../../content/catalog';
+import { findPath } from '../../content/content-loader';
+import { CATALOG } from '../../content/outline.generated';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   EMPTY_DRAFT,

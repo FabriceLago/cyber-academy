@@ -44,7 +44,7 @@ const catalog: Catalog = {
       ],
     },
   ],
-  labs: [{ id: 'L', kind: 'terminal', title: 'Labo L', skillIds: ['s2'] }],
+  labs: [{ id: 'L', kind: 'terminal', title: 'Labo L', skillIds: ['s2'], scenario: 'Fictif.' }],
   skills: [
     { id: 's1', title: 'Compétence 1', description: 'A et C' },
     { id: 's2', title: 'Compétence 2', description: 'B et L' },

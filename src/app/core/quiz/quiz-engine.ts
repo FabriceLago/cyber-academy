@@ -1,4 +1,4 @@
-import { Lesson, Objective, Question, Quiz } from '../models/content.model';
+import { Lesson, LessonReview, Objective, Question, Quiz } from '../models/content.model';
 import { QuizAttempt } from '../models/progress.model';
 import { isChoiceCorrect } from './choice';
 
@@ -121,15 +121,23 @@ export function isAnswerCorrect(question: Question, answer: Answer | null): bool
   }
 }
 
+/** Objectifs de la leçon et objectif évalué par chaque question (repris dans le plan généré). */
+export function lessonReview(lesson: Lesson): LessonReview {
+  return {
+    objectives: lesson.objectives,
+    questionObjectives: Object.fromEntries(lesson.quiz.questions.map((q) => [q.id, q.objectiveId])),
+  };
+}
+
 /** Notions mal comprises : objectifs des questions ratées, dans l'ordre de la leçon. */
-export function objectivesToReview(lesson: Lesson, attempt: QuizAttempt): Objective[] {
+export function objectivesToReview(review: LessonReview, attempt: QuizAttempt): Objective[] {
   const correct = new Set(attempt.correctQuestionIds);
   const missed = new Set(
-    lesson.quiz.questions
-      .filter((q) => attempt.questionIds.includes(q.id) && !correct.has(q.id))
-      .map((q) => q.objectiveId),
+    attempt.questionIds
+      .filter((id) => !correct.has(id) && Object.hasOwn(review.questionObjectives, id))
+      .map((id) => review.questionObjectives[id]),
   );
-  return lesson.objectives.filter((objective) => missed.has(objective.id));
+  return review.objectives.filter((objective) => missed.has(objective.id));
 }
 
 /** Mélange de Fisher-Yates, sans modifier le tableau reçu. */

@@ -1,7 +1,13 @@
 import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PATHS } from '../../content/catalog';
+import { GLOSSARY } from '../../content/glossary.generated';
 import { GlossaryEntry, Lesson } from '../../core/models/content.model';
+
+/** Un terme tel que défini dans une leçon (fichier généré glossary.generated.ts). */
+export type GlossarySource = GlossaryEntry & {
+  readonly lessonId: string;
+  readonly lessonTitle: string;
+};
 
 export interface GlossaryTerm extends GlossaryEntry {
   /** Leçons où le terme est défini, dans l'ordre du catalogue. */
@@ -18,18 +24,16 @@ export function normalize(text: string): string {
 }
 
 /** Termes de toutes les leçons, fusionnés s'ils reviennent, dans l'ordre alphabétique français. */
-export function buildGlossary(lessons: readonly Lesson[]): GlossaryTerm[] {
+export function buildGlossary(entries: readonly GlossarySource[]): GlossaryTerm[] {
   const byTerm = new Map<string, GlossaryTerm>();
-  for (const lesson of lessons) {
-    for (const entry of lesson.glossary) {
-      const key = normalize(entry.term);
-      const seen = { id: lesson.id, title: lesson.title };
-      const known = byTerm.get(key);
-      byTerm.set(
-        key,
-        known ? { ...known, lessons: [...known.lessons, seen] } : { ...entry, lessons: [seen] },
-      );
-    }
+  for (const { lessonId, lessonTitle, ...entry } of entries) {
+    const key = normalize(entry.term);
+    const seen = { id: lessonId, title: lessonTitle };
+    const known = byTerm.get(key);
+    byTerm.set(
+      key,
+      known ? { ...known, lessons: [...known.lessons, seen] } : { ...entry, lessons: [seen] },
+    );
   }
   const collator = new Intl.Collator('fr', { sensitivity: 'base' });
   return [...byTerm.values()].sort((a, b) => collator.compare(a.term, b.term));
@@ -43,7 +47,7 @@ export function searchGlossary(terms: readonly GlossaryTerm[], query: string): G
     : terms.filter((t) => normalize(t.term).includes(q) || normalize(t.definition).includes(q));
 }
 
-const TERMS = buildGlossary(PATHS.flatMap((p) => p.modules.flatMap((m) => m.lessons)));
+const TERMS = buildGlossary(GLOSSARY);
 
 @Component({
   selector: 'ca-glossary-page',

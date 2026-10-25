@@ -14,7 +14,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG, findLesson } from '../../content/catalog';
+import { LessonEntry } from '../../content/content-loader';
+import { CATALOG } from '../../content/outline.generated';
 import { QuizAttempt } from '../../core/models/progress.model';
 import { quizScore, summarizeProgress } from '../../core/progress/progress';
 import {
@@ -31,6 +32,7 @@ import {
   initialAnswer,
   isAnswerComplete,
   isAnswerCorrect,
+  lessonReview,
   objectivesToReview,
 } from '../../core/quiz/quiz-engine';
 import { SubscriptionService } from '../../core/subscription/subscription.service';
@@ -60,7 +62,8 @@ export class QuizPage {
   private readonly resultHeading = viewChild<ElementRef<HTMLElement>>('resultHeading');
   private readonly errorSummary = viewChild<ElementRef<HTMLElement>>('errorSummary');
 
-  protected readonly entry = computed(() => findLesson(this.lessonId()));
+  /** Leçon complète, chargée par la route à l'ouverture de la page (null si inconnue). */
+  readonly entry = input<LessonEntry | null>(null);
   private readonly summary = computed(() =>
     summarizeProgress(CATALOG, this.progress.state(), new Date()),
   );
@@ -119,7 +122,7 @@ export class QuizPage {
   protected readonly review = computed(() => {
     const entry = this.entry();
     const attempt = this.submitted();
-    return entry && attempt ? objectivesToReview(entry.lesson, attempt) : [];
+    return entry && attempt ? objectivesToReview(lessonReview(entry.lesson), attempt) : [];
   });
 
   protected answerOf(presented: PresentedQuestion): Answer | null {

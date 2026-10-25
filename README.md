@@ -26,6 +26,7 @@ Mise en ligne (Supabase hébergé + Hostinger) : [docs/deploiement.md](docs/depl
 | `npm run e2e` | Build puis tests de parcours (Playwright, bureau et mobile, audit axe, thèmes clair et sombre) |
 | `npm run db:reset` | Recréer la base locale (migrations et catalogue) |
 | `npm run db:catalog` / `db:types` | Régénérer le catalogue SQL ou les types TypeScript de la base |
+| `npm run content:outline` | Régénérer le plan léger du catalogue lu par l'application (après chaque changement du contenu) |
 | `npm run db:backup` / `db:restore` | Sauvegarder ou recharger les données des apprenants |
 | `npm run build:prod` | Build à publier, avec `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` (voir la mise en ligne) |
 

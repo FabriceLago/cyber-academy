@@ -1,6 +1,6 @@
 import { Component, DOCUMENT, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG, PATHS } from '../../content/catalog';
+import { CATALOG } from '../../content/outline.generated';
 import { parseDraft } from '../../core/progress/portfolio';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
@@ -128,7 +128,7 @@ export class ProjectsPage {
 
   protected readonly projects = computed(() => {
     const summary = summarizeProgress(CATALOG, this.progress.state(), new Date());
-    return PATHS.flatMap((path) => {
+    return CATALOG.paths.flatMap((path) => {
       if (!path.career) return [];
       const project = path.career.finalProject;
       const draft = parseDraft(this.read(`ca-projet-${path.id}`), project.criteria);

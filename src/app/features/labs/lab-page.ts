@@ -13,8 +13,8 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { CATALOG, findLab } from '../../content/catalog';
-import { LabKind } from '../../core/models/content.model';
+import { CATALOG } from '../../content/outline.generated';
+import { AnyLab, LabKind } from '../../core/models/content.model';
 import { summarizeProgress } from '../../core/progress/progress';
 import { AccountProgress, RecordError, recordMessage } from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
@@ -89,7 +89,8 @@ export class LabPage {
   private readonly resultHeading = viewChild<ElementRef<HTMLElement>>('resultHeading');
 
   protected readonly kinds = LAB_KINDS;
-  protected readonly lab = computed(() => findLab(this.labId()));
+  /** Laboratoire complet, chargé par la route à l'ouverture de la page (null si inconnu). */
+  readonly lab = input<AnyLab | null>(null);
   protected readonly terminal = computed(() => {
     const lab = this.lab();
     return lab?.kind === 'terminal' ? lab : null;

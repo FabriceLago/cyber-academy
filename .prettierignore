@@ -1,0 +1,4 @@
+# Fichiers générés : vérifiés à l'identique par leur script (--check), à ne pas reformater.
+src/app/content/*.generated.ts
+src/app/core/supabase/database.types.ts
+supabase/seed.sql

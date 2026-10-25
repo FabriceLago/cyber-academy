@@ -1,5 +1,18 @@
-import { Routes } from '@angular/router';
+import { ResolveFn, Routes } from '@angular/router';
+import type { LessonEntry } from './content/content-loader';
+import type { AnyLab } from './core/models/content.model';
 import { ErrorPage } from './features/errors/error-page';
+
+/**
+ * Contenu complet d'une leçon (avec son quiz) ou d'un laboratoire, téléchargé à l'ouverture de sa
+ * page et transmis au composant (withComponentInputBinding). Échec du téléchargement : page d'erreur.
+ */
+const lessonEntry: ResolveFn<LessonEntry | null> = (route) =>
+  import('./content/content-loader').then((m) =>
+    m.loadLesson(route.paramMap.get('lessonId') ?? ''),
+  );
+const labContent: ResolveFn<AnyLab | null> = (route) =>
+  import('./content/content-loader').then((m) => m.loadLab(route.paramMap.get('labId') ?? ''));
 
 export const routes: Routes = [
   {
@@ -16,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'parcours/:pathId',
     title: (route) =>
-      import('./content/catalog').then(
+      import('./content/content-loader').then(
         (m) => m.findPath(route.paramMap.get('pathId') ?? '')?.title ?? 'Parcours introuvable',
       ),
     loadComponent: () => import('./features/learning-paths/path-page').then((m) => m.PathPage),
@@ -30,10 +43,11 @@ export const routes: Routes = [
     path: 'lecons/:lessonId',
     // Titre d'onglet = titre de la leçon ; le catalogue est chargé à la demande, pas au démarrage.
     title: (route) =>
-      import('./content/catalog').then(
+      import('./content/content-loader').then(
         (m) =>
           m.findLesson(route.paramMap.get('lessonId') ?? '')?.lesson.title ?? 'Leçon introuvable',
       ),
+    resolve: { entry: lessonEntry },
     loadComponent: () => import('./features/lessons/lesson-page').then((m) => m.LessonPage),
   },
   {
@@ -90,18 +104,20 @@ export const routes: Routes = [
   {
     path: 'laboratoires/:labId',
     title: (route) =>
-      import('./content/catalog').then(
+      import('./content/content-loader').then(
         (m) => m.findLab(route.paramMap.get('labId') ?? '')?.title ?? 'Laboratoire introuvable',
       ),
+    resolve: { lab: labContent },
     loadComponent: () => import('./features/labs/lab-page').then((m) => m.LabPage),
   },
   {
     path: 'lecons/:lessonId/quiz',
     title: (route) =>
-      import('./content/catalog').then((m) => {
+      import('./content/content-loader').then((m) => {
         const title = m.findLesson(route.paramMap.get('lessonId') ?? '')?.lesson.title;
         return title ? `Quiz : ${title}` : 'Quiz introuvable';
       }),
+    resolve: { entry: lessonEntry },
     loadComponent: () => import('./features/quizzes/quiz-page').then((m) => m.QuizPage),
   },
   {

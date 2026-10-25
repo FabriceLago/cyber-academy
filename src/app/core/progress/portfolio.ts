@@ -1,8 +1,8 @@
-import { LearningPath } from '../models/content.model';
+import { PathOutline } from '../models/content.model';
 import { ProgressSummary } from './progress';
 
 export interface PortfolioInput {
-  readonly path: LearningPath;
+  readonly path: PathOutline;
   readonly summary: ProgressSummary;
   /** Rapport du projet final, rédigé par l'apprenant. */
   readonly report: string;

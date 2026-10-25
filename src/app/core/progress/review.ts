@@ -1,4 +1,4 @@
-import { Lesson, Objective } from '../models/content.model';
+import { LessonOutline, LessonReview, Objective } from '../models/content.model';
 import { ProgressState, QuizAttempt } from '../models/progress.model';
 import { objectivesToReview } from '../quiz/quiz-engine';
 
@@ -6,7 +6,7 @@ import { objectivesToReview } from '../quiz/quiz-engine';
 export const REVIEW_AFTER_DAYS = 14;
 
 export interface ReviewItem {
-  readonly lesson: Lesson;
+  readonly lesson: LessonOutline;
   /** « notions » : la dernière tentative a raté des notions ; « rappel » : révision espacée. */
   readonly reason: 'notions' | 'rappel';
   /** Notions mal comprises lors de la dernière tentative (vide pour un rappel). */
@@ -21,9 +21,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * Leçons à réviser, calculées à partir des tentatives de quiz (lire une page ne compte pas) :
  * d'abord celles dont la dernière tentative a raté des notions, de la plus récente à la plus
  * ancienne, puis les leçons validées sans quiz depuis REVIEW_AFTER_DAYS, la plus ancienne en tête.
+ * `reviews` : objectifs de chaque leçon (REVIEW_INDEX du plan), sans charger leur contenu.
  */
 export function reviewItems(
-  lessons: readonly Lesson[],
+  lessons: readonly LessonOutline[],
+  reviews: Readonly<Record<string, LessonReview>>,
   state: ProgressState,
   completedIds: ReadonlySet<string>,
   now: Date,
@@ -40,9 +42,10 @@ export function reviewItems(
   const reminders: ReviewItem[] = [];
   for (const lesson of lessons) {
     const attempt = last.get(lesson.id);
-    if (!attempt) continue;
+    const review = Object.hasOwn(reviews, lesson.id) ? reviews[lesson.id] : undefined;
+    if (!attempt || !review) continue;
     const daysSince = Math.floor((now.getTime() - Date.parse(attempt.submittedAt)) / DAY_MS);
-    const objectives = objectivesToReview(lesson, attempt);
+    const objectives = objectivesToReview(review, attempt);
     if (objectives.length > 0) {
       missed.push({ lesson, reason: 'notions', objectives, daysSince });
     } else if (completedIds.has(lesson.id) && daysSince >= REVIEW_AFTER_DAYS) {

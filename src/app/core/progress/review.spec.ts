@@ -1,4 +1,5 @@
 import { CATALOG, PATHS } from '../../content/catalog';
+import { REVIEW_INDEX } from '../../content/outline.generated';
 import { ProgressState, QuizAttempt } from '../models/progress.model';
 import { summarizeProgress } from './progress';
 import { EMPTY_PROGRESS } from './progress.store';
@@ -21,7 +22,7 @@ const run = (quizAttempts: QuizAttempt[]) => {
       .lessons.filter((l) => l.status === 'completed')
       .map((l) => l.lesson.id),
   );
-  return reviewItems(LESSONS, state, completed, NOW);
+  return reviewItems(LESSONS, REVIEW_INDEX, state, completed, NOW);
 };
 
 describe('reviewItems', () => {

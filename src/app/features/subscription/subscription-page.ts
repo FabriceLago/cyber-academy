@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PATHS } from '../../content/catalog';
+import { CATALOG } from '../../content/outline.generated';
 import { AuthService } from '../../core/auth/auth.service';
 import { Plan, SubscriptionService } from '../../core/subscription/subscription.service';
 
@@ -161,7 +161,7 @@ export class SubscriptionPage {
   protected readonly auth = inject(AuthService);
   protected readonly subscriptions = inject(SubscriptionService);
   protected readonly plans = PLANS;
-  protected readonly premiumPaths = PATHS.filter((path) => path.premium);
+  protected readonly premiumPaths = CATALOG.paths.filter((path) => path.premium);
   protected readonly waiver = signal(false);
   protected readonly pending = signal(false);
   protected readonly message = signal('');
