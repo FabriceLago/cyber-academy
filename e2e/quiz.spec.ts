@@ -32,7 +32,7 @@ test('réussir le quiz valide la leçon et ouvre la suivante', async ({ page }) 
   await page.goto('/');
   await expect(page.getByRole('progressbar', { name: 'Progression globale' })).toHaveAttribute(
     'aria-valuenow',
-    '14',
+    '13', // 1 leçon validée sur 8
   );
 });
 
@@ -127,5 +127,5 @@ test('la liste des quiz montre ce qui est accessible', async ({ page }) => {
   await page.goto('/quiz');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Quiz et examens');
   await expect(page.getByRole('link', { name: 'Passer le quiz' })).toHaveCount(1);
-  await expect(page.getByText('Quiz accessible après la leçon', { exact: false })).toHaveCount(6);
+  await expect(page.getByText('Quiz accessible après la leçon', { exact: false })).toHaveCount(7);
 });
