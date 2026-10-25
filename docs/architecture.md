@@ -436,6 +436,13 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
   - limitation de débit : 30 tentatives de chaque sorte par heure et par compte.
   L'objectif hebdomadaire est enregistré dans le profil. En cas d'échec réseau, un message le dit
   et l'envoi peut être refait (les réponses sont conservées).
+- **Signalements d'erreurs** ([`report-error.ts`](../src/app/shared/report-error/report-error.ts)) :
+  bouton « Signaler une erreur » en bas de chaque leçon et de chaque laboratoire, et sur chaque
+  question d'un quiz une fois corrigé. Réservé aux comptes : `report_content(message, leçon,
+  question, laboratoire)` enregistre dans `content_reports`, table sans aucune politique (ni lecture
+  ni écriture depuis le navigateur) ; les contraintes vérifient la cible (une seule, existante) et
+  le message (10 à 1 000 caractères) ; 10 signalements par heure et par compte. L'équipe les lit
+  depuis le tableau de bord Supabase ; ils sont supprimés avec le compte.
 - **Tentatives faites sans compte** : elles restent dans le navigateur et réapparaissent à la
   déconnexion, mais ne sont pas ajoutées au compte, car le serveur n'a pas pu les vérifier ; le
   profil l'indique.

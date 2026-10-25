@@ -38,6 +38,7 @@ import {
 import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Icon } from '../../shared/icon/icon';
 import { Paywall } from '../../shared/paywall/paywall';
+import { ReportError } from '../../shared/report-error/report-error';
 import { AnswerInput } from './answer-input';
 
 /**
@@ -46,7 +47,7 @@ import { AnswerInput } from './answer-input';
  */
 @Component({
   selector: 'ca-quiz-page',
-  imports: [RouterLink, PercentPipe, Icon, AnswerInput, Paywall],
+  imports: [RouterLink, PercentPipe, Icon, AnswerInput, Paywall, ReportError],
   templateUrl: './quiz-page.html',
   styleUrl: './quiz-page.css',
 })

@@ -93,6 +93,10 @@ export class LegalNoticePage {}
           Tentatives de quiz et de laboratoire, objectif hebdomadaire : pour calculer et retrouver
           votre progression sur vos appareils.
         </li>
+        <li>
+          Signalements d’erreurs (message, contenu concerné, date) : pour corriger les leçons, les
+          questions et les laboratoires. Ils ne sont lus que par l’équipe.
+        </li>
       </ul>
       <p>
         Base légale : l’exécution du service que vous demandez en créant un compte (RGPD, article 6,
