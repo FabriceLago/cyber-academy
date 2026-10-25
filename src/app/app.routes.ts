@@ -56,6 +56,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/glossary/glossary-page').then((m) => m.GlossaryPage),
   },
   {
+    path: 'cartes-memoire',
+    title: 'Cartes mémoire',
+    loadComponent: () =>
+      import('./features/glossary/flashcards-page').then((m) => m.FlashcardsPage),
+  },
+  {
     path: 'connexion',
     title: 'Connexion',
     data: { mode: 'connexion' },

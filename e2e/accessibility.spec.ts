@@ -14,6 +14,7 @@ const PATHS = [
   '/parcours/analyste-soc-junior', // spécialisation verrouillée, avec sa fiche métier
   '/parcours/culture-informatique', // niveau 1, verrouillé tant que Découverte n'est pas terminé
   '/glossaire',
+  '/cartes-memoire',
   '/parcours/inexistant',
   '/laboratoires/inexistant',
   '/connexion',

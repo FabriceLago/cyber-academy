@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { Page, expect, test } from '@playwright/test';
+import { ORDINATEUR_ET_FICHIERS as LESSON } from '../src/app/content/lessons/01-ordinateur-et-fichiers';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const FIRST = 'Comprendre un ordinateur, ses fichiers et ses dossiers';
@@ -146,6 +147,39 @@ test('le glossaire rassemble les termes des leçons et se filtre sans accents', 
   await expect(count).toHaveText(/1 terme trouvé sur \d+/);
   await page.getByRole('link', { name: 'Repérer l’hameçonnage et l’ingénierie sociale' }).click();
   await expect(page).toHaveURL(/\/lecons\/hameconnage$/);
+});
+
+test('les cartes mémoire reprennent les termes des leçons tentées, définition cachée d’abord', async ({
+  page,
+}) => {
+  await page.goto('/cartes-memoire');
+  await expect(page.getByText('Aucune carte pour l’instant')).toBeVisible();
+
+  await seedOnce(page, FIRST_LESSON_PASSED);
+  await page.goto('/glossaire');
+  await page.getByRole('link', { name: 'Réviser ces termes avec les cartes mémoire' }).click();
+  await expect(h1(page)).toHaveText('Cartes mémoire');
+  const count = LESSON.glossary.length;
+  await page.getByRole('button', { name: `Commencer la révision (${count} cartes)` }).click();
+
+  const heading = page.getByRole('main').getByRole('heading', { level: 2 });
+  for (let i = 1; i <= count; i++) {
+    await expect(page.getByText(`Carte ${i} sur ${count}`)).toBeVisible();
+    await expect(heading).toBeFocused();
+    const term = (await heading.innerText()).trim();
+    const entry = LESSON.glossary.find((e) => e.term === term);
+    if (!entry) throw new Error(`Terme inconnu : ${term}`);
+    const definition = page.getByText(entry.definition, { exact: true });
+    await expect(definition).toBeHidden();
+    await page.getByRole('button', { name: 'Afficher la définition' }).click();
+    await expect(definition).toBeVisible();
+    await page.getByRole('button', { name: i === 1 ? 'À revoir' : 'Je savais' }).click();
+  }
+
+  await expect(page.getByRole('heading', { name: 'Séance terminée' })).toBeFocused();
+  await expect(page.getByText(`${count - 1} cartes connues sur ${count}.`)).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(`Rien à revoir aujourd’hui sur vos ${count} cartes.`)).toBeVisible();
 });
 
 test('une adresse de leçon inconnue est signalée', async ({ page }) => {

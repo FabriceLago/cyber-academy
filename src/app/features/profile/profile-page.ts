@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AccountProgress, RecordError, recordMessage } from '../../core/progress/account-progress';
 import { ProgressState } from '../../core/models/progress.model';
+import { FlashcardStore } from '../../core/progress/flashcards';
 import { ProgressStore, readBackup } from '../../core/progress/progress.store';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 
@@ -80,8 +81,9 @@ const MAX_BACKUP_BYTES = 1_000_000;
         </p>
         @if (confirmingReset()) {
           <p>
-            <strong>Effacer toutes vos tentatives de quiz et de laboratoire ?</strong> Cette action
-            est définitive ; votre objectif hebdomadaire est conservé.
+            <strong>Effacer vos tentatives et vos cartes mémoire ?</strong> Quiz, laboratoires et
+            cartes repartent de zéro. Cette action est définitive ; votre objectif hebdomadaire est
+            conservé.
           </p>
           <div class="row">
             <button #confirmResetRef type="button" class="btn btn-primary" (click)="reset()">
@@ -310,6 +312,7 @@ const MAX_BACKUP_BYTES = 1_000_000;
 export class ProfilePage {
   protected readonly auth = inject(AuthService);
   protected readonly progress = inject(ProgressStore);
+  private readonly flashcards = inject(FlashcardStore);
   private readonly account = inject(AccountProgress);
   protected readonly weeklyGoal = computed(() => this.progress.state().weeklyGoal);
   protected readonly goalOptions = [1, 2, 3, 4, 5, 6, 7];
@@ -355,6 +358,7 @@ export class ProfilePage {
 
   protected reset(): void {
     this.progress.reset();
+    this.flashcards.reset();
     this.resetMessage.set('Progression réinitialisée.');
     this.cancelReset();
   }

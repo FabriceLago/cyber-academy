@@ -422,6 +422,10 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 - **MVP :** stockage dans le navigateur (`localStorage`, clé `ca-progress`), avec `schemaVersion`
   pour migrer le format. L'utilisateur peut modifier ces données : chaque entrée est vérifiée à la
   lecture (`parseProgress`), les entrées invalides sont ignorées, les dates normalisées.
+- **Cartes mémoire** ([`flashcards.ts`](../src/app/core/progress/flashcards.ts)) : termes du
+  glossaire des leçons dont le quiz a été tenté, révisés selon le système de Leitner (boîtes 1 à 5,
+  retour après 1, 3, 7, 14 puis 30 jours ; carte oubliée → boîte 1). Avancement gardé dans le
+  navigateur seulement (clé `ca-flashcards`), même avec un compte : ni serveur, ni sauvegarde.
 - **Avec un compte (étape 10)** : la progression affichée est celle du compte, chargée à l'ouverture
   de la session ([`account-progress.ts`](../src/app/core/progress/account-progress.ts)). Chaque
   tentative passe par une fonction serveur :
