@@ -1,4 +1,5 @@
 // Ouvre une page de paiement Stripe (abonnement mensuel ou annuel) pour l'utilisateur connecté.
+import { hasBilledSubscription } from '../_shared/billing.ts';
 import { SITE_URL, admin, json, preflight, requestUser, stripe } from '../_shared/stripe.ts';
 
 const PRICES: Record<string, string | undefined> = {
@@ -17,22 +18,47 @@ Deno.serve(async (req) => {
 
   const { data: existing } = await admin
     .from('subscriptions')
-    .select('stripe_customer_id, status')
+    .select('stripe_customer_id')
     .eq('user_id', user.id)
     .maybeSingle();
-  if (existing && ['active', 'trialing', 'past_due'].includes(existing.status)) {
-    return json({ error: 'Votre abonnement est déjà actif.' }, 409);
-  }
 
   // Un client Stripe par compte, gardé pour les abonnements suivants.
   let customer = existing?.stripe_customer_id;
-  if (!customer) {
+  if (customer) {
+    // Stripe fait foi, pas la table : un paiement fait il y a quelques secondes n'y est peut-être
+    // pas encore (webhook en route), et un second abonnement serait facturé en plus.
+    const { data: subs } = await stripe.subscriptions.list({ customer, status: 'all', limit: 100 });
+    if (hasBilledSubscription(subs)) {
+      return json(
+        {
+          error:
+            'Un abonnement existe déjà pour ce compte : gérez-le depuis « Gérer mon abonnement ».',
+        },
+        409,
+      );
+    }
+    // Une seule page de paiement ouverte à la fois : celles laissées dans d'autres onglets se ferment.
+    const { data: open } = await stripe.checkout.sessions.list({
+      customer,
+      status: 'open',
+      limit: 100,
+    });
+    await Promise.all(open.map((s) => stripe.checkout.sessions.expire(s.id).catch(() => null)));
+  } else {
+    // Clé d'idempotence : deux premières demandes simultanées reçoivent le même client Stripe, au
+    // lieu d'en créer un second, orphelin.
     customer = (
-      await stripe.customers.create({ email: user.email, metadata: { user_id: user.id } })
+      await stripe.customers.create(
+        { email: user.email, metadata: { user_id: user.id } },
+        { idempotencyKey: `client-${user.id}` },
+      )
     ).id;
     const { error } = await admin
       .from('subscriptions')
-      .insert({ user_id: user.id, stripe_customer_id: customer });
+      .upsert(
+        { user_id: user.id, stripe_customer_id: customer },
+        { onConflict: 'user_id', ignoreDuplicates: true },
+      );
     if (error) return json({ error: 'La demande a échoué : réessayez.' }, 500);
   }
 

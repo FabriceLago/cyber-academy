@@ -534,14 +534,20 @@ automatiquement.
   `learning_paths.premium` par `npm run db:catalog`.
 - **État** : table `subscriptions` (une ligne par compte : client Stripe, statut, fin de période,
   résiliation en fin de période). Lisible par son seul propriétaire ; écrite uniquement par la
-  fonction `stripe-webhook` (clé service_role), qui relit l'abonnement chez Stripe à chaque
-  événement (doublons et désordre sans effet).
+  fonction `stripe-webhook` (clé service_role), qui relit chez Stripe tous les abonnements du
+  client à chaque événement et enregistre celui qui fait foi (`_shared/billing.ts` : actif avant
+  résilié, puis le plus récent). Doublons, désordre et événements tardifs d'un ancien abonnement
+  sont sans effet.
 - **Accès** : `has_active_subscription` (statut `active` ou `trialing`, période non échue). Les
   fonctions d'enregistrement refusent une tentative premium sans abonnement (code `CA402`) ;
   l'application affiche à la place l'offre (`ca-paywall`) sur les pages de leçon, de quiz et de
   laboratoire. `delete_my_account` refuse un compte encore facturé (`CA409`).
 - **Paiement** : `create-checkout` (page de paiement Stripe, retour sur `SITE_URL`, jamais
-  l'adresse de la requête) et `customer-portal` (gestion, résiliation). La case de renonciation au
+  l'adresse de la requête) et `customer-portal` (gestion, résiliation). Pas de double paiement :
+  `create-checkout` interroge Stripe (pas la table, que le webhook peut ne pas avoir encore mise à
+  jour), refuse si un abonnement est encore facturé et ferme les pages de paiement restées
+  ouvertes ; le client Stripe est créé avec une clé d'idempotence. Règles testées par
+  `npm run test:functions` (Node, inclus dans `verify`). La case de renonciation au
   droit de rétractation (contenu numérique fourni immédiatement) conditionne le choix d'une formule.
 - **Limite connue** : comme les quiz, le texte des leçons est dans le JavaScript du site ; un
   visiteur technique peut le lire sans abonnement. L'abonnement protège la progression, les
