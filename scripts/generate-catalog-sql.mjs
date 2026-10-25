@@ -20,7 +20,7 @@ const { PATHS, LABS } = await import(`data:text/javascript;base64,${source}`);
 
 const quote = (text) => `'${text.replaceAll("'", "''")}'`;
 const literal = (value) =>
-  typeof value === 'number'
+  typeof value === 'number' || typeof value === 'boolean'
     ? String(value)
     : typeof value === 'object'
       ? `${quote(JSON.stringify(value))}::jsonb`
@@ -61,6 +61,7 @@ const paths = PATHS.map((path, position) => ({
   title: path.title,
   level: path.level,
   position,
+  premium: path.premium === true,
 }));
 const modules = PATHS.flatMap((path) =>
   path.modules.map((module, position) => ({

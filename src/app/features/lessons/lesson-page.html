@@ -38,6 +38,8 @@
         }
       </ul>
     </section>
+  } @else if (subscriptions.locked(entry.path)) {
+    <ca-paywall [pathTitle]="entry.path.title" />
   } @else {
     <nav class="card toc" aria-labelledby="sommaire-titre">
       <h2 id="sommaire-titre" class="toc-title">Sommaire</h2>

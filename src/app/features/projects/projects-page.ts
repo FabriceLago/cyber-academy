@@ -4,6 +4,7 @@ import { CATALOG, PATHS } from '../../content/catalog';
 import { parseDraft } from '../../core/progress/portfolio';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
+import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { EmptyState } from '../../shared/empty-state/empty-state';
 import { Icon } from '../../shared/icon/icon';
 
@@ -34,9 +35,14 @@ import { Icon } from '../../shared/icon/icon';
             {{ item.project.criteria.length }}
           </p>
 
-          <p class="state" [class.started]="item.started">
-            <ca-icon [name]="item.started ? 'clock' : 'circle'" />
-            @if (item.started) {
+          @let subscriberOnly = subscriptions.locked(item.path);
+          <p class="state" [class.started]="item.started && !subscriberOnly">
+            <ca-icon [name]="subscriberOnly ? 'lock' : item.started ? 'clock' : 'circle'" />
+            @if (subscriberOnly) {
+              Réservé aux abonnés{{
+                item.started ? ' · votre brouillon reste gardé dans ce navigateur' : ''
+              }}
+            } @else if (item.started) {
               Brouillon commencé dans ce navigateur · critères cochés : {{ item.checked }} sur
               {{ item.project.criteria.length }}
             } @else {
@@ -52,10 +58,20 @@ import { Icon } from '../../shared/icon/icon';
             }
           </p>
           <p>
-            <a class="btn btn-primary" [routerLink]="['/parcours', item.path.id]" fragment="projet">
-              {{ item.started ? 'Reprendre le projet' : 'Ouvrir le projet' }}
-              <span class="visually-hidden"> : {{ item.project.title }}</span>
-            </a>
+            @if (subscriberOnly) {
+              <a class="btn btn-primary" routerLink="/abonnement">
+                Voir l’abonnement<span class="visually-hidden"> : {{ item.project.title }}</span>
+              </a>
+            } @else {
+              <a
+                class="btn btn-primary"
+                [routerLink]="['/parcours', item.path.id]"
+                fragment="projet"
+              >
+                {{ item.started ? 'Reprendre le projet' : 'Ouvrir le projet' }}
+                <span class="visually-hidden"> : {{ item.project.title }}</span>
+              </a>
+            }
           </p>
         </li>
       }
@@ -107,6 +123,7 @@ import { Icon } from '../../shared/icon/icon';
 })
 export class ProjectsPage {
   private readonly progress = inject(ProgressStore);
+  protected readonly subscriptions = inject(SubscriptionService);
   private readonly window = inject(DOCUMENT).defaultView;
 
   protected readonly projects = computed(() => {

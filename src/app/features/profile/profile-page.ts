@@ -170,6 +170,7 @@ const MAX_BACKUP_BYTES = 1_000_000;
           <a class="btn btn-secondary" routerLink="/nouveau-mot-de-passe">
             Changer de mot de passe
           </a>
+          <a class="btn btn-secondary" routerLink="/abonnement">Mon abonnement</a>
         </div>
 
         <h3>Supprimer le compte</h3>

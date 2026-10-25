@@ -1,11 +1,11 @@
 -- Généré par scripts/generate-catalog-sql.mjs à partir de src/app/content : ne pas modifier
 -- à la main. Relancer « npm run db:catalog » après chaque changement du contenu.
 
-insert into public.learning_paths (id, title, level, position) values
-  ('decouverte', 'Découverte de la cybersécurité', 'debutant', 0),
-  ('culture-informatique', 'Niveau 1 : Culture informatique', 'debutant', 1),
-  ('analyste-soc-junior', 'Analyste SOC junior', 'intermediaire', 2)
-on conflict (id) do update set title = excluded.title, level = excluded.level, position = excluded.position;
+insert into public.learning_paths (id, title, level, position, premium) values
+  ('decouverte', 'Découverte de la cybersécurité', 'debutant', 0, false),
+  ('culture-informatique', 'Niveau 1 : Culture informatique', 'debutant', 1, false),
+  ('analyste-soc-junior', 'Analyste SOC junior', 'intermediaire', 2, true)
+on conflict (id) do update set title = excluded.title, level = excluded.level, position = excluded.position, premium = excluded.premium;
 
 insert into public.modules (id, path_id, title, pass_threshold, position) values
   ('premiers-pas', 'decouverte', 'Premiers pas avec l’ordinateur', 0.8, 0),

@@ -67,14 +67,14 @@ isOneToOne: true
                   ]
                 },"learning_paths": {
                   Row: {
-                    "created_at": string,"id": string,"level": string,"position": number,"title": string,"updated_at": string
+                    "created_at": string,"id": string,"level": string,"position": number,"premium": boolean,"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id": string,"level": string,"position": number,"title": string,"updated_at"?: string
+                    "created_at"?: string,"id": string,"level": string,"position": number,"premium"?: boolean,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"level"?: string,"position"?: number,"title"?: string,"updated_at"?: string
+                    "created_at"?: string,"id"?: string,"level"?: string,"position"?: number,"premium"?: boolean,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -173,6 +173,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"subscriptions": {
+                  Row: {
+                    "cancel_at_period_end": boolean,"created_at": string,"current_period_end": string | null,"price_id": string | null,"status": string,"stripe_customer_id": string,"stripe_subscription_id": string | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancel_at_period_end"?: boolean,"created_at"?: string,"current_period_end"?: string | null,"price_id"?: string | null,"status"?: string,"stripe_customer_id": string,"stripe_subscription_id"?: string | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "cancel_at_period_end"?: boolean,"created_at"?: string,"current_period_end"?: string | null,"price_id"?: string | null,"status"?: string,"stripe_customer_id"?: string,"stripe_subscription_id"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
@@ -185,6 +199,9 @@ isOneToOne: false
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"has_active_subscription":
+{ Args: { "p_user": string }; Returns: boolean
+                           },
 "has_distinct_elements":
 { Args: { "items": (string)[] }; Returns: boolean
                            },
@@ -193,6 +210,9 @@ isOneToOne: false
                            },
 "is_answer_correct":
 { Args: { "answer": Json,"answer_key": Json }; Returns: boolean
+                           },
+"is_premium_lesson":
+{ Args: { "p_lesson_id": string }; Returns: boolean
                            },
 "record_lab_attempt":
 { Args: { "p_hints_used": number,"p_lab_id": string,"p_succeeded": boolean }; Returns: {

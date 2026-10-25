@@ -33,7 +33,9 @@ import {
   isAnswerCorrect,
   objectivesToReview,
 } from '../../core/quiz/quiz-engine';
+import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Icon } from '../../shared/icon/icon';
+import { Paywall } from '../../shared/paywall/paywall';
 import { AnswerInput } from './answer-input';
 
 /**
@@ -42,7 +44,7 @@ import { AnswerInput } from './answer-input';
  */
 @Component({
   selector: 'ca-quiz-page',
-  imports: [RouterLink, PercentPipe, Icon, AnswerInput],
+  imports: [RouterLink, PercentPipe, Icon, AnswerInput, Paywall],
   templateUrl: './quiz-page.html',
   styleUrl: './quiz-page.css',
 })
@@ -51,6 +53,7 @@ export class QuizPage {
 
   private readonly progress = inject(ProgressStore);
   private readonly account = inject(AccountProgress);
+  protected readonly subscriptions = inject(SubscriptionService);
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');

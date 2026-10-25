@@ -16,13 +16,11 @@ import { RouterLink } from '@angular/router';
 import { CATALOG, findLab } from '../../content/catalog';
 import { LabKind } from '../../core/models/content.model';
 import { summarizeProgress } from '../../core/progress/progress';
-import {
-  AccountProgress,
-  RecordError,
-  recordMessage,
-} from '../../core/progress/account-progress';
+import { AccountProgress, RecordError, recordMessage } from '../../core/progress/account-progress';
 import { ProgressStore } from '../../core/progress/progress.store';
+import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Icon } from '../../shared/icon/icon';
+import { Paywall } from '../../shared/paywall/paywall';
 import { LogsLabView } from './logs-lab';
 import { PhishingLabView } from './phishing-lab';
 import { TerminalLabView } from './terminal-lab';
@@ -75,7 +73,7 @@ export const LAB_KINDS: Record<
  */
 @Component({
   selector: 'ca-lab-page',
-  imports: [RouterLink, DatePipe, Icon, TerminalLabView, PhishingLabView, LogsLabView],
+  imports: [RouterLink, DatePipe, Icon, TerminalLabView, PhishingLabView, LogsLabView, Paywall],
   templateUrl: './lab-page.html',
   styleUrl: './lab-page.css',
 })
@@ -84,6 +82,7 @@ export class LabPage {
 
   private readonly progress = inject(ProgressStore);
   private readonly account = inject(AccountProgress);
+  protected readonly subscriptions = inject(SubscriptionService);
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');

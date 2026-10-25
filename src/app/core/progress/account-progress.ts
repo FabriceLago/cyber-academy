@@ -38,6 +38,8 @@ export function recordMessage(error: { readonly code?: string }): string {
   switch (error.code) {
     case 'CA429':
       return 'Trop de tentatives en une heure : réessayez un peu plus tard.';
+    case 'CA402':
+      return 'Ce contenu est réservé aux abonnés : votre abonnement n’est plus actif.';
     case '28000':
     case 'PGRST301':
       return 'Votre session a expiré : reconnectez-vous, puis réessayez.';

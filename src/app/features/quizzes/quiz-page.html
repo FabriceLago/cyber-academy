@@ -19,6 +19,8 @@
       <p>Ce quiz s’ouvre quand la leçon est accessible.</p>
       <a class="btn btn-primary" [routerLink]="['/lecons', entry.lesson.id]">Voir la leçon</a>
     </section>
+  } @else if (subscriptions.locked(entry.path)) {
+    <ca-paywall [pathTitle]="entry.path.title" />
   } @else {
     @if (submitted(); as attempt) {
       <section class="card result" [class.passed]="passed()" aria-labelledby="resultat">

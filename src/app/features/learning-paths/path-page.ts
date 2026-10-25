@@ -11,7 +11,9 @@ import {
 } from '../../core/progress/portfolio';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
+import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Icon } from '../../shared/icon/icon';
+import { Paywall } from '../../shared/paywall/paywall';
 import { ProgressBar } from '../../shared/progress-bar/progress-bar';
 import { LEVELS, LessonList } from '../lessons/lesson-list';
 
@@ -22,7 +24,7 @@ import { LEVELS, LessonList } from '../lessons/lesson-list';
  */
 @Component({
   selector: 'ca-path-page',
-  imports: [RouterLink, PercentPipe, Icon, ProgressBar, LessonList],
+  imports: [RouterLink, PercentPipe, Icon, ProgressBar, LessonList, Paywall],
   templateUrl: './path-page.html',
   styleUrl: './path-page.css',
 })
@@ -31,6 +33,7 @@ export class PathPage {
 
   private readonly progress = inject(ProgressStore);
   private readonly auth = inject(AuthService);
+  protected readonly subscriptions = inject(SubscriptionService);
   private readonly document = inject(DOCUMENT);
 
   protected readonly levels = LEVELS;

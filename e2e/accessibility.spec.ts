@@ -20,6 +20,7 @@ const PATHS = [
   '/inscription',
   '/mot-de-passe-oublie',
   '/nouveau-mot-de-passe', // sans session : lien expiré
+  '/abonnement',
   '/mentions-legales',
   '/confidentialite',
   '/lecons/inexistante',

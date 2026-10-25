@@ -13,6 +13,7 @@ export const ANALYSTE_SOC_JUNIOR: LearningPath = {
     'Spécialisation : surveiller, analyser et trier les événements de sécurité, comme un analyste de niveau 1.',
   level: 'intermediaire',
   prerequisitePathIds: ['decouverte'],
+  premium: true,
   modules: [
     {
       id: 'metier-analyste-soc',

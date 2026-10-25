@@ -5,6 +5,7 @@ import { findLesson, findPath } from '../src/app/content/catalog';
 import { LOGS_LAB } from '../src/app/content/labs/lab-journaux';
 import { PHISHING_LAB } from '../src/app/content/labs/lab-phishing';
 import { TERMINAL_LAB } from '../src/app/content/labs/lab-terminal';
+import { learnerAccount, requireSupabase } from './account-helpers';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const SOC = '/parcours/analyste-soc-junior';
@@ -14,14 +15,24 @@ const DECOUVERTE = (findPath('decouverte')?.modules ?? []).flatMap((m) =>
   m.lessons.map((l) => l.id),
 );
 
-/** Parcours Découverte terminé (quiz à 100 %, laboratoires réussis), plus ces leçons. */
+/** Quiz réussis à 100 % : le parcours Découverte, plus ces leçons. */
+function passedQuizzes(extra: string[] = []) {
+  return [...DECOUVERTE, ...extra].map((lessonId) => ({
+    lessonId,
+    questionIds: (findLesson(lessonId)?.lesson.quiz.questions ?? []).slice(0, 5).map((q) => q.id),
+  }));
+}
+const DECOUVERTE_LABS = [TERMINAL_LAB.id, PHISHING_LAB.id];
+
+/** Sans compte : parcours Découverte terminé dans ce navigateur (quiz à 100 %, laboratoires réussis). */
 async function seedCompleted(page: Page, extra: string[] = []) {
   const now = new Date().toISOString();
-  const quizAttempts = [...DECOUVERTE, ...extra].map((lessonId) => {
-    const ids = (findLesson(lessonId)?.lesson.quiz.questions ?? []).slice(0, 5).map((q) => q.id);
-    return { lessonId, submittedAt: now, questionIds: ids, correctQuestionIds: ids };
-  });
-  const labAttempts = [TERMINAL_LAB.id, PHISHING_LAB.id].map((labId) => ({
+  const quizAttempts = passedQuizzes(extra).map((q) => ({
+    ...q,
+    submittedAt: now,
+    correctQuestionIds: q.questionIds,
+  }));
+  const labAttempts = DECOUVERTE_LABS.map((labId) => ({
     labId,
     completedAt: now,
     succeeded: true,
@@ -74,8 +85,42 @@ test('la spécialisation reste verrouillée tant que le parcours Découverte n�
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
-test('le parcours Découverte terminé ouvre la spécialisation', async ({ page }) => {
-  await seedCompleted(page);
+test('sans abonnement, la spécialisation présente l’offre au lieu de ses leçons', async ({
+  page,
+}) => {
+  // Première leçon validée dans ce navigateur : le laboratoire de la suivante est accessible.
+  await seedCompleted(page, ['soc-et-journaux']);
+
+  // Vitrine : la fiche métier reste lisible ; projet final et entretiens sont réservés.
+  await page.goto(SOC);
+  await expect(page.getByRole('heading', { name: /^Le métier :/ })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Projet final et préparation aux entretiens' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Votre rapport')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Préparer les entretiens' })).toHaveCount(0);
+  await page.goto('/projets');
+  await expect(page.getByText('Réservé aux abonnés')).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Ouvrir le projet/ })).toHaveCount(0);
+
+  await page.goto(`/lecons/soc-et-journaux`);
+  await expect(page.getByRole('heading', { name: 'Réservé aux abonnés' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sommaire' })).toHaveCount(0);
+  await page.goto(`/laboratoires/${LOGS_LAB.id}`);
+  await expect(page.getByRole('heading', { name: 'Réservé aux abonnés' })).toBeVisible();
+  await expect(page.getByRole('table')).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Voir l’abonnement' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Abonnement Premium');
+  // Sans compte, on propose d'en créer un ; aucune formule ne s'achète sans compte.
+  await expect(page.getByRole('link', { name: 'Créer un compte' }).last()).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Choisir/ })).toHaveCount(0);
+  await audit(page, 'page abonnement');
+});
+
+test('abonné, le parcours Découverte terminé ouvre la spécialisation', async ({ page }) => {
+  await requireSupabase(page);
+  await learnerAccount(page, { quizzes: passedQuizzes(), labs: DECOUVERTE_LABS });
   await page.goto(SOC);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Analyste SOC junior');
   await expect(page.getByRole('heading', { name: 'Spécialisation verrouillée' })).toHaveCount(0);
@@ -83,7 +128,12 @@ test('le parcours Découverte terminé ouvre la spécialisation', async ({ page 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(FIRST_LESSON);
 });
 
-test('la page Projets mène au projet final, affiché sous la barre du haut', async ({ page }) => {
+test('abonné, la page Projets mène au projet final, affiché sous la barre du haut', async ({
+  page,
+}) => {
+  await requireSupabase(page);
+  test.setTimeout(60_000); // Création du compte et connexion.
+  await learnerAccount(page, {});
   await page.goto('/projets');
   await expect(page.getByText('Pas encore commencé')).toBeVisible();
   await page.getByRole('link', { name: /^Ouvrir le projet/ }).click();
@@ -103,7 +153,13 @@ test('la page Projets mène au projet final, affiché sous la barre du haut', as
 });
 
 test('le laboratoire de journaux se filtre puis se résout jusqu’au verdict', async ({ page }) => {
-  await seedCompleted(page, ['soc-et-journaux']);
+  await requireSupabase(page);
+  // Création du compte et connexion, puis le laboratoire et ses audits : plus long qu'à l'ordinaire.
+  test.setTimeout(60_000);
+  await learnerAccount(page, {
+    quizzes: passedQuizzes(['soc-et-journaux']),
+    labs: DECOUVERTE_LABS,
+  });
   await page.goto(`/laboratoires/${LOGS_LAB.id}`);
   await expect(page.getByRole('heading', { level: 1, name: LOGS_LAB.title })).toBeVisible();
   const total = LOGS_LAB.entries.length;
@@ -142,9 +198,10 @@ test('le laboratoire de journaux se filtre puis se résout jusqu’au verdict', 
   await expect(page.getByText(`Conclusions justes : ${n} sur ${n}.`)).toBeVisible();
 });
 
-test('spécialisation : brouillon gardé, attendus après réponse, portfolio exporté', async ({
-  page,
-}) => {
+test('abonné : brouillon gardé, attendus après réponse, portfolio exporté', async ({ page }) => {
+  await requireSupabase(page);
+  test.setTimeout(60_000); // Création du compte et connexion, puis audits dans les deux thèmes.
+  await learnerAccount(page, {});
   const [criterion] = findPath('analyste-soc-junior')?.career?.finalProject.criteria ?? [];
   const report = 'Résumé : force brute réussie sur le VPN.';
   await page.goto(SOC);

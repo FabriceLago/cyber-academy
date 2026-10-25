@@ -26,6 +26,8 @@ export interface LearningPath {
   readonly prerequisitePathIds?: readonly string[];
   /** Spécialisation métier : préparation à un premier poste (niveau 9 du programme). */
   readonly career?: Career;
+  /** Réservé aux abonnés (vérifié aussi par le serveur à chaque enregistrement). */
+  readonly premium?: boolean;
 }
 
 /**
