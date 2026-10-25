@@ -245,21 +245,35 @@ export type FsNode = FsFile | FsDir;
 export interface FsFile {
   readonly kind: 'file';
   readonly content: string;
+  /** Droits en octal, par exemple « 640 » (644 par défaut). */
+  readonly mode?: string;
 }
 
 export interface FsDir {
   readonly kind: 'dir';
   readonly children: Readonly<Record<string, FsNode>>;
+  /** Droits en octal (755 par défaut). */
+  readonly mode?: string;
 }
 
 /**
  * Tâche vérifiée automatiquement sur l'état simulé : fichier affiché avec cat (`read`), dossier ou
- * fichier existant (`dir`, `file`), dossier courant (`cwd`). Chemins absolus.
+ * fichier existant (`dir`, `file`) ou disparu (`absent`, après un déplacement), dossier courant
+ * (`cwd`), droits attendus (`mode`). Chemins absolus.
  */
 export interface TerminalTask {
   readonly id: string;
   readonly text: string;
-  readonly check: { readonly kind: 'read' | 'dir' | 'file' | 'cwd'; readonly path: string };
+  readonly check:
+    | { readonly kind: 'read' | 'dir' | 'file' | 'cwd' | 'absent'; readonly path: string }
+    | { readonly kind: 'mode'; readonly path: string; readonly mode: string };
+}
+
+/** Processus fictif affiché par ps. */
+export interface TerminalProcess {
+  readonly pid: number;
+  readonly user: string;
+  readonly command: string;
 }
 
 export interface TerminalLab extends Lab {
@@ -270,6 +284,8 @@ export interface TerminalLab extends Lab {
   readonly home: string;
   readonly filesystem: FsDir;
   readonly tasks: readonly TerminalTask[];
+  /** Processus listés par ps ; sans eux, ps n'affiche que le terminal de l'apprenant. */
+  readonly processes?: readonly TerminalProcess[];
 }
 
 /** Éléments d'un e-mail que l'apprenant peut signaler comme suspects. */

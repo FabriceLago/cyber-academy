@@ -52,7 +52,7 @@ src/app/
 │  ├─ empty-state/       encadré « rien à afficher, voici pourquoi »      (étape 3, fait)
 │  ├─ progress-bar/      jauge accessible (role="progressbar")            (étape 4, fait)
 │  └─ animation-player/  lecteur commun des animations pédagogiques       (étape 7, fait)
-├─ content/              catalogue, 7 leçons, 3 labos, parcours (paths/)  (étapes 5, 8 et 11)
+├─ content/              catalogue, 8 leçons, 4 labos, parcours (paths/)  (étapes 5, 8, 11, niveau 1)
 └─ features/
    ├─ auth/              connexion et création de compte                  (étape 9, fait)
    ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
@@ -62,7 +62,7 @@ src/app/
    ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours, page d'une spécialisation    (étapes 5 et 11, fait)
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
-   │  └─ animations/     animation « Le trajet d'un paquet »              (étape 7, fait)
+   │  └─ animations/     « Le trajet d'un paquet », « La règle 3-2-1 »    (étape 7, niveau 1)
    ├─ quizzes/           page de quiz, liste des quiz, saisie des réponses (étape 6, fait)
    ├─ labs/              Cyber Lab : terminal, phishing, journaux simulés (étapes 8 et 11, fait)
    └─ projects/          projets finaux des spécialisations, brouillons   (après l'étape 13, fait)
@@ -240,6 +240,10 @@ Fichier : [`quiz-engine.ts`](../src/app/core/quiz/quiz-engine.ts), testé dans `
   (question DNS, demande, réponse) avec légende des couleurs, trajet de l'étape mis en évidence.
   Version détaillée (7 étapes, dont la résolution DNS et le retour) ou simplifiée (4 étapes, 4
   équipements). Le mouvement utilise la Web Animations API.
+- **La règle 3-2-1 face aux incidents** (niveau 1, [`backup-rule.ts`](../src/app/features/lessons/animations/backup-rule.ts)) :
+  trois emplacements (ordinateur, disque externe, en ligne hors site) ; à chaque étape, l'état de
+  chaque copie (aucune, copie, perdue, restaurée) et le nombre de copies intactes, décrits aussi
+  dans le titre du schéma pour les lecteurs d'écran.
 - **Mouvement réduit** : si le système le demande, le paquet saute directement à sa position, sans
   trajet animé (vérifié par test e2e).
 - **Alternative textuelle** : la description complète reste disponible sous l'animation ; un test
@@ -254,11 +258,16 @@ explications et « Recommencer ». Chaque fin d'exercice est enregistrée (`reco
 ou non) ; un laboratoire réussi, avec le quiz, valide la leçon.
 
 - **Terminal simulé** ([`terminal.ts`](../src/app/core/labs/terminal.ts)) : interpréteur d'une liste
-  fermée de commandes (`pwd`, `ls [-l]`, `cd`, `cat`, `mkdir`, `touch`, `clear`, `help`) sur un système
-  de fichiers fictif en mémoire, jamais modifié en place. Messages d'erreur proches des vrais (en
+  fermée de commandes (`pwd`, `ls [-l] [-a]`, `cd`, `cat`, `grep [-i]`, `mkdir`, `touch`,
+  `cp [-r]`, `mv`, `chmod`, `ps [aux]`, `sha256sum`, `clear`, `help`) sur un système de fichiers
+  fictif en mémoire, jamais modifié en place. Fichiers cachés (nom commençant par un point) montrés
+  par `ls -a` seulement ; droits en octal (`mode`, 644 et 755 par défaut), modifiables par
+  `chmod` (octal ou `o-r`, `g+w`…) sur les seuls fichiers de l'apprenant ; processus fictifs du
+  laboratoire listés par `ps aux` ; empreinte calculée par [`sha256.ts`](../src/app/core/labs/sha256.ts)
+  (synchrone, vérifiée sur les vecteurs officiels). Messages d'erreur proches des vrais (en
   français) ; `rm`, `rmdir`, `sudo` et `su` sont refusés avec leur raison ; tout autre nom est
   « commande introuvable ». Les tâches de la mission sont vérifiées sur l'état simulé : fichier lu,
-  dossier ou fichier créé, dossier courant. Invite qui suit le dossier courant, rappel des commandes
+  dossier ou fichier créé ou disparu (déplacement), dossier courant, droits attendus. Invite qui suit le dossier courant, rappel des commandes
   avec les flèches, sortie lue par les lecteurs d'écran (`role="log"`).
 - **Détecteur d'hameçonnage** ([`phishing.ts`](../src/app/core/labs/phishing.ts)) : 5 e-mails fictifs
   (3 pièges, 2 légitimes). L'apprenant affiche l'adresse réelle, vérifie la destination du lien,

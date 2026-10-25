@@ -12,6 +12,7 @@ const PATHS = [
   '/laboratoires/lab-phishing', // laboratoire verrouillé
   '/laboratoires/lab-journaux', // laboratoire d'une spécialisation verrouillée
   '/parcours/analyste-soc-junior', // spécialisation verrouillée, avec sa fiche métier
+  '/parcours/culture-informatique', // niveau 1, verrouillé tant que Découverte n'est pas terminé
   '/glossaire',
   '/parcours/inexistant',
   '/laboratoires/inexistant',

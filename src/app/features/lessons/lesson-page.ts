@@ -16,6 +16,7 @@ import { quizScore, summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { presentQuestion } from '../../core/quiz/quiz-engine';
 import { Icon } from '../../shared/icon/icon';
+import { BackupRule } from './animations/backup-rule';
 import { PacketJourney } from './animations/packet-journey';
 import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Paywall } from '../../shared/paywall/paywall';
@@ -32,7 +33,16 @@ function splitSteps(text: string): string[] {
 /** Page d'une leçon : les 17 sections du modèle pédagogique, ou l'explication du verrouillage. */
 @Component({
   selector: 'ca-lesson-page',
-  imports: [RouterLink, DatePipe, PercentPipe, Icon, PacketJourney, PracticeQuestion, Paywall],
+  imports: [
+    RouterLink,
+    DatePipe,
+    PercentPipe,
+    Icon,
+    PacketJourney,
+    BackupRule,
+    PracticeQuestion,
+    Paywall,
+  ],
   templateUrl: './lesson-page.html',
   styleUrl: './lesson-page.css',
 })

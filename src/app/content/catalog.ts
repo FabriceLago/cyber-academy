@@ -1,6 +1,7 @@
 import { AnyLab, Catalog, LearningPath, Lesson, Module } from '../core/models/content.model';
 import { LOGS_LAB } from './labs/lab-journaux';
 import { PHISHING_LAB } from './labs/lab-phishing';
+import { SAUVEGARDE_LAB } from './labs/lab-sauvegarde';
 import { TERMINAL_LAB } from './labs/lab-terminal';
 import { ORDINATEUR_ET_FICHIERS } from './lessons/01-ordinateur-et-fichiers';
 import { DECOUVRIR_LE_TERMINAL } from './lessons/02-decouvrir-le-terminal';
@@ -8,6 +9,7 @@ import { VOYAGE_D_UNE_INFORMATION } from './lessons/03-voyage-d-une-information'
 import { SECURITE_ET_RISQUES } from './lessons/04-securite-et-risques';
 import { HAMECONNAGE } from './lessons/05-hameconnage';
 import { ANALYSTE_SOC_JUNIOR } from './paths/analyste-soc-junior';
+import { CULTURE_INFORMATIQUE } from './paths/niveau-1-culture-informatique';
 
 /** Parcours complets, leçons rédigées. */
 export const PATHS: readonly LearningPath[] = [
@@ -35,6 +37,7 @@ export const PATHS: readonly LearningPath[] = [
       },
     ],
   },
+  CULTURE_INFORMATIQUE,
   ANALYSTE_SOC_JUNIOR,
 ];
 
@@ -56,7 +59,7 @@ export function findLesson(
 }
 
 /** Laboratoires du Cyber Lab, complets (scénario, environnement simulé, validation). */
-export const LABS: readonly AnyLab[] = [TERMINAL_LAB, PHISHING_LAB, LOGS_LAB];
+export const LABS: readonly AnyLab[] = [TERMINAL_LAB, PHISHING_LAB, LOGS_LAB, SAUVEGARDE_LAB];
 
 export function findLab(id: string): AnyLab | undefined {
   return LABS.find((lab) => lab.id === id);
@@ -106,6 +109,12 @@ export const CATALOG: Catalog = {
       title: 'Trier une alerte',
       description:
         'Qualifier une alerte, estimer sa gravité et décider d’une escalade, en documentant ses conclusions.',
+    },
+    {
+      id: 'sauvegarder-ses-donnees',
+      title: 'Sauvegarder ses données',
+      description:
+        'Installer les mises à jour sans tarder, ranger ses fichiers et les sauvegarder selon la règle 3-2-1.',
     },
   ],
 };
