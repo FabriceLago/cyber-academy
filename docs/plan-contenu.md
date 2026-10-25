@@ -82,7 +82,9 @@ Prérequis : parcours Découverte. But : utiliser un ordinateur et ses comptes e
 | Données et comptes | Formats de fichiers et extensions trompeuses · Mots de passe et gestionnaire de mots de passe · L'authentification à plusieurs facteurs |
 
 - Laboratoire : terminal étendu, « Ranger, copier et sauvegarder des fichiers ».
-- Animations : le trajet d'une donnée ; un mot de passe face à une attaque par dictionnaire.
+- Animations : la règle 3-2-1 face aux incidents (leçon pilote « Mises à jour et sauvegardes »,
+  publiée avec son laboratoire) ; le trajet d'une donnée ; un mot de passe face à une attaque par
+  dictionnaire.
 - Compétences : protéger ses comptes ; organiser et sauvegarder ses données.
 
 ### Niveau 2 : Réseaux informatiques (débutant)
@@ -204,16 +206,19 @@ publié, avec un message explicite.
 
 | Phase | Contenu | Leçons nouvelles | Moteurs et animations |
 |---|---|---|---|
-| 1 | Niveaux 1 à 4 (fondations) | 24 | Terminal étendu ; 7 animations |
+| 1 | Niveaux 1 à 4 (fondations) | 24 (dont 1 publiée, la leçon pilote) | Terminal étendu (fait) ; 8 animations (dont 1 faite) |
 | 2 | Niveau 5, puis compléter la spécialisation SOC | 4 + 10 | Explorateur de données ; scénario à décisions ; 1 animation |
 | 3 | Niveaux 6 et 7, puis Pentester et Analyste vulnérabilités | 12 + 12 | Relecture de code et de configuration ; 2 animations |
 | 4 | Niveau 8, puis Développeur sécurité, Cloud et DevSecOps | 6 + 18 | (moteurs déjà construits) ; 2 animations |
 | En parallèle | Animations des 6 leçons existantes qui n'en ont pas | — | 6 animations |
 
-Total : 86 leçons nouvelles, 4 moteurs (2 extensions, 2 nouveaux), 18 animations. Repère
+Total : 86 leçons nouvelles, 4 moteurs (2 extensions, 2 nouveaux), 19 animations. Repère
 indicatif, à affiner sur la première phase : une leçon complète demande environ une journée de
 rédaction, plus la relecture experte ; un laboratoire sur un moteur existant, environ une journée ;
 un nouveau moteur, plusieurs jours avec ses tests.
+
+Mesure du premier pilote (terminal étendu, niveau 1) : environ 1 h 45 de travail assisté pour le
+moteur, la leçon, son laboratoire, son animation et leurs tests, hors relecture experte.
 
 Recommandation : rédiger d'abord **une leçon pilote par moteur** (par exemple niveau 3 avec le
 terminal étendu, niveau 6 avec la relecture de code), faire relire, mesurer le temps réel, puis
