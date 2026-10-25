@@ -10,7 +10,6 @@ import { LEVELS, LessonList } from '../lessons/lesson-list';
 
 /** Niveaux prévus par le programme ; affichés comme tels, sans contenu factice. */
 const PLANNED = [
-  'Culture informatique',
   'Réseaux informatiques',
   'Linux et administration système',
   'Fondamentaux de la cybersécurité',

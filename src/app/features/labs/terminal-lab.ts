@@ -107,7 +107,7 @@ export class TerminalLabView {
     {
       id: 0,
       lines: [
-        `Terminal simulé du serveur fictif ${this.lab().host} : aucune commande n’est réellement exécutée.`,
+        `Terminal simulé de la machine fictive ${this.lab().host} : aucune commande n’est réellement exécutée.`,
         'Tapez help pour voir les commandes disponibles.',
       ],
       tone: 'info',
