@@ -371,7 +371,14 @@ export interface PathOutline extends Omit<LearningPath, 'modules'> {
   readonly modules: readonly ModuleOutline[];
 }
 
-export type LabOutline = Pick<Lab, 'id' | 'kind' | 'title' | 'skillIds'>;
+export type LabOutline = Pick<Lab, 'id' | 'kind' | 'title' | 'skillIds' | 'scenario'>;
+
+/** De quoi repérer les notions à revoir sans charger la leçon : objectifs et objectif de chaque question. */
+export interface LessonReview {
+  readonly objectives: readonly Objective[];
+  /** Identifiant de question → objectif évalué. */
+  readonly questionObjectives: Readonly<Record<string, string>>;
+}
 
 /** Ce que propose la plateforme : parcours, laboratoires et compétences visées. */
 export interface Catalog {

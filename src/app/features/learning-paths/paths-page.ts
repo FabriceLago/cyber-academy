@@ -1,7 +1,7 @@
 import { PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG } from '../../content/catalog';
+import { CATALOG } from '../../content/outline.generated';
 import { PathProgress, summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { Icon } from '../../shared/icon/icon';

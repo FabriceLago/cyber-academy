@@ -1,7 +1,7 @@
 import { DatePipe, PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG, PATHS } from '../../content/catalog';
+import { CATALOG, REVIEW_INDEX } from '../../content/outline.generated';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { objectivesToReview } from '../../core/quiz/quiz-engine';
@@ -82,8 +82,9 @@ export class QuizzesPage {
   protected readonly rows = computed(() => {
     const state = this.progress.state();
     const summary = summarizeProgress(CATALOG, state, new Date());
-    return PATHS.flatMap((path) => path.modules.flatMap((module) => module.lessons)).map(
-      (lesson) => {
+    return CATALOG.paths
+      .flatMap((path) => path.modules.flatMap((module) => module.lessons))
+      .map((lesson) => {
         const progress = summary.lessons.find((l) => l.lesson.id === lesson.id);
         const result = summary.quizResults.find((r) => r.lesson.id === lesson.id) ?? null;
         const last = state.quizAttempts.filter((a) => a.lessonId === lesson.id).at(-1);
@@ -93,9 +94,8 @@ export class QuizzesPage {
           locked: progress?.status === 'locked',
           blockedBy: progress?.blockedBy[0]?.title ?? '',
           statusLabel: result ? (result.passed ? 'Réussi' : 'À retenter') : 'Pas encore tenté',
-          review: last ? objectivesToReview(lesson, last) : [],
+          review: last ? objectivesToReview(REVIEW_INDEX[lesson.id], last) : [],
         };
-      },
-    );
+      });
   });
 }

@@ -10,8 +10,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG, findLesson } from '../../content/catalog';
-import { Lesson } from '../../core/models/content.model';
+import { LessonEntry, findLesson } from '../../content/content-loader';
+import { CATALOG } from '../../content/outline.generated';
+import { LessonOutline } from '../../core/models/content.model';
 import { quizScore, summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { presentQuestion } from '../../core/quiz/quiz-engine';
@@ -57,7 +58,8 @@ export class LessonPage {
     summarizeProgress(CATALOG, this.progress.state(), new Date()),
   );
 
-  protected readonly entry = computed(() => findLesson(this.lessonId()));
+  /** Leçon complète, chargée par la route à l'ouverture de la page (null si inconnue). */
+  readonly entry = input<LessonEntry | null>(null);
   protected readonly state = computed(() =>
     this.summary().lessons.find((l) => l.lesson.id === this.lessonId()),
   );
@@ -69,7 +71,7 @@ export class LessonPage {
   protected readonly prerequisites = computed(() =>
     (this.entry()?.lesson.prerequisiteIds ?? [])
       .map((id) => findLesson(id)?.lesson)
-      .filter((lesson): lesson is Lesson => lesson !== undefined),
+      .filter((lesson): lesson is LessonOutline => lesson !== undefined),
   );
   protected readonly lab = computed(() => {
     const id = this.entry()?.lesson.labId;

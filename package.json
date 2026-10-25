@@ -22,7 +22,8 @@
     "check:deps": "npm audit --audit-level=moderate",
     "test:coverage": "ng test --watch=false --coverage",
     "test:functions": "node --test supabase/functions/_shared/billing.test.ts",
-    "verify": "npm run lint && npm run test:coverage && npm run test:functions && npm run build && npm run check:secrets && npm run check:deps && npm run db:catalog -- --check"
+    "content:outline": "node scripts/generate-outline.mjs",
+    "verify": "npm run lint && npm run test:coverage && npm run test:functions && npm run build && npm run check:secrets && npm run check:deps && npm run db:catalog -- --check && npm run content:outline -- --check"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

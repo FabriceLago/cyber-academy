@@ -184,10 +184,23 @@ Le test [`catalog.spec.ts`](../src/app/content/catalog.spec.ts) applique `valida
 catalogue : un contenu incomplet ne passe pas les tests.
 
 **Plan et contenu.** `PathOutline` (titres, durées, prérequis, laboratoires, compétences) suffit à la
-navigation et à la progression ; un `LearningPath` complet en est un cas particulier. Les 5 leçons du
-parcours « Découverte » sont rédigées dans [`content/lessons/`](../src/app/content/lessons/) : tous les
-noms de domaine et adresses d'exemple sont réservés (`.example`, `203.0.113.x`), les organisations
-fictives.
+navigation et à la progression ; un `LearningPath` complet en est un cas particulier. Les leçons sont
+rédigées dans [`content/lessons/`](../src/app/content/lessons/) : tous les noms de domaine et
+adresses d'exemple sont réservés (`.example`, `203.0.113.x`), les organisations fictives.
+
+**Chargement à la demande.** [`catalog.ts`](../src/app/content/catalog.ts) assemble le contenu
+complet : il sert de source aux scripts (catalogue SQL, plan), aux tests et aux e2e, jamais au code de
+l'application. Celle-ci lit au démarrage un plan léger généré, `content/outline.generated.ts`
+(catalogue sans le texte des leçons, objectifs de chaque leçon pour les révisions ; environ 15 ko
+contre 147 ko pour 8 leçons), et télécharge le contenu d'une leçon (avec son quiz) ou d'un
+laboratoire à l'ouverture de sa page, chacun dans son propre fichier
+([`content-loader.ts`](../src/app/content/content-loader.ts), resolvers des routes). Le glossaire a
+son propre fichier généré, chargé par sa seule page. Après un changement du contenu :
+`npm run db:catalog` puis `npm run content:outline` ; `verify` (donc la CI) échoue si l'un des deux
+n'est plus à jour, ou si le code de l'application importe le contenu complet. Une nouvelle leçon
+s'ajoute aussi dans `content-loader.ts` (un test le vérifie). Limite : les fichiers de leçon restent
+publics (ils sont téléchargeables sans abonnement) ; servir le contenu Premium depuis la base reste
+à faire.
 
 ### Moteur de leçons (étape 5)
 

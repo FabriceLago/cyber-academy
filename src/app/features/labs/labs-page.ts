@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATALOG, LABS } from '../../content/catalog';
+import { CATALOG } from '../../content/outline.generated';
 import { summarizeProgress } from '../../core/progress/progress';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { LAB_KINDS } from './lab-page';
@@ -85,7 +85,7 @@ export class LabsPage {
   protected readonly rows = computed(() => {
     const state = this.progress.state();
     const summary = summarizeProgress(CATALOG, state, new Date());
-    return LABS.map((lab) => {
+    return CATALOG.labs.map((lab) => {
       const lesson = summary.lessons.find((l) => l.lesson.labId === lab.id);
       const completed = summary.labs.find((l) => l.lab.id === lab.id)?.completed ?? false;
       const attempts = state.labAttempts.filter((a) => a.labId === lab.id);

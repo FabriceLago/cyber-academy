@@ -5,6 +5,7 @@ import {
   initialAnswer,
   isAnswerComplete,
   isAnswerCorrect,
+  lessonReview,
   objectivesToReview,
   presentQuestion,
 } from './quiz-engine';
@@ -87,12 +88,13 @@ describe('correction', () => {
 
 describe('objectivesToReview', () => {
   it('liste les objectifs des questions ratées, sans doublon', () => {
-    const review = objectivesToReview(LESSON, {
+    const review = objectivesToReview(lessonReview(LESSON), {
       lessonId: LESSON.id,
       submittedAt: '2026-10-17T08:00:00.000Z',
-      questionIds: ['q1', 'q2', 'q4', 'q7', 'q8'],
+      questionIds: ['q1', 'q2', 'q4', 'q7', 'q8', 'constructor', 'inconnue'],
       correctQuestionIds: ['q4'],
     });
+    // Les identifiants inconnus (progression modifiée à la main) sont ignorés.
     expect(review.map((o) => o.id)).toEqual(['o1', 'o3']);
   });
 });
