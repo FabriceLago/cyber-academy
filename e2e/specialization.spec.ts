@@ -90,6 +90,19 @@ test('sans abonnement, la spécialisation présente l’offre au lieu de ses le�
 }) => {
   // Première leçon validée dans ce navigateur : le laboratoire de la suivante est accessible.
   await seedCompleted(page, ['soc-et-journaux']);
+
+  // Vitrine : la fiche métier reste lisible ; projet final et entretiens sont réservés.
+  await page.goto(SOC);
+  await expect(page.getByRole('heading', { name: /^Le métier :/ })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Projet final et préparation aux entretiens' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Votre rapport')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Préparer les entretiens' })).toHaveCount(0);
+  await page.goto('/projets');
+  await expect(page.getByText('Réservé aux abonnés')).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Ouvrir le projet/ })).toHaveCount(0);
+
   await page.goto(`/lecons/soc-et-journaux`);
   await expect(page.getByRole('heading', { name: 'Réservé aux abonnés' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Sommaire' })).toHaveCount(0);
@@ -115,7 +128,12 @@ test('abonné, le parcours Découverte terminé ouvre la spécialisation', async
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(FIRST_LESSON);
 });
 
-test('la page Projets mène au projet final, affiché sous la barre du haut', async ({ page }) => {
+test('abonné, la page Projets mène au projet final, affiché sous la barre du haut', async ({
+  page,
+}) => {
+  await requireSupabase(page);
+  test.setTimeout(60_000); // Création du compte et connexion.
+  await learnerAccount(page, {});
   await page.goto('/projets');
   await expect(page.getByText('Pas encore commencé')).toBeVisible();
   await page.getByRole('link', { name: /^Ouvrir le projet/ }).click();
@@ -180,9 +198,10 @@ test('le laboratoire de journaux se filtre puis se résout jusqu’au verdict', 
   await expect(page.getByText(`Conclusions justes : ${n} sur ${n}.`)).toBeVisible();
 });
 
-test('spécialisation : brouillon gardé, attendus après réponse, portfolio exporté', async ({
-  page,
-}) => {
+test('abonné : brouillon gardé, attendus après réponse, portfolio exporté', async ({ page }) => {
+  await requireSupabase(page);
+  test.setTimeout(60_000); // Création du compte et connexion, puis audits dans les deux thèmes.
+  await learnerAccount(page, {});
   const [criterion] = findPath('analyste-soc-junior')?.career?.finalProject.criteria ?? [];
   const report = 'Résumé : force brute réussie sur le VPN.';
   await page.goto(SOC);

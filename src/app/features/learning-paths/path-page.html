@@ -96,114 +96,127 @@
     </section>
 
     @let project = job.finalProject;
-    <section class="card" aria-labelledby="projet">
-      <h2 id="projet">Projet final : {{ project.title }}</h2>
-      <p>{{ project.brief }}</p>
-      <h3>Livrables</h3>
-      <ol>
-        @for (item of project.deliverables; track item) {
-          <li>{{ item }}</li>
-        }
-      </ol>
-
-      <div class="field">
-        <label for="rapport">Votre rapport</label>
-        <p id="rapport-aide" class="muted">
-          Enregistré automatiquement dans ce navigateur, pas sur votre compte. Évitez d’y mettre des
-          informations personnelles.
+    @if (subscriptions.locked(path)) {
+      <!-- La fiche métier reste en vitrine ; projet et entretiens font partie de l'abonnement. -->
+      <section class="card" aria-labelledby="projet">
+        <h2 id="projet"><ca-icon name="lock" /> Projet final et préparation aux entretiens</h2>
+        <p>
+          Réservés aux abonnés : le projet « {{ project.title }} », avec son rapport, sa grille
+          d’auto-évaluation et l’export du portfolio, puis les questions et mises en situation
+          d’entretien, avec leurs éléments attendus.
         </p>
-        <textarea
-          id="rapport"
-          #report
-          rows="12"
-          maxlength="20000"
-          aria-describedby="rapport-aide"
-          [value]="draft().report"
-          (input)="setReport(report.value)"
-        ></textarea>
-      </div>
+        <a class="btn btn-primary" routerLink="/abonnement">Voir l’abonnement</a>
+      </section>
+    } @else {
+      <section class="card" aria-labelledby="projet">
+        <h2 id="projet">Projet final : {{ project.title }}</h2>
+        <p>{{ project.brief }}</p>
+        <h3>Livrables</h3>
+        <ol>
+          @for (item of project.deliverables; track item) {
+            <li>{{ item }}</li>
+          }
+        </ol>
 
-      <fieldset class="criteria">
-        <legend>Auto-évaluation : cochez les critères que votre rapport remplit</legend>
-        @for (criterion of project.criteria; track criterion) {
-          <label class="choice">
-            <input
-              #box
-              type="checkbox"
-              [checked]="draft().checked.includes(criterion)"
-              (change)="toggle(criterion, box.checked)"
-            />
-            {{ criterion }}
-          </label>
-        }
-      </fieldset>
-      <p class="muted">
-        Pas de correction par un mentor pour l’instant : cette grille sert à relire votre propre
-        travail.
-      </p>
+        <div class="field">
+          <label for="rapport">Votre rapport</label>
+          <p id="rapport-aide" class="muted">
+            Enregistré automatiquement dans ce navigateur, pas sur votre compte. Évitez d’y mettre
+            des informations personnelles.
+          </p>
+          <textarea
+            id="rapport"
+            #report
+            rows="12"
+            maxlength="20000"
+            aria-describedby="rapport-aide"
+            [value]="draft().report"
+            (input)="setReport(report.value)"
+          ></textarea>
+        </div>
 
-      <div class="actions">
-        <button type="button" class="btn btn-primary" (click)="exportPortfolio()">
-          Exporter mon portfolio (Markdown)
-        </button>
-      </div>
-      <p class="muted" role="status">
-        @if (exported()) {
-          Fichier « {{ exported() }} » téléchargé : leçons, laboratoires et compétences validés,
-          rapport et auto-évaluation.
-        }
-      </p>
-    </section>
+        <fieldset class="criteria">
+          <legend>Auto-évaluation : cochez les critères que votre rapport remplit</legend>
+          @for (criterion of project.criteria; track criterion) {
+            <label class="choice">
+              <input
+                #box
+                type="checkbox"
+                [checked]="draft().checked.includes(criterion)"
+                (change)="toggle(criterion, box.checked)"
+              />
+              {{ criterion }}
+            </label>
+          }
+        </fieldset>
+        <p class="muted">
+          Pas de correction par un mentor pour l’instant : cette grille sert à relire votre propre
+          travail.
+        </p>
 
-    <section class="card" aria-labelledby="entretiens">
-      <h2 id="entretiens">Préparer les entretiens</h2>
-      <p class="muted">
-        Répondez d’abord par écrit, puis comparez avec les éléments attendus. Vos réponses ne sont
-        pas enregistrées.
-      </p>
-      @for (group of interview(); track group.title) {
-        <h3>{{ group.title }}</h3>
-        @for (item of group.items; track item.id) {
-          <article class="prompt" [attr.aria-labelledby]="'q-' + item.id">
-            <h4 [id]="'q-' + item.id">{{ item.title }}</h4>
-            <p>{{ item.prompt }}</p>
-            <form (submit)="$event.preventDefault(); reveal(item.id, answer.value)">
-              <label class="visually-hidden" [for]="'r-' + item.id">
-                Votre réponse : {{ item.title }}
-              </label>
-              <textarea
-                #answer
-                rows="4"
-                maxlength="5000"
-                [id]="'r-' + item.id"
-                [attr.aria-invalid]="empty() === item.id ? 'true' : null"
-                [attr.aria-describedby]="empty() === item.id ? 'e-' + item.id : null"
-              ></textarea>
-              @if (empty() === item.id) {
-                <p class="error" role="alert" [id]="'e-' + item.id">
-                  Écrivez d’abord votre réponse : les éléments attendus s’affichent ensuite.
-                </p>
+        <div class="actions">
+          <button type="button" class="btn btn-primary" (click)="exportPortfolio()">
+            Exporter mon portfolio (Markdown)
+          </button>
+        </div>
+        <p class="muted" role="status">
+          @if (exported()) {
+            Fichier « {{ exported() }} » téléchargé : leçons, laboratoires et compétences validés,
+            rapport et auto-évaluation.
+          }
+        </p>
+      </section>
+
+      <section class="card" aria-labelledby="entretiens">
+        <h2 id="entretiens">Préparer les entretiens</h2>
+        <p class="muted">
+          Répondez d’abord par écrit, puis comparez avec les éléments attendus. Vos réponses ne sont
+          pas enregistrées.
+        </p>
+        @for (group of interview(); track group.title) {
+          <h3>{{ group.title }}</h3>
+          @for (item of group.items; track item.id) {
+            <article class="prompt" [attr.aria-labelledby]="'q-' + item.id">
+              <h4 [id]="'q-' + item.id">{{ item.title }}</h4>
+              <p>{{ item.prompt }}</p>
+              <form (submit)="$event.preventDefault(); reveal(item.id, answer.value)">
+                <label class="visually-hidden" [for]="'r-' + item.id">
+                  Votre réponse : {{ item.title }}
+                </label>
+                <textarea
+                  #answer
+                  rows="4"
+                  maxlength="5000"
+                  [id]="'r-' + item.id"
+                  [attr.aria-invalid]="empty() === item.id ? 'true' : null"
+                  [attr.aria-describedby]="empty() === item.id ? 'e-' + item.id : null"
+                ></textarea>
+                @if (empty() === item.id) {
+                  <p class="error" role="alert" [id]="'e-' + item.id">
+                    Écrivez d’abord votre réponse : les éléments attendus s’affichent ensuite.
+                  </p>
+                }
+                @if (!answered().has(item.id)) {
+                  <button type="submit" class="btn btn-secondary">
+                    Comparer avec les éléments attendus
+                  </button>
+                }
+              </form>
+              @if (answered().has(item.id)) {
+                <div class="expected">
+                  <h5>Éléments attendus</h5>
+                  <ul>
+                    @for (point of item.expectations; track point) {
+                      <li>{{ point }}</li>
+                    }
+                  </ul>
+                </div>
               }
-              @if (!answered().has(item.id)) {
-                <button type="submit" class="btn btn-secondary">
-                  Comparer avec les éléments attendus
-                </button>
-              }
-            </form>
-            @if (answered().has(item.id)) {
-              <div class="expected">
-                <h5>Éléments attendus</h5>
-                <ul>
-                  @for (point of item.expectations; track point) {
-                    <li>{{ point }}</li>
-                  }
-                </ul>
-              </div>
-            }
-          </article>
+            </article>
+          }
         }
-      }
-    </section>
+      </section>
+    }
 
     <section class="card" aria-labelledby="certifications">
       <h2 id="certifications">Certifications possibles</h2>
