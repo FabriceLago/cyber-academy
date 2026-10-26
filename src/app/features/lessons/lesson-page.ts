@@ -18,6 +18,7 @@ import { ProgressStore } from '../../core/progress/progress.store';
 import { presentQuestion } from '../../core/quiz/quiz-engine';
 import { Icon } from '../../shared/icon/icon';
 import { BackupRule } from './animations/backup-rule';
+import { DIAGRAM_IDS, LessonDiagram } from './lesson-diagram';
 import { PacketJourney } from './animations/packet-journey';
 import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Paywall } from '../../shared/paywall/paywall';
@@ -42,6 +43,7 @@ function splitSteps(text: string): string[] {
     Icon,
     PacketJourney,
     BackupRule,
+    LessonDiagram,
     PracticeQuestion,
     Paywall,
     ReportError,
@@ -54,6 +56,8 @@ export class LessonPage {
 
   private readonly progress = inject(ProgressStore);
   protected readonly subscriptions = inject(SubscriptionService);
+  /** Démonstrations dessinées ; les autres n'ont encore que leur description. */
+  protected readonly diagrams = DIAGRAM_IDS;
   private readonly document = inject(DOCUMENT);
   private readonly title = viewChild<ElementRef<HTMLElement>>('title');
   private readonly summary = computed(() =>
