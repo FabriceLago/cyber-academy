@@ -6,11 +6,12 @@
     Politique de sécurité du contenu (CSP). Les scripts sont protégés par la politique stricte
     qu'Angular génère au build de production (autoCsp : empreintes des scripts de cette page).
     Celle-ci limite le reste : connexions au site et à Supabase seulement, aucun cadre, aucun
-    worker, aucun formulaire envoyé ailleurs. L'adresse de Supabase change au déploiement (étape 13).
+    worker sauf le service worker du site (mode hors ligne), aucun formulaire envoyé ailleurs.
+    L'adresse de Supabase change au déploiement (étape 13).
   -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="connect-src 'self' http://127.0.0.1:54621; img-src 'self'; font-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; form-action 'self'"
+      content="connect-src 'self' http://127.0.0.1:54621; img-src 'self'; font-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'; form-action 'self'"
     />
     <title>Cyber Academy</title>
     <meta
@@ -21,6 +22,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <meta name="theme-color" content="#0e7490" />
   </head>
   <body>
     <ca-root></ca-root>
