@@ -142,8 +142,11 @@
       <h2 id="demonstration-titre" tabindex="-1">Démonstration</h2>
       <figure class="card visual">
         <figcaption>{{ lesson.demonstration.title }}</figcaption>
+        <ca-lesson-diagram [id]="lesson.demonstration.id" />
         <p>{{ lesson.demonstration.textAlternative }}</p>
-        <p class="soon"><ca-icon name="clock" /> Le schéma illustré n’est pas encore disponible : voici sa description complète.</p>
+        @if (!diagrams.includes(lesson.demonstration.id)) {
+          <p class="soon"><ca-icon name="clock" /> Le schéma illustré n’est pas encore disponible : voici sa description complète.</p>
+        }
       </figure>
     </section>
 

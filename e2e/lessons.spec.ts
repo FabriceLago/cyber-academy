@@ -52,6 +52,9 @@ test('un nouvel apprenant ouvre la première leçon et y trouve les 17 sections'
   ]) {
     await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
   }
+  const demonstration = page.getByRole('region', { name: 'Démonstration' });
+  await expect(demonstration.locator('svg')).toBeVisible();
+  await expect(demonstration).not.toContainText('pas encore disponible');
   await expect(page.getByRole('button', { name: 'Recommencer la leçon' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Leçon suivante' })).toBeDisabled();
 });
