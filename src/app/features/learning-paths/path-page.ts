@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { findPath } from '../../content/content-loader';
 import { CATALOG } from '../../content/outline.generated';
 import { AuthService } from '../../core/auth/auth.service';
+import { CERTIFICATE_NOTICE, certificatePdf } from '../../core/progress/certificate';
 import {
   EMPTY_DRAFT,
   parseDraft,
@@ -134,6 +135,64 @@ export class PathPage {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url));
     this.exported.set(name);
+  }
+
+  protected readonly notice = CERTIFICATE_NOTICE;
+  /** Parcours terminé : de quoi remplir l'attestation ; null tant qu'une leçon reste à valider. */
+  protected readonly certificate = computed(() => {
+    const overview = this.overview();
+    if (!overview || overview.lessons.length === 0) return null;
+    if (overview.completed < overview.lessons.length) return null;
+    const lessons = overview.lessons.map((l) => l.lesson);
+    const labIds = new Set(lessons.flatMap((l) => (l.labId ? [l.labId] : [])));
+    const skillIds = new Set([
+      ...lessons.flatMap((l) => l.skillIds),
+      ...CATALOG.labs.filter((lab) => labIds.has(lab.id)).flatMap((lab) => lab.skillIds),
+    ]);
+    return {
+      completedAt: new Date(
+        Math.max(...overview.lessons.map((l) => Date.parse(l.completedAt ?? ''))),
+      ),
+      minutes: lessons.reduce((sum, l) => sum + l.durationMinutes, 0),
+      skills: CATALOG.skills.filter((s) => skillIds.has(s.id)).map((s) => s.title),
+    };
+  });
+  /** Nom saisi pour l'attestation (non enregistré), prérempli avec celui du compte. */
+  protected readonly learner = linkedSignal(() => this.auth.profile()?.displayName ?? '');
+  protected readonly certificateError = linkedSignal(() => {
+    this.pathId();
+    return '';
+  });
+  protected readonly certificateFile = linkedSignal(() => {
+    this.pathId();
+    return '';
+  });
+
+  protected downloadCertificate(): void {
+    const path = this.path();
+    const certificate = this.certificate();
+    const learner = this.learner().trim();
+    if (!path || !certificate) return;
+    if (learner === '') {
+      this.certificateError.set('Indiquez le nom à faire figurer sur l’attestation.');
+      this.document.getElementById('attestation-nom')?.focus();
+      return;
+    }
+    this.certificateError.set('');
+    const bytes = certificatePdf({
+      ...certificate,
+      learner,
+      pathTitle: path.title,
+      issuedAt: new Date(),
+    });
+    const name = `attestation-${path.id}.pdf`;
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    const link = this.document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url));
+    this.certificateFile.set(name);
   }
 
   private saveDraft(draft: ProjectDraft): void {
