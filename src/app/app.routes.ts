@@ -1,5 +1,5 @@
 import { ResolveFn, Routes } from '@angular/router';
-import type { LessonEntry } from './content/content-loader';
+import type { LessonEntry, PathEntry } from './content/content-loader';
 import type { AnyLab } from './core/models/content.model';
 import { ErrorPage } from './features/errors/error-page';
 
@@ -13,6 +13,10 @@ const lessonEntry: ResolveFn<LessonEntry | null> = (route) =>
   );
 const labContent: ResolveFn<AnyLab | null> = (route) =>
   import('./content/content-loader').then((m) => m.loadLab(route.paramMap.get('labId') ?? ''));
+const pathExam: ResolveFn<PathEntry | null> = (route) =>
+  import('./content/content-loader').then((m) =>
+    m.loadPathLessons(route.paramMap.get('pathId') ?? ''),
+  );
 
 export const routes: Routes = [
   {
@@ -33,6 +37,16 @@ export const routes: Routes = [
         (m) => m.findPath(route.paramMap.get('pathId') ?? '')?.title ?? 'Parcours introuvable',
       ),
     loadComponent: () => import('./features/learning-paths/path-page').then((m) => m.PathPage),
+  },
+  {
+    path: 'parcours/:pathId/examen',
+    title: (route) =>
+      import('./content/content-loader').then((m) => {
+        const title = m.findPath(route.paramMap.get('pathId') ?? '')?.title;
+        return title ? `Examen blanc : ${title}` : 'Examen introuvable';
+      }),
+    resolve: { exam: pathExam },
+    loadComponent: () => import('./features/quizzes/exam-page').then((m) => m.ExamPage),
   },
   {
     path: 'lecons',
