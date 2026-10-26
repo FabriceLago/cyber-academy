@@ -477,7 +477,7 @@ Règles (testées dans [`progress.spec.ts`](../src/app/core/progress/progress.sp
 
 | Principe (brief §14) | Mise en œuvre | Vérifié par |
 |---|---|---|
-| Protection contre les injections (XSS) | Politique de sécurité du contenu : scripts limités aux empreintes générées au build (`autoCsp`, `strict-dynamic`), `object-src 'none'`, `base-uri 'self'` ; connexions limitées au site et à Supabase, aucun cadre, aucun worker. Angular échappe tout affichage ; ni `innerHTML`, ni `eval`, ni contournement de la sanitisation dans le code | `e2e/security.spec.ts` : aucune violation sur les pages principales, script injecté bloqué |
+| Protection contre les injections (XSS) | Politique de sécurité du contenu : scripts limités aux empreintes générées au build (`autoCsp`, `strict-dynamic`), `object-src 'none'`, `base-uri 'self'` ; connexions limitées au site et à Supabase, aucun cadre, aucun worker sauf le service worker du site (`worker-src 'self'`, mode hors ligne). Angular échappe tout affichage ; ni `innerHTML`, ni `eval`, ni contournement de la sanitisation dans le code | `e2e/security.spec.ts` : aucune violation sur les pages principales, script injecté bloqué |
 | Protection contre les injections (SQL) | Fonctions paramétrées, `search_path` vide, aucun SQL dynamique construit avec une saisie | relecture, pgTAP |
 | Validation côté client et côté serveur | Formulaires validés dans l'application ; côté serveur : contraintes de tables, réponses d'un quiz limitées à 8 Ko, questions vérifiées, nom affiché sans caractères de contrôle ou invisibles | pgTAP |
 | Contrôle d'accès systématique | RLS sur toutes les tables ; sans compte, aucune fonction appelable ; avec un compte, seulement `record_quiz_attempt`, `record_lab_attempt`, `delete_my_account` (son propre compte) et `is_admin` ; fonctions futures fermées par défaut | `hardening.test.sql`, `rls.test.sql` |
@@ -538,6 +538,16 @@ automatiquement.
   référent, `Permissions-Policy`, `Cross-Origin-Opener-Policy`) et règle le cache (fichiers à
   empreinte : un an ; `index.html` : toujours revalidé). Vérifié sur Apache 2.4 dans Docker : en-têtes,
   404, redirection HTTPS, et toute la suite e2e (`E2E_BASE_URL`).
+- **Application installable et hors ligne** : manifeste (`public/manifest.webmanifest`, icônes
+  dans `public/icons`) et service worker d'Angular (`@angular/service-worker`, configuré par
+  [`ngsw-config.json`](../ngsw-config.json), build de production seulement). Il précharge tous les
+  fichiers du site, contenu des leçons et des laboratoires compris : après une première visite, le
+  site s'ouvre sans réseau, avec la progression gardée dans le navigateur. Les appels à Supabase ne
+  passent pas par lui (rien de personnel en cache) ; compte, synchronisation et signalements
+  demandent le réseau. Une nouvelle version est prise au chargement suivant. `build:prod` régénère
+  `ngsw.json` après avoir modifié `index.html` (empreintes vérifiées par le service worker). Testé
+  par `e2e/offline.spec.ts` (réseau coupé, y compris pour le service worker) ; les autres tests le
+  bloquent (`serviceWorkers: 'block'`).
 - **Confirmation par e-mail** : à activer en production. Le lien ramène sur `/profil` ; le client
   Supabase (`detectSessionInUrl`) ouvre la session et retire les jetons de l'adresse. Testé de
   bout en bout avec un lien généré par la pile locale.

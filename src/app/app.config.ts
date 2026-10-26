@@ -4,8 +4,10 @@ import {
   ApplicationConfig,
   LOCALE_ID,
   inject,
+  isDevMode,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
 import {
   RedirectCommand,
   Router,
@@ -38,5 +40,12 @@ export const appConfig: ApplicationConfig = {
       ),
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
+    // Application installable et utilisable hors ligne (build de production seulement) : le
+    // service worker précharge tous les fichiers du site, contenu des leçons compris. Les appels
+    // à Supabase ne passent pas par lui : aucune donnée personnelle n'est mise en cache.
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

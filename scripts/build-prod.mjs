@@ -63,6 +63,14 @@ if (!html.includes(`connect-src 'self' ${LOCAL_URL}`)) {
   fail('index.html : politique des connexions (connect-src) introuvable.');
 }
 writeFileSync(index, html.replaceAll(LOCAL_URL, origin));
+// Le service worker vérifie l'empreinte de chaque fichier : index.html vient de changer, son
+// manifeste (ngsw.json) est régénéré, sinon le mode hors ligne refuserait cette version.
+execFileSync(process.execPath, [
+  'node_modules/@angular/service-worker/ngsw-config.js',
+  OUT,
+  'ngsw-config.json',
+  '/',
+]);
 writeFileSync(
   join(OUT, '.htaccess'),
   readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin) +

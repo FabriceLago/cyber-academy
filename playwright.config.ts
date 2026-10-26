@@ -20,6 +20,9 @@ export default defineConfig({
   use: {
     baseURL: external ?? 'http://localhost:4201',
     trace: 'on-first-retry',
+    // Le service worker (mode hors ligne) répondrait à la place du réseau et précharge tout le
+    // site : bloqué partout, sauf dans e2e/offline.spec.ts qui le teste.
+    serviceWorkers: 'block',
   },
   projects: [
     { name: 'bureau', use: { ...devices['Desktop Chrome'] } },

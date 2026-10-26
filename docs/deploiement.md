@@ -86,8 +86,12 @@ locale ni aucun secret ne part en ligne. Résultat : `dist/cyber-academy/browser
 curl -I https://<votre-domaine>/profil
 ```
 
-Attendus : `200`, `Content-Security-Policy` avec `frame-ancestors 'none'`,
+Attendus : `200`, `Content-Security-Policy` avec `frame-ancestors 'none'` et `worker-src 'self'`,
 `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Cache-Control: no-cache`.
+
+Mode hors ligne : `curl -I https://<votre-domaine>/ngsw-worker.js` doit renvoyer
+`Cache-Control: no-cache` (sinon une nouvelle version ne serait pas détectée), et
+`curl -I https://<votre-domaine>/manifest.webmanifest` le type `application/manifest+json`.
 
 Tests de parcours sur le site en ligne, sans création de compte (PowerShell) :
 
