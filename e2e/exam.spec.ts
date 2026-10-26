@@ -5,7 +5,7 @@ import { DECOUVRIR_LE_TERMINAL } from '../src/app/content/lessons/02-decouvrir-l
 import { VOYAGE_D_UNE_INFORMATION } from '../src/app/content/lessons/03-voyage-d-une-information';
 import { SECURITE_ET_RISQUES } from '../src/app/content/lessons/04-securite-et-risques';
 import { HAMECONNAGE } from '../src/app/content/lessons/05-hameconnage';
-import { answer } from './quiz-helpers';
+import { DECOUVERTE_DONE, answer, seedProgress } from './quiz-helpers';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const PATH = 'Découverte de la cybersécurité';
@@ -18,26 +18,6 @@ const LESSONS = [
 ];
 /** Les énoncés sont uniques dans un parcours (vérifié par les tests de l'examen). */
 const BY_PROMPT = new Map(LESSONS.flatMap((l) => l.quiz.questions.map((q) => [q.prompt, q])));
-
-/** Données de test : parcours Découverte terminé (quiz et laboratoires réussis). */
-const FIVE = ['a', 'b', 'c', 'd', 'e'];
-const now = new Date().toISOString();
-const DECOUVERTE_DONE = JSON.stringify({
-  schemaVersion: 1,
-  weeklyGoal: null,
-  quizAttempts: LESSONS.map((l) => ({
-    lessonId: l.id,
-    submittedAt: now,
-    questionIds: FIVE,
-    correctQuestionIds: FIVE,
-  })),
-  labAttempts: ['lab-terminal', 'lab-phishing'].map((labId) => ({
-    labId,
-    completedAt: now,
-    succeeded: true,
-    hintsUsed: 0,
-  })),
-});
 
 test('l’examen blanc reste fermé tant que les leçons du parcours ne sont pas validées', async ({
   page,
@@ -55,11 +35,7 @@ test('l’examen blanc reste fermé tant que les leçons du parcours ne sont pas
 test('examen blanc : questions mélangées des 5 leçons, puis bilan par compétence', async ({
   page,
 }) => {
-  await page.addInitScript((value) => {
-    if (sessionStorage.getItem('seeded')) return;
-    localStorage.setItem('ca-progress', value);
-    sessionStorage.setItem('seeded', '1');
-  }, DECOUVERTE_DONE);
+  await seedProgress(page, DECOUVERTE_DONE);
   await page.goto('/quiz');
   await page.getByRole('link', { name: `Passer l’examen blanc : ${PATH}` }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Examen blanc : ${PATH}`);

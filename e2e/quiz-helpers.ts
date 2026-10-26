@@ -62,3 +62,38 @@ export async function answerAll(page: Page, correctly: boolean): Promise<Questio
   for (const question of questions) await answer(page, question, correctly);
   return questions;
 }
+
+/** Données de test : parcours Découverte terminé (5 quiz à 100 %, 2 laboratoires réussis). */
+const FIVE = ['a', 'b', 'c', 'd', 'e'];
+const now = new Date().toISOString();
+export const DECOUVERTE_DONE = JSON.stringify({
+  schemaVersion: 1,
+  weeklyGoal: null,
+  quizAttempts: [
+    'ordinateur-et-fichiers',
+    'decouvrir-le-terminal',
+    'voyage-d-une-information',
+    'securite-et-risques',
+    'hameconnage',
+  ].map((lessonId) => ({
+    lessonId,
+    submittedAt: now,
+    questionIds: FIVE,
+    correctQuestionIds: FIVE,
+  })),
+  labAttempts: ['lab-terminal', 'lab-phishing'].map((labId) => ({
+    labId,
+    completedAt: now,
+    succeeded: true,
+    hintsUsed: 0,
+  })),
+});
+
+/** Progression injectée dans ce navigateur, une seule fois par onglet. */
+export async function seedProgress(page: Page, raw: string) {
+  await page.addInitScript((value) => {
+    if (sessionStorage.getItem('seeded')) return;
+    localStorage.setItem('ca-progress', value);
+    sessionStorage.setItem('seeded', '1');
+  }, raw);
+}
