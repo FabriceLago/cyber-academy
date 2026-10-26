@@ -141,7 +141,7 @@ export function objectivesToReview(review: LessonReview, attempt: QuizAttempt): 
 }
 
 /** Mélange de Fisher-Yates, sans modifier le tableau reçu. */
-function shuffle<T>(values: readonly T[], random: () => number): T[] {
+export function shuffle<T>(values: readonly T[], random: () => number): T[] {
   const result = [...values];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));

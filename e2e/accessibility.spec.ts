@@ -15,6 +15,7 @@ const PATHS = [
   '/parcours/culture-informatique', // niveau 1, verrouillé tant que Découverte n'est pas terminé
   '/glossaire',
   '/cartes-memoire',
+  '/parcours/decouverte/examen', // examen blanc pas encore ouvert
   '/parcours/inexistant',
   '/laboratoires/inexistant',
   '/connexion',

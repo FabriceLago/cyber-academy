@@ -1,5 +1,5 @@
 import { LABS, PATHS } from './catalog';
-import { findLesson, findPath, loadLab, loadLesson } from './content-loader';
+import { findLesson, findPath, loadLab, loadLesson, loadPathLessons } from './content-loader';
 import { CATALOG } from './outline.generated';
 
 const LESSONS = PATHS.flatMap((p) => p.modules.flatMap((m) => m.lessons));
@@ -25,11 +25,21 @@ describe('chargement à la demande', () => {
     expect(await loadLab(id)).toBe(lab);
   });
 
+  it.each(PATHS.map((p) => [p.id, p] as const))(
+    'charge toutes les leçons du parcours « %s », dans l’ordre',
+    async (id, path) => {
+      const entry = await loadPathLessons(id);
+      expect(entry?.path.id).toBe(id);
+      expect(entry?.lessons).toEqual(path.modules.flatMap((m) => m.lessons));
+    },
+  );
+
   it.each(['inconnue', 'constructor', '__proto__'])(
     'renvoie null pour un identifiant inconnu (« %s »)',
     async (id) => {
       expect(await loadLesson(id)).toBeNull();
       expect(await loadLab(id)).toBeNull();
+      expect(await loadPathLessons(id)).toBeNull();
       expect(findPath(id)).toBeUndefined();
     },
   );

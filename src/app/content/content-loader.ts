@@ -71,6 +71,22 @@ export async function loadLesson(id: string): Promise<LessonEntry | null> {
   return { ...found, lesson: await LESSONS[id]() };
 }
 
+/** Parcours avec le contenu complet de ses leçons, dans l'ordre du catalogue (examen blanc). */
+export interface PathEntry {
+  readonly path: PathOutline;
+  readonly lessons: readonly Lesson[];
+}
+
+/** null si le parcours n'existe pas ; rejette si un fichier ne se télécharge pas. */
+export async function loadPathLessons(pathId: string): Promise<PathEntry | null> {
+  const path = findPath(pathId);
+  if (!path) return null;
+  const entries = await Promise.all(
+    path.modules.flatMap((module) => module.lessons).map((lesson) => loadLesson(lesson.id)),
+  );
+  return { path, lessons: entries.flatMap((entry) => (entry ? [entry.lesson] : [])) };
+}
+
 export async function loadLab(id: string): Promise<AnyLab | null> {
   if (!findLab(id) || !Object.hasOwn(LABS, id)) return null;
   return LABS[id]();
