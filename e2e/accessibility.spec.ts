@@ -5,6 +5,9 @@ import { PAGES } from './pages';
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const PATHS = [
   ...PAGES.map((p) => p.path),
+  '/', // accueil public
+  '/glossaire/hameconnage', // page d'un terme
+  '/glossaire/inexistant',
   '/lecons/ordinateur-et-fichiers', // leçon ouverte, avec toutes ses sections
   '/lecons/hameconnage', // leçon verrouillée
   '/lecons/ordinateur-et-fichiers/quiz',

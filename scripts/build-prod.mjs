@@ -71,6 +71,9 @@ execFileSync(process.execPath, [
   'ngsw-config.json',
   '/',
 ]);
+// Pages statiques du glossaire (moteurs de recherche), copiées de l'index.html définitif.
+// SITE_URL, facultative, ajoute les adresses canoniques, sitemap.xml et robots.txt.
+execFileSync(process.execPath, ['scripts/prerender-glossary.mjs', OUT], { stdio: 'inherit' });
 writeFileSync(
   join(OUT, '.htaccess'),
   readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin) +

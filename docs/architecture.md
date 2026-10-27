@@ -57,8 +57,9 @@ src/app/
    ├─ auth/              connexion et création de compte                  (étape 9, fait)
    ├─ errors/            page introuvable, page d'erreur de chargement    (étape 3, fait)
    ├─ profile/           thème, objectif, sauvegarde, réinitialisation    (étapes 5 et 9, fait)
-   ├─ dashboard/         tableau de bord, à réviser, défi de la semaine   (étape 4, fait)
-   ├─ glossary/          glossaire de toutes les leçons, avec recherche   (après l'étape 13, fait)
+   ├─ home/              accueil public (/) : présentation de la plateforme (après l'étape 13)
+   ├─ dashboard/         tableau de bord (/tableau-de-bord), à réviser    (étape 4, fait)
+   ├─ glossary/          glossaire, une page par terme, cartes mémoire    (après l'étape 13, fait)
    ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours, page d'une spécialisation    (étapes 5 et 11, fait)
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
@@ -538,6 +539,14 @@ automatiquement.
   référent, `Permissions-Policy`, `Cross-Origin-Opener-Policy`) et règle le cache (fichiers à
   empreinte : un an ; `index.html` : toujours revalidé). Vérifié sur Apache 2.4 dans Docker : en-têtes,
   404, redirection HTTPS, et toute la suite e2e (`E2E_BASE_URL`).
+- **Accueil public et glossaire indexable** : `/` présente la plateforme ; le tableau de bord est à
+  `/tableau-de-bord` (point de départ de l'application installée). Chaque terme du glossaire a sa
+  page (`/glossaire/<terme>`, adresse tirée du terme sans accents). Après `ng build`,
+  [`scripts/prerender-glossary.mjs`](../scripts/prerender-glossary.mjs) en écrit une version
+  statique (copie d'`index.html` avec titre, description et contenu), lisible sans JavaScript ;
+  l'application la remplace au démarrage. Avec `SITE_URL` : adresses canoniques, `sitemap.xml`,
+  `robots.txt`. L'accueil, lui, reste rendu dans le navigateur (titre et description dans
+  `index.html`).
 - **Application installable et hors ligne** : manifeste (`public/manifest.webmanifest`, icônes
   dans `public/icons`) et service worker d'Angular (`@angular/service-worker`, configuré par
   [`ngsw-config.json`](../ngsw-config.json), build de production seulement). Il précharge tous les

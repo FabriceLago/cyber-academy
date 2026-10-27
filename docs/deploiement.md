@@ -63,12 +63,18 @@ La clé à utiliser est la **clé publique** (Project Settings → API Keys → 
 ```powershell
 $env:SUPABASE_URL = "https://<identifiant-du-projet>.supabase.co"
 $env:SUPABASE_PUBLISHABLE_KEY = "sb_publishable_..."
+$env:SITE_URL = "https://<votre-domaine>"
 npm run build:prod
 ```
 
 Le script construit l'application, remplace l'adresse de Supabase dans la politique de sécurité du
 contenu, écrit le `.htaccess` (modèle : `deploy/hostinger.htaccess`) et vérifie qu'aucune adresse
 locale ni aucun secret ne part en ligne. Résultat : `dist/cyber-academy/browser`.
+
+Il écrit aussi une page statique par terme du glossaire (`glossaire/<terme>/index.html`), lisible
+par les moteurs de recherche sans JavaScript. `SITE_URL` (facultative tant que le domaine n'est pas
+choisi) leur ajoute leur adresse canonique et produit `sitemap.xml` et `robots.txt` : à déclarer
+ensuite dans Google Search Console.
 
 ## 5. Publier sur Hostinger
 

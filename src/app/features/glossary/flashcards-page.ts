@@ -13,7 +13,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { FlashcardStore, INTERVAL_DAYS, sessionCards } from '../../core/progress/flashcards';
 import { ProgressStore } from '../../core/progress/progress.store';
-import { GlossaryTerm, TERMS, normalize } from './glossary-page';
+import { GlossaryTerm, TERMS, normalize } from './glossary';
 
 const keyOf = (term: GlossaryTerm) => normalize(term.term);
 

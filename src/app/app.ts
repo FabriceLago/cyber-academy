@@ -25,7 +25,7 @@ interface NavItem {
 
 /** Les 8 sections de la navigation principale ; chaque chemin correspond à une route de app.routes.ts. */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { path: '/', label: 'Tableau de bord', icon: 'dashboard' },
+  { path: '/tableau-de-bord', label: 'Tableau de bord', icon: 'dashboard' },
   { path: '/parcours', label: 'Parcours d’apprentissage', icon: 'route' },
   { path: '/lecons', label: 'Leçons', icon: 'book' },
   { path: '/laboratoires', label: 'Laboratoires', icon: 'flask' },

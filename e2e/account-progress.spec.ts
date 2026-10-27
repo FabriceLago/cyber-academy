@@ -53,7 +53,7 @@ test('la progression suit le compte : vérifiée par le serveur, retrouvée apr�
 
   // Elle n'est pas reprise par le compte : le serveur ne l'a pas vérifiée.
   await expect(page.getByText(/Ce navigateur garde aussi 1 tentative/)).toBeVisible();
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(page.getByText('Leçons validées : 0 sur 8', { exact: true })).toBeVisible();
   await expect(page.getByText('Points d’expérience')).toBeVisible();
 
