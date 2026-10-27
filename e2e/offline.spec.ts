@@ -24,7 +24,11 @@ test('installable : manifeste et icônes servis, service worker accepté par la 
   const manifest = (await (await page.request.get(`/${href}`)).json()) as {
     icons: { src: string; sizes: string }[];
   };
-  expect(manifest).toMatchObject({ name: 'Cyber Academy', display: 'standalone', start_url: '/' });
+  expect(manifest).toMatchObject({
+    name: 'Cyber Academy',
+    display: 'standalone',
+    start_url: '/tableau-de-bord',
+  });
   expect(manifest.icons.map((i) => i.sizes)).toEqual(
     expect.arrayContaining(['192x192', '512x512']),
   );

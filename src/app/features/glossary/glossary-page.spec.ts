@@ -1,6 +1,13 @@
 import { PATHS } from '../../content/catalog';
 import { GLOSSARY } from '../../content/glossary.generated';
-import { GlossarySource, buildGlossary, normalize, searchGlossary } from './glossary-page';
+import {
+  GlossarySource,
+  buildGlossary,
+  findTerm,
+  normalize,
+  searchGlossary,
+  slugify,
+} from './glossary';
 
 /** Les termes d'une leçon fictive, tels que les écrit le plan généré. */
 const lesson = (id: string, terms: string[]): GlossarySource[] =>
@@ -41,5 +48,19 @@ describe('glossaire', () => {
     const distinct = new Set(lessons.flatMap((l) => l.glossary.map((g) => normalize(g.term))));
     expect(terms).toHaveLength(distinct.size);
     expect(terms.every((t) => t.lessons.length > 0)).toBe(true);
+  });
+
+  it('donne à chaque terme une adresse lisible et unique', () => {
+    expect(slugify('Usurpation d’identité')).toBe('usurpation-d-identite');
+    expect(slugify('Règle 3-2-1')).toBe('regle-3-2-1');
+    expect(slugify('Journal (log)')).toBe('journal-log');
+    const slugs = buildGlossary(GLOSSARY).map((t) => t.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect(slugs.every((s) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s))).toBe(true);
+  });
+
+  it('retrouve un terme par son adresse', () => {
+    expect(findTerm('hameconnage')?.term).toBe('Hameçonnage');
+    expect(findTerm('inexistant')).toBeUndefined();
   });
 });

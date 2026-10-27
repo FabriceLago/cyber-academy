@@ -6,8 +6,8 @@ const heading = (page: import('@playwright/test').Page) => page.getByRole('headi
 test('la page d’accueil se charge en français', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expect(heading(page)).toHaveText('Tableau de bord');
-  await expect(page).toHaveTitle('Tableau de bord · Cyber Academy');
+  await expect(heading(page)).toHaveText('Apprendre la cybersécurité en partant de zéro');
+  await expect(page).toHaveTitle('Apprendre la cybersécurité en partant de zéro · Cyber Academy');
 });
 
 test('chaque lien de la navigation ouvre la bonne page et y place le focus', async ({
@@ -117,7 +117,7 @@ test('un échec de chargement affiche la page d’erreur en gardant l’adresse'
   page,
   isMobile,
 }) => {
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(heading(page)).toHaveText('Tableau de bord');
   // Simule une coupure réseau : les pages chargées à la demande ne peuvent plus être téléchargées.
   await page.route(/chunk-[^/]+\.js$/, (route) => route.abort());

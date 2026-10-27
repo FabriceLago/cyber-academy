@@ -3,7 +3,7 @@
   "short_name": "Cyber Academy",
   "description": "Apprendre la cybersécurité pas à pas, gratuitement et en français.",
   "lang": "fr",
-  "start_url": "/",
+  "start_url": "/tableau-de-bord",
   "scope": "/",
   "display": "standalone",
   "background_color": "#060a13",

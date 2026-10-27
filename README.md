@@ -28,7 +28,7 @@ Mise en ligne (Supabase hébergé + Hostinger) : [docs/deploiement.md](docs/depl
 | `npm run db:catalog` / `db:types` | Régénérer le catalogue SQL ou les types TypeScript de la base |
 | `npm run content:outline` | Régénérer le plan léger du catalogue lu par l'application (après chaque changement du contenu) |
 | `npm run db:backup` / `db:restore` | Sauvegarder ou recharger les données des apprenants |
-| `npm run build:prod` | Build à publier, avec `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` (voir la mise en ligne) |
+| `npm run build:prod` | Build à publier, avec `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY`, et `SITE_URL` pour le plan du site (voir la mise en ligne) |
 
 Seule la clé publique de Supabase (`sb_publishable_…`) est dans le dépôt ; la clé secrète n'y
 figure jamais (`npm run check:secrets` le vérifie).

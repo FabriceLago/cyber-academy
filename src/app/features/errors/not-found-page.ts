@@ -10,7 +10,7 @@ import { Icon } from '../../shared/icon/icon';
       <ca-icon class="status-icon" name="compass" />
       <h1>Page introuvable</h1>
       <p>L’adresse demandée n’existe pas, ou elle a changé.</p>
-      <a class="btn btn-primary" routerLink="/">Retour au tableau de bord</a>
+      <a class="btn btn-primary" routerLink="/tableau-de-bord">Retour au tableau de bord</a>
     </div>
   `,
 })

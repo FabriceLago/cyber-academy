@@ -16,7 +16,7 @@ import { Icon } from '../../shared/icon/icon';
       <p>La page n’a pas pu être chargée. Vérifiez votre connexion internet, puis réessayez.</p>
       <div class="actions">
         <button type="button" class="btn btn-primary" (click)="reload()">Recharger la page</button>
-        <a class="btn btn-secondary" routerLink="/">Retour au tableau de bord</a>
+        <a class="btn btn-secondary" routerLink="/tableau-de-bord">Retour au tableau de bord</a>
       </div>
     </div>
   `,

@@ -20,8 +20,14 @@ const pathExam: ResolveFn<PathEntry | null> = (route) =>
 
 export const routes: Routes = [
   {
+    // Accueil public : présentation de la plateforme ; le tableau de bord a sa propre adresse.
     path: '',
     pathMatch: 'full',
+    title: 'Apprendre la cybersécurité en partant de zéro',
+    loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
+  },
+  {
+    path: 'tableau-de-bord',
     title: 'Tableau de bord',
     loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
   },
@@ -68,6 +74,16 @@ export const routes: Routes = [
     path: 'glossaire',
     title: 'Glossaire',
     loadComponent: () => import('./features/glossary/glossary-page').then((m) => m.GlossaryPage),
+  },
+  {
+    path: 'glossaire/:terme',
+    title: (route) =>
+      import('./features/glossary/glossary').then((m) => {
+        const term = m.findTerm(route.paramMap.get('terme') ?? '')?.term;
+        return term ? `${term} : définition` : 'Terme introuvable';
+      }),
+    loadComponent: () =>
+      import('./features/glossary/glossary-term-page').then((m) => m.GlossaryTermPage),
   },
   {
     path: 'cartes-memoire',

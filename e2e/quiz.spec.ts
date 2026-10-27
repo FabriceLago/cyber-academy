@@ -29,7 +29,7 @@ test('réussir le quiz valide la leçon et ouvre la suivante', async ({ page }) 
 
   await page.getByRole('link', { name: 'Leçon suivante : Découvrir le terminal' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Découvrir le terminal');
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(page.getByRole('progressbar', { name: 'Progression globale' })).toHaveAttribute(
     'aria-valuenow',
     '13', // 1 leçon validée sur 8

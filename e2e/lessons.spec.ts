@@ -34,7 +34,7 @@ const h1 = (page: Page) => page.getByRole('heading', { level: 1 });
 test('un nouvel apprenant ouvre la première leçon et y trouve les 17 sections', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await page.getByRole('link', { name: 'Commencer la leçon' }).click();
   await expect(h1(page)).toHaveText(FIRST);
   await expect(page).toHaveTitle(`${FIRST} · Cyber Academy`);
@@ -132,7 +132,7 @@ test('la progression peut être réinitialisée depuis le profil', async ({ page
   await expect(
     page.getByRole('status').filter({ hasText: 'Progression réinitialisée.' }),
   ).toBeVisible();
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(page.getByRole('progressbar', { name: 'Progression globale' })).toHaveAttribute(
     'aria-valuenow',
     '0',

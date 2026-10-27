@@ -43,7 +43,7 @@ const nextLesson = (page: Page) => page.locator('#next-title');
 test('un nouvel apprenant voit la première leçon et des états vides expliqués', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(nextLesson(page)).toHaveText(
     'Comprendre un ordinateur, ses fichiers et ses dossiers',
   );
@@ -61,7 +61,7 @@ test('la progression enregistrée met à jour le tableau de bord et les compéte
   page,
 }) => {
   await seed(page, IN_PROGRESS);
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
 
   await expect(nextLesson(page)).toHaveText('Découvrir le terminal');
   await expect(
@@ -107,13 +107,13 @@ test('l’objectif hebdomadaire se règle dans le profil et s’affiche au table
   await page.goto('/profil');
   const goal = page.getByLabel('Leçons à valider chaque semaine');
   await goal.selectOption('3');
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(page.getByText('Leçons validées depuis lundi : 0 sur 3.')).toBeVisible();
 
   await page.goto('/profil');
   await expect(goal).toHaveValue('3');
   await goal.selectOption('');
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(page.getByText('Facultatif : fixez-vous un nombre de leçons')).toBeVisible();
 });
 
@@ -138,7 +138,7 @@ test('les notions manquées sont proposées à la révision, avec le défi de la
       ],
     }),
   );
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
 
   const review = page.getByRole('region', { name: 'À réviser' });
   await expect(review).toContainText('Distinguer la mémoire vive du stockage');
@@ -183,13 +183,13 @@ test('la progression se sauvegarde dans un fichier puis se restaure', async ({ p
   await page.getByRole('button', { name: 'Oui, remplacer' }).click();
   await expect(page.getByText('Progression restaurée depuis le fichier.')).toBeVisible();
 
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(page.getByRole('table').getByRole('row')).toHaveCount(3);
 });
 
 test('des données de progression corrompues n’empêchent pas l’affichage', async ({ page }) => {
   await seed(page, '{"schemaVersion":1,"quizAttempts":"oups"');
-  await page.goto('/');
+  await page.goto('/tableau-de-bord');
   await expect(nextLesson(page)).toHaveText(
     'Comprendre un ordinateur, ses fichiers et ses dossiers',
   );
