@@ -42,6 +42,37 @@ if (!/^sb_publishable_[A-Za-z0-9_-]{10,}$/.test(key)) {
   );
 }
 
+// Mesure d'audience, facultative : Matomo hébergé par l'éditeur (voir docs/deploiement.md).
+let matomoUrl = '';
+const matomoSiteId = process.env.MATOMO_SITE_ID ?? '';
+if (process.env.MATOMO_URL) {
+  try {
+    const url = new URL(process.env.MATOMO_URL);
+    matomoUrl = `${url.origin}${url.pathname.replace(/\/?$/, '/')}`;
+  } catch {
+    fail('MATOMO_URL invalide (exemple : https://stats.cyber-academy.fr/).');
+  }
+  if (!matomoUrl.startsWith('https://')) fail('MATOMO_URL doit commencer par https://.');
+  if (!/^\d+$/.test(matomoSiteId)) {
+    fail('MATOMO_SITE_ID doit être le numéro du site dans Matomo (exemple : 1).');
+  }
+} else if (matomoSiteId) {
+  fail('MATOMO_SITE_ID est fourni sans MATOMO_URL : la mesure d’audience serait ignorée.');
+}
+const matomoOrigin = matomoUrl ? new URL(matomoUrl).origin : '';
+/** Politique de sécurité du contenu : autorise aussi l'envoi des mesures à Matomo. */
+function withMatomo(policy, file) {
+  if (!matomoOrigin) return policy;
+  for (const directive of [`connect-src 'self' ${origin}`, "img-src 'self'"]) {
+    if (!policy.includes(directive)) {
+      fail(`${file} : « ${directive} » introuvable, Matomo serait bloqué.`);
+    }
+  }
+  return policy
+    .replace(`connect-src 'self' ${origin}`, `connect-src 'self' ${origin} ${matomoOrigin}`)
+    .replace("img-src 'self'", `img-src 'self' ${matomoOrigin}`);
+}
+
 const define = (name, value) => ['--define', `${name}=${JSON.stringify(value)}`];
 execFileSync(
   process.execPath,
@@ -52,6 +83,8 @@ execFileSync(
     'production,deploy',
     ...define('CA_SUPABASE_URL', origin),
     ...define('CA_SUPABASE_PUBLISHABLE_KEY', key),
+    ...define('CA_MATOMO_URL', matomoUrl),
+    ...define('CA_MATOMO_SITE_ID', matomoUrl ? matomoSiteId : ''),
   ],
   { stdio: 'inherit' },
 );
@@ -62,7 +95,7 @@ const html = readFileSync(index, 'utf8');
 if (!html.includes(`connect-src 'self' ${LOCAL_URL}`)) {
   fail('index.html : politique des connexions (connect-src) introuvable.');
 }
-writeFileSync(index, html.replaceAll(LOCAL_URL, origin));
+writeFileSync(index, withMatomo(html.replaceAll(LOCAL_URL, origin), 'index.html'));
 // Le service worker vérifie l'empreinte de chaque fichier : index.html vient de changer, son
 // manifeste (ngsw.json) est régénéré, sinon le mode hors ligne refuserait cette version.
 execFileSync(process.execPath, [
@@ -76,7 +109,10 @@ execFileSync(process.execPath, [
 execFileSync(process.execPath, ['scripts/prerender-glossary.mjs', OUT], { stdio: 'inherit' });
 writeFileSync(
   join(OUT, '.htaccess'),
-  readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin) +
+  withMatomo(
+    readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin),
+    '.htaccess',
+  ) +
     (preview
       ? '\n# Aperçu : aucune indexation.\n<IfModule mod_headers.c>\n  Header always set X-Robots-Tag "noindex, nofollow"\n</IfModule>\n'
       : ''),

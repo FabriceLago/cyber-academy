@@ -5,6 +5,7 @@ import {
   LOCALE_ID,
   inject,
   isDevMode,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -18,6 +19,7 @@ import {
   withNavigationErrorHandler,
 } from '@angular/router';
 import { routes } from './app.routes';
+import { Analytics } from './core/analytics/analytics';
 import { PageTitleStrategy } from './core/page-title.strategy';
 
 // Dates et nombres à la française : « 16 octobre », « 80 % ».
@@ -40,6 +42,8 @@ export const appConfig: ApplicationConfig = {
       ),
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
+    // Mesure d'audience Matomo, sans cookies : inactive tant que son adresse n'est pas configurée.
+    provideAppInitializer(() => inject(Analytics).start()),
     // Application installable et utilisable hors ligne (build de production seulement) : le
     // service worker précharge tous les fichiers du site, contenu des leçons compris. Les appels
     // à Supabase ne passent pas par lui : aucune donnée personnelle n'est mise en cache.

@@ -7,4 +7,7 @@
 export const environment = {
   supabaseUrl: 'http://127.0.0.1:54621',
   supabasePublishableKey: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+  /** Mesure d'audience (Matomo) : vide en local, donc aucune mesure. */
+  matomoUrl: '',
+  matomoSiteId: '',
 };
