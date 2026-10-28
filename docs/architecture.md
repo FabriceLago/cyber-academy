@@ -539,6 +539,16 @@ automatiquement.
   référent, `Permissions-Policy`, `Cross-Origin-Opener-Policy`) et règle le cache (fichiers à
   empreinte : un an ; `index.html` : toujours revalidé). Vérifié sur Apache 2.4 dans Docker : en-têtes,
   404, redirection HTTPS, et toute la suite e2e (`E2E_BASE_URL`).
+- **Statistiques** : `learning_funnel()` (migration `statistiques`) donne, leçon par leçon, les
+  apprenants avec un compte qui ont tenté le quiz, qui l'ont réussi, et ceux qui ont réussi le
+  laboratoire : des totaux, lus par l'administrateur dans l'éditeur SQL de Supabase, inaccessibles
+  depuis le site (seule la clé secrète, côté serveur, pourrait l'appeler). Mesure d'audience :
+  [`analytics.ts`](../src/app/core/analytics/analytics.ts) envoie les pages vues à Matomo, hébergé
+  par l'éditeur, sans cookies ni détection des fonctionnalités du navigateur, adresse sans
+  paramètres, titre lu une fois mis à jour par le routeur ; la file `_paq` est relue à chaque
+  envoi (matomo.js la remplace une fois chargé). Inactive sans `MATOMO_URL` au build, si le
+  visiteur s'y oppose (case de la politique de confidentialité) ou si son navigateur demande de ne
+  pas être suivi. Voir `docs/deploiement.md`, section 10.
 - **Accueil public et glossaire indexable** : `/` présente la plateforme ; le tableau de bord est à
   `/tableau-de-bord` (point de départ de l'application installée). Chaque terme du glossaire a sa
   page (`/glossaire/<terme>`, adresse tirée du terme sans accents). Après `ng build`,

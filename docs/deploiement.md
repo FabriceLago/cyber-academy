@@ -162,3 +162,38 @@ enregistrement (`record_quiz_attempt`, `record_lab_attempt`), pas seulement l'af
 
 Contrôles locaux : `supabase/tests/database/subscriptions.test.sql` (accès, enregistrements,
 suppression du compte) et les tests de parcours de `e2e/specialization.spec.ts`.
+
+## 10. Statistiques : décrochage et mesure d'audience
+
+**Décrochage des apprenants avec un compte** (aucun traceur) : dans le tableau de bord Supabase,
+SQL Editor, lancer `select * from public.learning_funnel();`. Pour chaque leçon, dans l'ordre :
+apprenants qui ont tenté le quiz, qui l'ont réussi, qui ont réussi le laboratoire. Seulement des
+totaux ; la fonction n'est pas appelable depuis le site.
+
+**Mesure d'audience (Matomo, facultative)**, pour les visiteurs avec ou sans compte :
+
+1. Hostinger : créer le sous-domaine `stats.<votre-domaine>` et une base MySQL, puis y installer
+   Matomo (installateur d'applications ou archive officielle de matomo.org).
+2. Matomo : ajouter le site, noter son numéro (« ID du site »), puis, dans les réglages de
+   confidentialité, activer le mode CNIL (« Enforce compliance where possible ») et vérifier à la
+   main ce qui reste « Unknown ». Garder l'IP tronquée sur 2 octets et une conservation de 25 mois
+   au plus. Vérifier que le journal des visites et les profils de visiteurs sont désactivés
+   (Système › Réglages généraux, rubrique « Live ») : la politique de confidentialité annonce des
+   statistiques seulement agrégées. Le site n'utilise pas l'iframe d'opposition de Matomo (les
+   cadres sont interdits par la CSP) : la case « Ne pas être compté » de la politique de
+   confidentialité la remplace.
+3. Reconstruire avec les deux variables :
+
+   ```powershell
+   $env:MATOMO_URL = "https://stats.<votre-domaine>/"
+   $env:MATOMO_SITE_ID = "1"
+   npm run build:prod
+   ```
+
+   Le script ajoute ce sous-domaine à la politique de sécurité du contenu (`connect-src`,
+   `img-src`). Sans ces variables, aucune mesure n'a lieu et la politique de confidentialité
+   annonce « aucune mesure d'audience ».
+
+Le réglage relève de l'éditeur : la CNIL ne publie plus de liste d'outils exemptés, il faut
+documenter que la configuration respecte ses conditions (page « Cookies : solutions pour les
+outils de mesure d'audience » sur cnil.fr).

@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/outline.generated';
+import { Analytics } from '../../core/analytics/analytics';
 import { ProgressStore } from '../../core/progress/progress.store';
 import { LEVELS } from '../lessons/lesson-list';
 
@@ -119,7 +120,14 @@ function hours(minutes: number): string {
           <strong>Sécurité :</strong> les exercices se font uniquement sur des cibles fictives et
           isolées.
         </li>
-        <li><strong>Vie privée :</strong> ni publicité, ni mesure d’audience, ni traqueur.</li>
+        <li>
+          <strong>Vie privée :</strong>
+          {{
+            analytics.configured
+              ? 'ni publicité, ni traqueur ; une mesure d’audience anonyme, sans cookies.'
+              : 'ni publicité, ni mesure d’audience, ni traqueur.'
+          }}
+        </li>
         <li>
           <strong>Accessibilité :</strong> navigation au clavier, lecteurs d’écran, thème clair ou
           sombre, utilisable hors ligne une fois installée.
@@ -205,6 +213,7 @@ function hours(minutes: number): string {
 })
 export class HomePage {
   private readonly progress = inject(ProgressStore);
+  protected readonly analytics = inject(Analytics);
 
   protected readonly paths = CATALOG.paths;
   protected readonly levels = LEVELS;

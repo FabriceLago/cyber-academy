@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Analytics } from '../../core/analytics/analytics';
 
 // Les informations propres à l'éditeur sont marquées A_COMPLETER : `npm run build:prod` refuse de
 // construire le site tant qu'il en reste une (une page légale incomplète ne doit pas partir).
@@ -75,10 +76,14 @@ export class LegalNoticePage {}
     <section class="card prose" aria-labelledby="sans-compte">
       <h2 id="sans-compte">Sans compte</h2>
       <p>
-        Rien ne quitte votre navigateur : votre progression et le thème choisi y sont gardés
-        (stockage local), uniquement pour faire fonctionner la plateforme. Aucun cookie
-        publicitaire, aucune mesure d’audience, aucun service tiers de suivi. L’avancement dans les
-        cartes mémoire reste lui aussi dans le navigateur, même avec un compte.
+        Votre progression et le thème choisi sont gardés dans votre navigateur (stockage local),
+        uniquement pour faire fonctionner la plateforme. Aucun cookie publicitaire, aucun service
+        tiers de suivi{{
+          analytics.configured
+            ? ' ; une mesure d’audience anonyme, sans cookies (voir plus bas)'
+            : ', aucune mesure d’audience'
+        }}. L’avancement dans les cartes mémoire reste lui aussi dans le navigateur, même avec un
+        compte.
       </p>
     </section>
     <section class="card prose" aria-labelledby="avec-compte">
@@ -91,7 +96,8 @@ export class LegalNoticePage {}
         <li>Prénom ou pseudonyme : pour l’affichage dans l’application.</li>
         <li>
           Tentatives de quiz et de laboratoire, objectif hebdomadaire : pour calculer et retrouver
-          votre progression sur vos appareils.
+          votre progression sur vos appareils. Elles servent aussi, sous forme de totaux anonymes
+          par leçon, à repérer les leçons où les apprenants s’arrêtent, pour les améliorer.
         </li>
         <li>
           Signalements d’erreurs (message, contenu concerné, date) : pour corriger les leçons, les
@@ -115,6 +121,34 @@ export class LegalNoticePage {}
         dix ans, comme l’exige la loi pour les pièces comptables.
       </p>
     </section>
+    @if (analytics.configured) {
+      <section class="card prose" aria-labelledby="mesure-audience">
+        <h2 id="mesure-audience">Mesure d’audience</h2>
+        <p>
+          Pour savoir quelles pages sont consultées et où les visiteurs s’arrêtent, le site utilise
+          Matomo, installé sur notre propre hébergement : aucune donnée ne part chez un tiers. Le
+          réglage suit les conditions de la CNIL pour une mesure sans consentement : aucun cookie,
+          aucun identifiant, adresse IP tronquée, seulement des statistiques agrégées sur ce site,
+          conservées au plus 25 mois. Les adresses envoyées ne contiennent ni paramètres ni codes de
+          connexion. Un navigateur qui demande de ne pas être suivi n’est pas compté.
+        </p>
+        @if (analytics.browserOptOut) {
+          <p class="opt-out">
+            Votre navigateur demande de ne pas être suivi : vous n’êtes pas compté.
+          </p>
+        } @else {
+          <label class="opt-out">
+            <input
+              #refuse
+              type="checkbox"
+              [checked]="analytics.optedOut()"
+              (change)="analytics.setOptOut(refuse.checked)"
+            />
+            Ne pas être compté dans les statistiques de visite (choix gardé dans ce navigateur)
+          </label>
+        }
+      </section>
+    }
     <section class="card prose" aria-labelledby="droits">
       <h2 id="droits">Vos droits</h2>
       <ul>
@@ -139,6 +173,16 @@ export class LegalNoticePage {}
     section {
       margin-bottom: var(--space-5);
     }
+
+    .opt-out {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: var(--target-min);
+      font-weight: 600;
+    }
   `,
 })
-export class PrivacyPage {}
+export class PrivacyPage {
+  protected readonly analytics = inject(Analytics);
+}

@@ -246,6 +246,11 @@ isOneToOne: false
 "is_premium_lesson":
 { Args: { "p_lesson_id": string }; Returns: boolean
                            },
+"learning_funnel":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "attempted": number,"lab_id": string,"lab_succeeded": number,"lesson_id": string,"lesson_rank": number,"lesson_title": string,"passed": number,"path_title": string
+            }[]
+                           },
 "record_lab_attempt":
 { Args: { "p_hints_used": number,"p_lab_id": string,"p_succeeded": boolean }; Returns: {
               "completed_at": string,
