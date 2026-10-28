@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/outline.generated';
 import { AuthService } from '../../core/auth/auth.service';
@@ -10,6 +10,8 @@ const PLANS: readonly { id: Plan; label: string; price: string; note: string }[]
   { id: 'mensuel', label: 'Mensuel', price: '9,90 € par mois', note: 'Sans engagement' },
   { id: 'annuel', label: 'Annuel', price: '99 € par an', note: 'Deux mois offerts' },
 ];
+/** À garder identique à TRIAL_DAYS (supabase/functions/_shared/billing.ts). */
+const TRIAL_DAYS = 7;
 
 @Component({
   selector: 'ca-subscription-page',
@@ -23,7 +25,7 @@ const PLANS: readonly { id: Plan; label: string; price: string; note: string }[]
     @if (statut() === 'merci' && !subscriptions.active()) {
       <section class="card" role="status" aria-labelledby="merci">
         <h2 id="merci">Merci pour votre abonnement</h2>
-        <p>Le paiement est en cours de confirmation : l’accès s’ouvre dans quelques secondes.</p>
+        <p>L’abonnement est en cours de confirmation : l’accès s’ouvre dans quelques secondes.</p>
         <button type="button" class="btn btn-secondary" (click)="subscriptions.load()">
           Actualiser
         </button>
@@ -55,18 +57,57 @@ const PLANS: readonly { id: Plan; label: string; price: string; note: string }[]
         </div>
       } @else if (subscriptions.active()) {
         @let current = subscriptions.subscription();
-        <p>
-          <strong>Votre abonnement est actif.</strong>
-          @if (current?.currentPeriodEnd; as end) {
-            {{ current?.cancelAtPeriodEnd ? 'Il prendra fin le' : 'Prochain renouvellement le' }}
-            {{ end | date: 'longDate' }}.
+        @switch (current?.status) {
+          @case ('trialing') {
+            <p>
+              <strong>Votre essai gratuit est en cours.</strong>
+              @if (current?.currentPeriodEnd; as end) {
+                Il se termine le {{ end | date: 'longDate' }}.
+              }
+            </p>
+            <p>
+              @if (current?.cancelAtPeriodEnd) {
+                L’abonnement s’arrêtera à la fin de l’essai : rien ne sera prélevé.
+              } @else {
+                Sans moyen de paiement enregistré d’ici là, l’abonnement s’arrête de lui-même, sans
+                frais. Pour continuer ensuite, ajoutez-en un depuis « Gérer mon abonnement ».
+              }
+            </p>
           }
-        </p>
+          @case ('past_due') {
+            <p>
+              <strong>Le dernier paiement a été refusé.</strong> Votre accès est maintenu pendant
+              que le prélèvement est retenté : mettez à jour votre moyen de paiement depuis « Gérer
+              mon abonnement ».
+            </p>
+          }
+          @default {
+            <p>
+              <strong>Votre abonnement est actif.</strong>
+              @if (current?.currentPeriodEnd; as end) {
+                {{
+                  current?.cancelAtPeriodEnd ? 'Il prendra fin le' : 'Prochain renouvellement le'
+                }}
+                {{ end | date: 'longDate' }}.
+              }
+            </p>
+          }
+        }
         <p class="hint">Moyen de paiement, factures, changement de formule ou résiliation :</p>
         <button type="button" class="btn btn-secondary" (click)="manage()">
           {{ pending() ? 'Patientez…' : 'Gérer mon abonnement' }}
         </button>
       } @else {
+        @if (trialOffered()) {
+          <p>
+            <strong
+              >Premier abonnement : {{ trialDays }} jours d’essai gratuit, sans carte
+              bancaire.</strong
+            >
+            Sans moyen de paiement ajouté avant la fin de l’essai, l’abonnement s’arrête de lui-même
+            : rien n’est prélevé.
+          </p>
+        }
         <ul class="plans">
           @for (plan of plans; track plan.id) {
             <li class="plan">
@@ -162,6 +203,12 @@ export class SubscriptionPage {
   protected readonly subscriptions = inject(SubscriptionService);
   protected readonly plans = PLANS;
   protected readonly premiumPaths = CATALOG.paths.filter((path) => path.premium);
+  protected readonly trialDays = TRIAL_DAYS;
+  /** Jamais abonné (aucune ligne, ou client Stripe créé sans abonnement) ; Stripe tranche. */
+  protected readonly trialOffered = computed(() => {
+    const current = this.subscriptions.subscription();
+    return current === null || current.status === 'incomplete';
+  });
   protected readonly waiver = signal(false);
   protected readonly pending = signal(false);
   protected readonly message = signal('');

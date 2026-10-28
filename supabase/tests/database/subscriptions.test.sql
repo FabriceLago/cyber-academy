@@ -3,7 +3,7 @@
 -- supprime pas. Tout est annulé à la fin.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(14);
 
 update public.learning_paths set premium = true where id = 'analyste-soc-junior';
 insert into auth.users (id, email) values
@@ -85,6 +85,29 @@ select throws_ok(
   'CA409', 'Résiliez d’abord votre abonnement.',
   'un compte encore facturé ne se supprime pas'
 );
+
+-- Paiement refusé : l'accès reste ouvert pendant les relances de Stripe, puis se ferme quand il
+-- abandonne (abonnement résilié).
+reset role;
+update public.subscriptions set status = 'past_due'
+where user_id = '66666666-6666-6666-6666-666666666666';
+set local role authenticated;
+select lives_ok(
+  $$ select public.record_lab_attempt('lab-journaux', true, 0::smallint) $$,
+  'paiement refusé, l’accès reste ouvert pendant les relances'
+);
+reset role;
+update public.subscriptions set status = 'canceled'
+where user_id = '66666666-6666-6666-6666-666666666666';
+set local role authenticated;
+select throws_ok(
+  $$ select public.record_lab_attempt('lab-journaux', true, 0::smallint) $$,
+  'CA402', 'Abonnement requis.',
+  'relances abandonnées, l’abonnement résilié ferme l’accès'
+);
+reset role;
+update public.subscriptions set status = 'active'
+where user_id = '66666666-6666-6666-6666-666666666666';
 
 -- Abonnement échu, puis résilié en fin de période
 reset role;

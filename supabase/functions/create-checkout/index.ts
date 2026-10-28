@@ -1,11 +1,30 @@
 // Ouvre une page de paiement Stripe (abonnement mensuel ou annuel) pour l'utilisateur connecté.
-import { hasBilledSubscription } from '../_shared/billing.ts';
+// Premier abonnement : 7 jours d'essai gratuit, sans carte.
+import { hasBilledSubscription, trialFor } from '../_shared/billing.ts';
 import { SITE_URL, admin, json, preflight, requestUser, stripe } from '../_shared/stripe.ts';
 
 const PRICES: Record<string, string | undefined> = {
   mensuel: Deno.env.get('STRIPE_PRICE_MENSUEL'),
   annuel: Deno.env.get('STRIPE_PRICE_ANNUEL'),
 };
+
+/**
+ * Tous les abonnements déjà ouverts par cette personne, même résiliés : ceux de son client Stripe
+ * et ceux d'un client à la même adresse (compte supprimé puis recréé). Un seul essai par personne.
+ */
+async function subscriptionsOf(customer: string, email: string | undefined) {
+  const customers = new Set([customer]);
+  if (email) {
+    const { data } = await stripe.customers.list({ email, limit: 100 });
+    for (const other of data) customers.add(other.id);
+  }
+  const lists = await Promise.all(
+    [...customers].map((id) =>
+      stripe.subscriptions.list({ customer: id, status: 'all', limit: 100 }),
+    ),
+  );
+  return lists.flatMap((list) => list.data);
+}
 
 Deno.serve(async (req) => {
   const early = preflight(req);
@@ -62,12 +81,15 @@ Deno.serve(async (req) => {
     if (error) return json({ error: 'La demande a échoué : réessayez.' }, 500);
   }
 
+  const trial = trialFor(await subscriptionsOf(customer, user.email));
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer,
     client_reference_id: user.id,
     line_items: [{ price, quantity: 1 }],
-    subscription_data: { metadata: { user_id: user.id } },
+    // Essai : la carte n'est pas demandée.
+    payment_method_collection: trial ? 'if_required' : 'always',
+    subscription_data: { metadata: { user_id: user.id }, ...trial },
     allow_promotion_codes: true,
     locale: 'fr',
     success_url: `${SITE_URL}/abonnement?statut=merci`,

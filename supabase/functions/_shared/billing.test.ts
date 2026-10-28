@@ -1,7 +1,7 @@
 // Règles d'abonnement des fonctions Stripe. Lancé par `npm run test:functions` (Node, sans Deno).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { hasBilledSubscription, pickSubscription, subscriptionRow } from './billing.ts';
+import { hasBilledSubscription, pickSubscription, subscriptionRow, trialFor } from './billing.ts';
 
 const sub = (id: string, status: string, created: number, end?: number) => ({
   id,
@@ -39,6 +39,16 @@ test('un abonnement encore facturé ou à régulariser bloque un second paiement
     assert.equal(hasBilledSubscription([sub('sub_1', status, 1)]), false, status);
   }
   assert.equal(hasBilledSubscription([]), false);
+});
+
+test('essai de 7 jours sans carte au premier abonnement seulement, même après une résiliation', () => {
+  assert.deepEqual(trialFor([]), {
+    trial_period_days: 7,
+    trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },
+  });
+  for (const status of ['canceled', 'incomplete_expired', 'active', 'trialing']) {
+    assert.equal(trialFor([sub('sub_1', status, 1)]), undefined, status);
+  }
 });
 
 test('la ligne enregistrée reprend l’abonnement, avec une fin de période en date ISO', () => {
