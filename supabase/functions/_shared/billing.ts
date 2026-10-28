@@ -1,5 +1,6 @@
 // Règles d'abonnement, sans dépendance (testées avec `node --test`, utilisées par les fonctions
-// Deno) : quel abonnement Stripe d'un client fait foi, et quand refuser d'en ouvrir un second.
+// Deno) : quel abonnement Stripe d'un client fait foi, quand refuser d'en ouvrir un second, et à
+// qui offrir l'essai gratuit.
 
 /** Ce que ces règles lisent d'un abonnement Stripe (Stripe.Subscription en a la forme). */
 export interface StripeSubscriptionLike {
@@ -47,6 +48,20 @@ export function pickSubscription<T extends StripeSubscriptionLike>(subs: readonl
 
 export function hasBilledSubscription(subs: readonly StripeSubscriptionLike[]): boolean {
   return subs.some((sub) => BILLED.includes(sub.status));
+}
+
+export const TRIAL_DAYS = 7;
+
+/**
+ * Essai gratuit pour qui n'a jamais été abonné (`previous` : tous ses abonnements, même résiliés),
+ * sans carte : sans moyen de paiement ajouté avant la fin, Stripe résilie, rien n'est prélevé.
+ */
+export function trialFor(previous: readonly StripeSubscriptionLike[]) {
+  if (previous.length > 0) return undefined;
+  return {
+    trial_period_days: TRIAL_DAYS,
+    trial_settings: { end_behavior: { missing_payment_method: 'cancel' as const } },
+  };
 }
 
 /** Ligne de la table subscriptions. Selon la version de l'API, la fin de période est sur l'article. */

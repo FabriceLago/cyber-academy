@@ -153,12 +153,23 @@ enregistrement (`record_quiz_attempt`, `record_lab_attempt`), pas seulement l'af
    `https://<projet>.supabase.co/functions/v1/stripe-webhook`, événements
    `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
    Copiez son secret de signature, puis `npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`.
-5. **Portail client Stripe** (Settings → Billing → Customer portal) : activez la résiliation et le
-   changement de formule ; c'est la page ouverte par « Gérer mon abonnement ».
-6. **Essai** avec la carte de test `4242 4242 4242 4242` : après le paiement, la page Abonnement
-   indique « Votre abonnement est actif » et la spécialisation s'ouvre.
-7. **Avant de vendre** : conditions générales de vente (CGV), mentions légales complètes, puis
-   clés Stripe en mode réel (`sk_live_…`, nouveaux prix, nouveau webhook).
+5. **Portail client Stripe** (Settings → Billing → Customer portal) : activez la résiliation, le
+   changement de formule et la mise à jour du moyen de paiement (sans elle, un essai sans carte ne
+   peut pas continuer) ; c'est la page ouverte par « Gérer mon abonnement ».
+6. **Paiements refusés** (Settings → Billing → Revenue recovery) : relances automatiques (par
+   exemple pendant deux semaines), puis résiliation de l'abonnement si toutes échouent ; activez
+   les e-mails envoyés au client quand un paiement échoue. Pendant les relances (statut
+   `past_due`), l'accès est maintenu et la page Abonnement demande de mettre à jour le moyen de
+   paiement ; une fois l'abonnement résilié, l'accès se ferme.
+7. **Test** : le premier abonnement d'un compte commence par 7 jours d'essai gratuit, sans carte
+   (`TRIAL_DAYS` dans `supabase/functions/_shared/billing.ts`, et dans la page Abonnement) ; la
+   page indique « Votre essai gratuit est en cours » et la spécialisation s'ouvre. Un compte (ou
+   une adresse) déjà abonné une fois paie directement : carte de test `4242 4242 4242 4242`. Fin
+   d'essai et paiement refusé se simulent avec les horloges de test de Stripe (Test clocks) et la
+   carte `4000 0000 0000 0341`, acceptée à l'enregistrement puis refusée au prélèvement.
+8. **Avant de vendre** : conditions générales de vente (CGV, qui décrivent l'essai sans carte et
+   le maintien de l'accès pendant les relances), mentions légales complètes, puis clés Stripe en
+   mode réel (`sk_live_…`, nouveaux prix, nouveau webhook).
 
 Contrôles locaux : `supabase/tests/database/subscriptions.test.sql` (accès, enregistrements,
 suppression du compte) et les tests de parcours de `e2e/specialization.spec.ts`.

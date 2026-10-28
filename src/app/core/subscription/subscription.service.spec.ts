@@ -13,15 +13,16 @@ const sub = (status: string, currentPeriodEnd: string | null) => ({
 });
 
 describe('isActive (mêmes règles que has_active_subscription côté serveur)', () => {
-  it('ouvre l’accès pendant une période payée ou d’essai', () => {
+  it('ouvre l’accès pendant une période payée, d’essai, ou de relance d’un paiement refusé', () => {
     expect(isActive(sub('active', '2026-11-20T12:00:00Z'), NOW)).toBe(true);
     expect(isActive(sub('trialing', '2026-10-27T12:00:00Z'), NOW)).toBe(true);
+    expect(isActive(sub('past_due', '2026-11-20T12:00:00Z'), NOW)).toBe(true);
   });
 
-  it('ferme l’accès sans abonnement, après la période payée ou si le paiement a échoué', () => {
+  it('ferme l’accès sans abonnement, après la période payée ou quand les relances ont échoué', () => {
     expect(isActive(null, NOW)).toBe(false);
     expect(isActive(sub('active', '2026-10-19T12:00:00Z'), NOW)).toBe(false);
-    for (const status of ['incomplete', 'past_due', 'unpaid', 'canceled', 'paused']) {
+    for (const status of ['incomplete', 'unpaid', 'canceled', 'paused']) {
       expect(isActive(sub(status, '2026-11-20T12:00:00Z'), NOW), status).toBe(false);
     }
   });

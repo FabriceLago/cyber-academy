@@ -600,7 +600,8 @@ automatiquement.
   client à chaque événement et enregistre celui qui fait foi (`_shared/billing.ts` : actif avant
   résilié, puis le plus récent). Doublons, désordre et événements tardifs d'un ancien abonnement
   sont sans effet.
-- **Accès** : `has_active_subscription` (statut `active` ou `trialing`, période non échue). Les
+- **Accès** : `has_active_subscription` (statut `active`, `trialing`, ou `past_due` : paiement
+  refusé que Stripe retente encore, migration `impayes` ; période non échue). Les
   fonctions d'enregistrement refusent une tentative premium sans abonnement (code `CA402`) ;
   l'application affiche à la place l'offre (`ca-paywall`) sur les pages de leçon, de quiz et de
   laboratoire. `delete_my_account` refuse un compte encore facturé (`CA409`).
@@ -608,7 +609,9 @@ automatiquement.
   l'adresse de la requête) et `customer-portal` (gestion, résiliation). Pas de double paiement :
   `create-checkout` interroge Stripe (pas la table, que le webhook peut ne pas avoir encore mise à
   jour), refuse si un abonnement est encore facturé et ferme les pages de paiement restées
-  ouvertes ; le client Stripe est créé avec une clé d'idempotence. Règles testées par
+  ouvertes ; le client Stripe est créé avec une clé d'idempotence. Essai : 7 jours sans carte
+  (`trialFor`) pour qui n'a jamais eu d'abonnement chez Stripe, ni sur son client ni sur un client
+  à la même adresse ; sans moyen de paiement ajouté avant la fin, Stripe résilie. Règles testées par
   `npm run test:functions` (Node, inclus dans `verify`). La case de renonciation au
   droit de rétractation (contenu numérique fourni immédiatement) conditionne le choix d'une formule.
 - **Limite connue** : comme les quiz, le texte des leçons est dans le JavaScript du site ; un

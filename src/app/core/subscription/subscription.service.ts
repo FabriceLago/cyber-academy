@@ -13,11 +13,14 @@ export interface Subscription {
 
 export type Plan = 'mensuel' | 'annuel';
 
+/** Ouvrent l'accès : payé, en essai, ou paiement refusé que Stripe retente encore (past_due). */
+const ACCESS = ['active', 'trialing', 'past_due'];
+
 /** Mêmes règles que has_active_subscription côté serveur. */
 export function isActive(subscription: Subscription | null, now: Date): boolean {
   return (
     subscription !== null &&
-    (subscription.status === 'active' || subscription.status === 'trialing') &&
+    ACCESS.includes(subscription.status) &&
     (subscription.currentPeriodEnd === null || new Date(subscription.currentPeriodEnd) > now)
   );
 }
