@@ -24,8 +24,8 @@ select results_eq(
   $$ select * from pg_temp.callable('authenticated') $$,
   $$ values ('create_group'), ('delete_my_account'), ('group_progress'), ('is_admin'),
        ('join_group'), ('owns_group'), ('record_lab_attempt'), ('record_quiz_attempt'),
-       ('regenerate_join_code'), ('report_content') $$,
-  'avec un compte : les enregistrements, le signalement, les groupes, la suppression du compte et is_admin'
+       ('regenerate_join_code'), ('report_client_error'), ('report_content') $$,
+  'avec un compte : les enregistrements, les signalements, les groupes, la suppression du compte et is_admin'
 );
 
 insert into auth.users (id, email, raw_user_meta_data) values

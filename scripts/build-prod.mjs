@@ -60,17 +60,34 @@ if (process.env.MATOMO_URL) {
   fail('MATOMO_SITE_ID est fourni sans MATOMO_URL : la mesure d’audience serait ignorée.');
 }
 const matomoOrigin = matomoUrl ? new URL(matomoUrl).origin : '';
-/** Politique de sécurité du contenu : autorise aussi l'envoi des mesures à Matomo. */
-function withMatomo(policy, file) {
-  if (!matomoOrigin) return policy;
-  for (const directive of [`connect-src 'self' ${origin}`, "img-src 'self'"]) {
+
+// Captcha, facultatif : Cloudflare Turnstile (voir docs/deploiement.md). La clé de site est
+// publique ; la clé secrète (plus longue) va dans Supabase, jamais ici.
+const turnstileSiteKey = process.env.TURNSTILE_SITE_KEY ?? '';
+if (turnstileSiteKey && !/^[0-3]x[0-9A-Za-z_-]{18,28}$/.test(turnstileSiteKey)) {
+  fail('TURNSTILE_SITE_KEY doit être la clé de site Turnstile (0x…), jamais la clé secrète.');
+}
+
+/** Politique de sécurité du contenu : Matomo (mesures) et Turnstile (cadre du captcha), s'il y a lieu. */
+function withServices(policy, file) {
+  const changes = [
+    ...(matomoOrigin
+      ? [
+          [`connect-src 'self' ${origin}`, `connect-src 'self' ${origin} ${matomoOrigin}`],
+          ["img-src 'self'", `img-src 'self' ${matomoOrigin}`],
+        ]
+      : []),
+    ...(turnstileSiteKey
+      ? [["frame-src 'none'", 'frame-src https://challenges.cloudflare.com']]
+      : []),
+  ];
+  for (const [directive, replacement] of changes) {
     if (!policy.includes(directive)) {
-      fail(`${file} : « ${directive} » introuvable, Matomo serait bloqué.`);
+      fail(`${file} : « ${directive} » introuvable, le service serait bloqué.`);
     }
+    policy = policy.replace(directive, replacement);
   }
-  return policy
-    .replace(`connect-src 'self' ${origin}`, `connect-src 'self' ${origin} ${matomoOrigin}`)
-    .replace("img-src 'self'", `img-src 'self' ${matomoOrigin}`);
+  return policy;
 }
 
 const define = (name, value) => ['--define', `${name}=${JSON.stringify(value)}`];
@@ -85,6 +102,7 @@ execFileSync(
     ...define('CA_SUPABASE_PUBLISHABLE_KEY', key),
     ...define('CA_MATOMO_URL', matomoUrl),
     ...define('CA_MATOMO_SITE_ID', matomoUrl ? matomoSiteId : ''),
+    ...define('CA_TURNSTILE_SITE_KEY', turnstileSiteKey),
   ],
   { stdio: 'inherit' },
 );
@@ -95,7 +113,7 @@ const html = readFileSync(index, 'utf8');
 if (!html.includes(`connect-src 'self' ${LOCAL_URL}`)) {
   fail('index.html : politique des connexions (connect-src) introuvable.');
 }
-writeFileSync(index, withMatomo(html.replaceAll(LOCAL_URL, origin), 'index.html'));
+writeFileSync(index, withServices(html.replaceAll(LOCAL_URL, origin), 'index.html'));
 // Le service worker vérifie l'empreinte de chaque fichier : index.html vient de changer, son
 // manifeste (ngsw.json) est régénéré, sinon le mode hors ligne refuserait cette version.
 execFileSync(process.execPath, [
@@ -109,7 +127,7 @@ execFileSync(process.execPath, [
 execFileSync(process.execPath, ['scripts/prerender-glossary.mjs', OUT], { stdio: 'inherit' });
 writeFileSync(
   join(OUT, '.htaccess'),
-  withMatomo(
+  withServices(
     readFileSync('deploy/hostinger.htaccess', 'utf8').replaceAll('__SUPABASE_ORIGIN__', origin),
     '.htaccess',
   ) +

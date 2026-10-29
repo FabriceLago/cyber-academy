@@ -228,3 +228,50 @@ where join_code = 'ABCDEFGHJK';  -- code donné par le responsable
 Le responsable et tous les membres ont alors accès au Premium jusqu'à cette date ; la page
 Abonnement l'indique. Pour l'arrêter plus tôt : `set premium_until = null`. Les conditions de
 cette offre (prix, durée, nombre de membres) sont à écrire dans les CGV ou dans le devis.
+
+## 12. Surveillance : erreurs, disponibilité, captcha
+
+**Erreurs du site** : les erreurs JavaScript des apprenants connectés arrivent dans la table
+`client_errors` (migration `20261030100000_erreurs_client.sql`), 20 par heure et par compte au
+plus, effacées au bout de 90 jours. Pour les lire (SQL Editor) :
+
+```sql
+select message, path, count(*) as fois, max(created_at) as derniere
+from public.client_errors
+group by message, path
+order by derniere desc;
+```
+
+Sans compte, rien n'est envoyé (le navigateur n'appelle aucune fonction sans session) : les
+erreurs des visiteurs restent dans la console de leur navigateur.
+
+**Disponibilité** :
+
+1. Service externe, pour être alerté en quelques minutes : compte gratuit sur UptimeRobot ou
+   Better Stack, moniteur HTTPS sur `https://<votre-domaine>/` toutes les 5 minutes avec le
+   mot-clé « Cyber Academy » (une page d'erreur de l'hébergeur ne passe pas), alerte par e-mail.
+   Pour Supabase : s'abonner aux alertes de status.supabase.com.
+2. Workflow GitHub « Disponibilité » (`.github/workflows/disponibilite.yml`), filet dans le
+   dépôt : définir les variables du dépôt (Settings → Secrets and variables → Actions →
+   Variables) `SITE_URL`, `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` (clé publique). Il vérifie
+   le site et Supabase toutes les 30 minutes (horaires approximatifs chez GitHub) ; en cas
+   d'échec, GitHub envoie un e-mail à la personne qui a modifié son planning en dernier. GitHub
+   suspend les workflows planifiés d'un dépôt public sans activité depuis 60 jours : le
+   réactiver depuis l'onglet Actions. Essai : Actions → Disponibilité → Run workflow, ou
+   `node scripts/check-availability.mjs` avec les trois variables.
+
+**Captcha (Cloudflare Turnstile)**, dans cet ordre :
+
+1. Cloudflare (compte gratuit) → Turnstile → Add widget : votre domaine, mode « Managed ».
+   Notez la clé de site et la clé secrète.
+2. Reconstruire et publier le site avec la clé de site : `$env:TURNSTILE_SITE_KEY = "0x…"`, puis
+   `npm run build:prod` (le script refuse une clé secrète et ajoute
+   `https://challenges.cloudflare.com` à `frame-src`).
+3. Seulement ensuite : Supabase → Authentication → Attack Protection → Enable Captcha
+   protection → Turnstile, avec la clé secrète. Dans l'autre ordre, plus personne ne pourrait se
+   connecter le temps de publier le site.
+
+Le captcha est alors demandé à l'inscription, à la connexion, au renvoi du message de
+confirmation et pour le mot de passe oublié ; la politique de confidentialité le mentionne dès
+que la clé est fournie. Clés de test de Cloudflare (validation toujours réussie) pour un essai :
+`1x00000000000000000000AA` (site) et `1x0000000000000000000000000000000AA` (secrète).

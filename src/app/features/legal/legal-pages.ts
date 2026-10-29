@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Analytics } from '../../core/analytics/analytics';
+import { TURNSTILE_SITE_KEY } from '../../shared/captcha/captcha';
 
 // Les informations propres à l'éditeur sont marquées A_COMPLETER : `npm run build:prod` refuse de
 // construire le site tant qu'il en reste une (une page légale incomplète ne doit pas partir).
@@ -112,6 +113,11 @@ export class LegalNoticePage {}
           depuis la page <a routerLink="/groupes">Groupes</a>. Pour un groupe que vous animez : son
           nom et son code.
         </li>
+        <li>
+          Erreurs techniques rencontrées sur le site (message technique, page sans ses paramètres,
+          navigateur) : pour corriger le site. Elles ne sont lues que par l’équipe et sont effacées
+          au bout de 90 jours.
+        </li>
       </ul>
       <p>
         Base légale : l’exécution du service que vous demandez en créant un compte (RGPD, article 6,
@@ -130,6 +136,20 @@ export class LegalNoticePage {}
         dix ans, comme l’exige la loi pour les pièces comptables.
       </p>
     </section>
+    @if (captcha) {
+      <section class="card prose" aria-labelledby="anti-robot">
+        <h2 id="anti-robot">Protection contre les robots</h2>
+        <p>
+          Les formulaires de connexion, d’inscription et de mot de passe oublié vérifient qu’ils
+          sont remplis par une personne, avec Cloudflare Turnstile (Cloudflare, Inc.). Cloudflare
+          reçoit pour cela votre adresse IP et des informations techniques sur votre navigateur,
+          sans cookie de suivi ni publicité ; le transfert vers les États-Unis est encadré par le
+          cadre de protection des données UE–États-Unis. Base légale : l’intérêt légitime à protéger
+          les comptes contre les créations et connexions automatisées (RGPD, article 6, paragraphe
+          1, f).
+        </p>
+      </section>
+    }
     @if (analytics.configured) {
       <section class="card prose" aria-labelledby="mesure-audience">
         <h2 id="mesure-audience">Mesure d’audience</h2>
@@ -194,4 +214,6 @@ export class LegalNoticePage {}
 })
 export class PrivacyPage {
   protected readonly analytics = inject(Analytics);
+  /** Captcha configuré (clé Turnstile au build) : la section qui le décrit s'affiche. */
+  protected readonly captcha = inject(TURNSTILE_SITE_KEY) !== '';
 }

@@ -10,4 +10,6 @@ export const environment = {
   /** Mesure d'audience (Matomo) : vide en local, donc aucune mesure. */
   matomoUrl: '',
   matomoSiteId: '',
+  /** Captcha (Cloudflare Turnstile) : vide en local, donc aucun captcha. */
+  turnstileSiteKey: '',
 };

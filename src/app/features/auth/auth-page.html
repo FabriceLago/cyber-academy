@@ -26,6 +26,7 @@
       Rien reçu après quelques minutes ? Regardez dans les courriers indésirables, ou demandez un
       nouveau message.
     </p>
+    <ca-captcha />
     <button type="button" class="btn btn-secondary" (click)="resend()">
       {{ pending() ? 'Patientez…' : 'Renvoyer le message' }}
     </button>
@@ -130,6 +131,7 @@
       }
     </div>
 
+    <ca-captcha />
     <button type="submit" class="btn btn-primary">
       {{ pending() ? 'Patientez…' : signup() ? 'Créer mon compte' : 'Se connecter' }}
     </button>

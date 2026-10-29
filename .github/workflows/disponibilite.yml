@@ -1,0 +1,33 @@
+# Disponibilité du site en ligne : toutes les 30 minutes, le site et Supabase doivent répondre ;
+# sinon le workflow échoue et GitHub envoie un e-mail. Filet complémentaire d'un service de
+# surveillance externe, plus rapide à alerter (voir docs/deploiement.md, section 12).
+# Inactif tant que la variable du dépôt SITE_URL n'est pas définie (Settings → Secrets and
+# variables → Actions → Variables : SITE_URL, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY).
+name: Disponibilité
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    name: Site et Supabase en ligne
+    if: vars.SITE_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Action épinglée par empreinte de commit, comme dans ci.yml.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/check-availability.mjs
+          sparse-checkout-cone-mode: false
+      - run: node scripts/check-availability.mjs
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}

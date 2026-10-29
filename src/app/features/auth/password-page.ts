@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { CAPTCHA_PENDING, Captcha } from '../../shared/captcha/captcha';
 import { validateAuthForm } from './auth-page';
 
 /**
@@ -19,7 +20,7 @@ import { validateAuthForm } from './auth-page';
  */
 @Component({
   selector: 'ca-password-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Captcha],
   styleUrl: './auth-page.css',
   template: `
     <header class="page-header">
@@ -109,6 +110,9 @@ import { validateAuthForm } from './auth-page';
             </label>
           }
         </div>
+        @if (request()) {
+          <ca-captcha />
+        }
         <button type="submit" class="btn btn-primary">
           {{ pending() ? 'Patientez…' : request() ? 'Recevoir le lien' : 'Enregistrer' }}
         </button>
@@ -126,6 +130,7 @@ export class PasswordPage {
   protected readonly auth = inject(AuthService);
   private readonly injector = inject(Injector);
   private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
+  private readonly captcha = viewChild(Captcha);
 
   protected readonly request = computed(() => this.mode() === 'demande');
   protected readonly value = signal('');
@@ -143,12 +148,15 @@ export class PasswordPage {
       : validateAuthForm({ name: 'x', email: 'a@b.fr', password: this.value() }, true);
     const invalid = errors.email ?? errors['mot-de-passe'];
     if (invalid) return this.fail(invalid);
+    const captchaToken = this.captcha()?.take();
+    if (captchaToken === null) return this.fail(CAPTCHA_PENDING);
 
     this.pending.set(true);
     const result = this.request()
-      ? await this.auth.requestPasswordReset(this.value().trim())
+      ? await this.auth.requestPasswordReset(this.value().trim(), captchaToken)
       : await this.auth.updatePassword(this.value());
     this.pending.set(false);
+    this.captcha()?.reset();
     if (!result.ok) return this.fail(result.message);
     this.error.set('');
     this.done.set(true);

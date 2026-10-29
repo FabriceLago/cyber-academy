@@ -65,7 +65,14 @@ export class AuthService {
     });
   }
 
-  async signUp(email: string, password: string, displayName: string): Promise<AuthResult> {
+  // captchaToken : jeton Turnstile (composant ca-captcha), exigé par Supabase quand le captcha y
+  // est activé, pour l'inscription, la connexion, le renvoi du message et le mot de passe oublié.
+  async signUp(
+    email: string,
+    password: string,
+    displayName: string,
+    captchaToken?: string,
+  ): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -74,6 +81,7 @@ export class AuthService {
         options: {
           data: { display_name: displayName },
           emailRedirectTo: `${this.document.location.origin}/profil`,
+          captchaToken,
         },
       });
       // Adresse déjà inscrite : même réponse que pour une nouvelle, pour ne pas révéler qui a un
@@ -87,9 +95,13 @@ export class AuthService {
     });
   }
 
-  async signIn(email: string, password: string): Promise<AuthResult> {
+  async signIn(email: string, password: string, captchaToken?: string): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken },
+      });
       if (!error) return OK;
       const message = authMessage(error);
       return error.code === 'email_not_confirmed'
@@ -99,12 +111,12 @@ export class AuthService {
   }
 
   /** Renvoie le message de confirmation d'inscription (perdu, ou lien expiré). */
-  async resendConfirmation(email: string): Promise<AuthResult> {
+  async resendConfirmation(email: string, captchaToken?: string): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
-        options: { emailRedirectTo: `${this.document.location.origin}/profil` },
+        options: { emailRedirectTo: `${this.document.location.origin}/profil`, captchaToken },
       });
       return error && isTransient(error) ? { ok: false, message: authMessage(error) } : OK;
     });
@@ -114,10 +126,11 @@ export class AuthService {
    * Envoie un lien de réinitialisation. Même réponse que l'adresse ait un compte ou non. Flux
    * PKCE : le lien n'est accepté que par ce navigateur, comme celui de l'inscription.
    */
-  async requestPasswordReset(email: string): Promise<AuthResult> {
+  async requestPasswordReset(email: string, captchaToken?: string): Promise<AuthResult> {
     return this.attempt(async (supabase) => {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${this.document.location.origin}/nouveau-mot-de-passe`,
+        captchaToken,
       });
       return error && isTransient(error) ? { ok: false, message: authMessage(error) } : OK;
     });
