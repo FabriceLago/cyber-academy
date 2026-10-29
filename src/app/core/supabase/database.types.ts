@@ -57,6 +57,40 @@ isOneToOne: false
       referencedColumns: ["lesson_id","question_id"]
     }
                   ]
+                },"group_members": {
+                  Row: {
+                    "group_id": string,"joined_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "group_id": string,"joined_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "group_id"?: string,"joined_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_members_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"groups": {
+                  Row: {
+                    "created_at": string,"id": string,"join_code": string,"name": string,"owner_id": string,"premium_until": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"join_code": string,"name": string,"owner_id": string,"premium_until"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"join_code"?: string,"name"?: string,"owner_id"?: string,"premium_until"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"lab_attempts": {
                   Row: {
                     "completed_at": string,"created_at": string,"hints_used": number,"id": number,"lab_id": string,"succeeded": boolean,"user_id": string
@@ -228,8 +262,28 @@ isOneToOne: false
             "check_attempt_rate":
 { Args: { "recent": number }; Returns: undefined
                            },
+"create_group":
+{ Args: { "p_name": string }; Returns: {
+              "created_at": string,
+"id": string,
+"join_code": string,
+"name": string,
+"owner_id": string,
+"premium_until": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "groups"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"group_progress":
+{ Args: { "p_group": string }; Returns: {
+              "display_name": string,"joined_at": string,"labs_succeeded": number,"last_activity": string,"lessons_completed": number,"user_id": string
+            }[]
                            },
 "has_active_subscription":
 { Args: { "p_user": string }; Returns: boolean
@@ -246,10 +300,28 @@ isOneToOne: false
 "is_premium_lesson":
 { Args: { "p_lesson_id": string }; Returns: boolean
                            },
+"join_group":
+{ Args: { "p_accepted": boolean,"p_code": string }; Returns: {
+              "created_at": string,
+"id": string,
+"join_code": string,
+"name": string,
+"owner_id": string,
+"premium_until": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "groups"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "learning_funnel":
 { Args: Record<PropertyKey, never>; Returns: {
               "attempted": number,"lab_id": string,"lab_succeeded": number,"lesson_id": string,"lesson_rank": number,"lesson_title": string,"passed": number,"path_title": string
             }[]
+                           },
+"new_join_code":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "record_lab_attempt":
 { Args: { "p_hints_used": number,"p_lab_id": string,"p_succeeded": boolean }; Returns: {
@@ -283,6 +355,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"regenerate_join_code":
+{ Args: { "p_group": string }; Returns: string
+                           },
 "report_content":
 { Args: { "p_lab_id"?: string,"p_lesson_id"?: string,"p_message": string,"p_question_id"?: string }; Returns: undefined
                            }

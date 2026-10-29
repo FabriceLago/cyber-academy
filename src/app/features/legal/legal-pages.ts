@@ -103,6 +103,15 @@ export class LegalNoticePage {}
           Signalements d’erreurs (message, contenu concerné, date) : pour corriger les leçons, les
           questions et les laboratoires. Ils ne sont lus que par l’équipe.
         </li>
+        <li>
+          Groupes (associations, écoles), si vous en rejoignez un avec son code : son responsable
+          voit votre prénom ou pseudonyme, la date à laquelle vous l’avez rejoint, le nombre de
+          leçons validées et de laboratoires réussis, et la date de votre dernière activité, jamais
+          votre adresse e-mail ni vos réponses. Base légale : votre consentement, donné en
+          rejoignant le groupe (réservé aux 15 ans et plus) ; vous le retirez en quittant le groupe
+          depuis la page <a routerLink="/groupes">Groupes</a>. Pour un groupe que vous animez : son
+          nom et son code.
+        </li>
       </ul>
       <p>
         Base légale : l’exécution du service que vous demandez en créant un compte (RGPD, article 6,

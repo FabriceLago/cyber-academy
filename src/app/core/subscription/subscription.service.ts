@@ -1,5 +1,6 @@
 import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import { GroupsService } from '../groups/groups.service';
 import { PathOutline } from '../models/content.model';
 import { SUPABASE } from '../supabase/supabase';
 
@@ -36,7 +37,12 @@ export class SubscriptionService {
   private readonly document = inject(DOCUMENT);
 
   readonly subscription = signal<Subscription | null>(null);
-  readonly active = computed(() => isActive(this.subscription(), new Date()));
+  /** Abonnement personnel (payé, en essai ou en relance). */
+  readonly ownActive = computed(() => isActive(this.subscription(), new Date()));
+  /** Groupe dont l'administrateur a accordé le Premium (offre sur devis), s'il y en a un. */
+  readonly groupPremium = inject(GroupsService).premium;
+  /** Accès Premium, par l'abonnement ou par un groupe : comme has_active_subscription. */
+  readonly active = computed(() => this.ownActive() || this.groupPremium() !== null);
 
   constructor() {
     effect(() => {

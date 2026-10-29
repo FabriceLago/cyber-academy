@@ -173,6 +173,7 @@ const MAX_BACKUP_BYTES = 1_000_000;
             Changer de mot de passe
           </a>
           <a class="btn btn-secondary" routerLink="/abonnement">Mon abonnement</a>
+          <a class="btn btn-secondary" routerLink="/groupes">Groupes (associations, écoles)</a>
         </div>
 
         <h3>Supprimer le compte</h3>
