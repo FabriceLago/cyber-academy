@@ -208,3 +208,23 @@ totaux ; la fonction n'est pas appelable depuis le site.
 Le réglage relève de l'éditeur : la CNIL ne publie plus de liste d'outils exemptés, il faut
 documenter que la configuration respecte ses conditions (page « Cookies : solutions pour les
 outils de mesure d'audience » sur cnil.fr).
+
+## 11. Groupes : associations et écoles
+
+Tout compte peut créer un groupe depuis la page **Groupes** (lien dans le profil) et en donner le
+code à ses membres ; ils le rejoignent en acceptant que le responsable voie leur progression
+(15 ans et plus). Rien à configurer, sauf la migration `20261029100000_groupes.sql`, appliquée avec
+les autres.
+
+**Premium pour tout un groupe (offre sur devis)** : après accord et paiement (devis et facture
+établis hors du site), demandez au responsable le code de son groupe, puis, dans le tableau de
+bord Supabase, SQL Editor :
+
+```sql
+update public.groups set premium_until = '2027-06-30'
+where join_code = 'ABCDEFGHJK';  -- code donné par le responsable
+```
+
+Le responsable et tous les membres ont alors accès au Premium jusqu'à cette date ; la page
+Abonnement l'indique. Pour l'arrêter plus tôt : `set premium_until = null`. Les conditions de
+cette offre (prix, durée, nombre de membres) sont à écrire dans les CGV ou dans le devis.

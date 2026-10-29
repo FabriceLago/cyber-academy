@@ -45,6 +45,10 @@ const TRIAL_DAYS = 7;
         <li>Votre progression vérifiée et enregistrée sur votre compte</li>
       </ul>
       <p class="hint">Le parcours Découverte reste gratuit, avec ou sans compte.</p>
+      <p class="hint">
+        Associations et écoles : Premium pour tout un groupe, sur devis (voir la page
+        <a routerLink="/groupes">Groupes</a>).
+      </p>
     </section>
 
     <section class="card" aria-labelledby="formules">
@@ -55,7 +59,7 @@ const TRIAL_DAYS = 7;
           <a class="btn btn-primary" routerLink="/inscription">Créer un compte</a>
           <a class="btn btn-secondary" routerLink="/connexion">Se connecter</a>
         </div>
-      } @else if (subscriptions.active()) {
+      } @else if (subscriptions.ownActive()) {
         @let current = subscriptions.subscription();
         @switch (current?.status) {
           @case ('trialing') {
@@ -97,6 +101,11 @@ const TRIAL_DAYS = 7;
         <button type="button" class="btn btn-secondary" (click)="manage()">
           {{ pending() ? 'Patientez…' : 'Gérer mon abonnement' }}
         </button>
+      } @else if (subscriptions.groupPremium(); as group) {
+        <p>
+          <strong>Accès Premium offert par votre groupe « {{ group.name }} »</strong>, jusqu’au
+          {{ group.premiumUntil | date: 'longDate' }}.
+        </p>
       } @else {
         @if (trialOffered()) {
           <p>

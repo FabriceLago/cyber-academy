@@ -618,3 +618,24 @@ automatiquement.
   visiteur technique peut le lire sans abonnement. L'abonnement protège la progression, les
   laboratoires enregistrés et l'accès dans l'interface, pas le texte. Si besoin : servir le
   contenu premium depuis la base, derrière une politique RLS.
+
+## 9. Groupes (associations et écoles)
+
+- **Principe** : tout compte peut créer jusqu'à dix groupes et en devient le responsable. Un
+  membre rejoint avec le code du groupe (`/groupes?code=…`), en certifiant avoir 15 ans ou plus
+  et en acceptant que le responsable voie sa progression ; il quitte quand il veut. Moins de
+  15 ans : non ouvert (l'accord des parents serait nécessaire).
+- **Données** (migration `groupes`) : `groups` (nom, code de 10 signes tiré par pgcrypto,
+  `premium_until`) et `group_members` (date de l'accord), 200 membres au plus par groupe. Lecture
+  par la RLS : ses groupes et ses adhésions, celles des groupes qu'on anime ; `owns_group` (security
+  definer) évite que les politiques des deux tables se rappellent l'une l'autre. Écritures :
+  `create_group`, `join_group`, `regenerate_join_code` ; quitter, retirer un membre et supprimer
+  un groupe passent par la RLS.
+- **Suivi** : `group_progress`, réservée au responsable, renvoie pseudonyme, date d'adhésion,
+  leçons validées (même règle que l'application : quiz réussi et, s'il y en a un, laboratoire
+  réussi), laboratoires réussis et dernière activité ; jamais l'adresse e-mail ni les réponses.
+- **Premium sur devis** : l'administrateur renseigne `premium_until` (voir
+  `docs/deploiement.md`, section 11) ; `has_active_subscription` ouvre alors l'accès au
+  responsable et aux membres, et `SubscriptionService.active` en tient compte.
+- **Interface** : `core/groups/groups.service.ts`, pages `/groupes` (rejoindre, quitter, créer)
+  et `/groupes/:groupId` (code, lien, membres, retrait, suppression), lien depuis le profil.

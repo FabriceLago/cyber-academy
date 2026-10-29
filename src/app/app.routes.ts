@@ -123,6 +123,17 @@ export const routes: Routes = [
       import('./features/subscription/subscription-page').then((m) => m.SubscriptionPage),
   },
   {
+    // Associations et écoles, hors du menu principal (lien depuis le profil) ; ?code=… préremplit.
+    path: 'groupes',
+    title: 'Groupes',
+    loadComponent: () => import('./features/groups/groups-page').then((m) => m.GroupsPage),
+  },
+  {
+    path: 'groupes/:groupId',
+    title: 'Suivi du groupe',
+    loadComponent: () => import('./features/groups/group-page').then((m) => m.GroupPage),
+  },
+  {
     path: 'mentions-legales',
     title: 'Mentions légales',
     loadComponent: () => import('./features/legal/legal-pages').then((m) => m.LegalNoticePage),

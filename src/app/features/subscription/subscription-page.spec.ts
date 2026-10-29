@@ -11,9 +11,14 @@ import { SubscriptionPage } from './subscription-page';
 
 const IN_A_WEEK = new Date(Date.now() + 7 * 86_400_000).toISOString();
 
-/** Page Abonnement d'un compte connecté, avec cet abonnement. */
-function render(current: Subscription | null): HTMLElement {
+/** Page Abonnement d'un compte connecté, avec cet abonnement (et ce groupe Premium). */
+function render(
+  current: Subscription | null,
+  group: { name: string; premiumUntil: string } | null = null,
+): HTMLElement {
   const subscription = signal(current);
+  const ownActive = computed(() => isActive(subscription(), new Date()));
+  const groupPremium = signal(group);
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -22,7 +27,9 @@ function render(current: Subscription | null): HTMLElement {
         provide: SubscriptionService,
         useValue: {
           subscription,
-          active: computed(() => isActive(subscription(), new Date())),
+          ownActive,
+          groupPremium,
+          active: computed(() => ownActive() || groupPremium() !== null),
           load: vi.fn(),
         },
       },
@@ -68,6 +75,13 @@ describe('SubscriptionPage', () => {
   it('essai résilié : rien ne sera prélevé', () => {
     const page = render(sub('trialing', true));
     expect(page.textContent).toContain('rien ne sera prélevé');
+  });
+
+  it('Premium offert par un groupe : le dit, sans formule à choisir ni abonnement à gérer', () => {
+    const page = render(null, { name: 'Club cyber', premiumUntil: IN_A_WEEK });
+    expect(page.textContent).toContain('Accès Premium offert par votre groupe « Club cyber »');
+    expect(choices(page)).toHaveLength(0);
+    expect(page.textContent).not.toContain('Gérer mon abonnement');
   });
 
   it('paiement refusé : l’accès est maintenu et le moyen de paiement à mettre à jour', () => {
