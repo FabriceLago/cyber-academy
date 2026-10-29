@@ -639,3 +639,23 @@ automatiquement.
   responsable et aux membres, et `SubscriptionService.active` en tient compte.
 - **Interface** : `core/groups/groups.service.ts`, pages `/groupes` (rejoindre, quitter, créer)
   et `/groupes/:groupId` (code, lien, membres, retrait, suppression), lien depuis le profil.
+
+## 10. Surveillance et protection contre les robots
+
+- **Erreurs** : `ReportingErrorHandler` (`core/errors`) remplace l'`ErrorHandler` d'Angular :
+  l'erreur s'affiche toujours dans la console, et celle d'un apprenant connecté part à
+  `report_client_error` (migration `erreurs_client`) : message, pile, chemin sans paramètres,
+  navigateur ; cinq erreurs différentes au plus par page, coupures réseau ignorées. Côté serveur :
+  20 par heure et par compte (au-delà, ignorées sans erreur), effacement après 90 jours, table
+  sans aucun droit pour le navigateur. Sans compte, rien n'est envoyé : `anon` n'appelle aucune
+  fonction.
+- **Disponibilité** : `scripts/check-availability.mjs` (le site répond avec son nom, et
+  `/auth/v1/health` de Supabase), lancé toutes les 30 minutes par le workflow
+  `disponibilite.yml`, inactif sans la variable `SITE_URL` ; un service externe donne l'alerte
+  plus vite (`docs/deploiement.md`, section 12).
+- **Captcha** : Cloudflare Turnstile, natif dans Supabase Auth. Composant `ca-captcha`
+  (`shared/captcha`) dans les formulaires de connexion, d'inscription, de renvoi du message et de
+  mot de passe oublié ; jeton à usage unique, joint par `AuthService` (`captchaToken`) puis
+  réinitialisé. Sans `TURNSTILE_SITE_KEY` au build, rien ne s'affiche ni n'est demandé ; avec,
+  `build:prod` ajoute `https://challenges.cloudflare.com` à `frame-src`, et le script de
+  Turnstile, ajouté par l'application, passe par `strict-dynamic`.

@@ -25,7 +25,21 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "content_reports": {
+            "client_errors": {
+                  Row: {
+                    "created_at": string,"id": number,"message": string,"path": string,"stack": string | null,"user_agent": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: never,"message": string,"path": string,"stack"?: string | null,"user_agent"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: never,"message"?: string,"path"?: string,"stack"?: string | null,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"content_reports": {
                   Row: {
                     "created_at": string,"id": number,"lab_id": string | null,"lesson_id": string | null,"message": string,"question_id": string | null,"user_id": string
                   }
@@ -323,6 +337,9 @@ isOneToOne: false
 "new_join_code":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"owns_group":
+{ Args: { "p_group": string }; Returns: boolean
+                           },
 "record_lab_attempt":
 { Args: { "p_hints_used": number,"p_lab_id": string,"p_succeeded": boolean }; Returns: {
               "completed_at": string,
@@ -357,6 +374,9 @@ isOneToOne: false
       } },
 "regenerate_join_code":
 { Args: { "p_group": string }; Returns: string
+                           },
+"report_client_error":
+{ Args: { "p_message": string,"p_path": string,"p_stack": string,"p_user_agent": string }; Returns: undefined
                            },
 "report_content":
 { Args: { "p_lab_id"?: string,"p_lesson_id"?: string,"p_message": string,"p_question_id"?: string }; Returns: undefined

@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { CAPTCHA_PENDING, Captcha } from '../../shared/captcha/captcha';
 
 type Field = 'nom' | 'email' | 'mot-de-passe';
 export type FieldErrors = Partial<Record<Field, string>>;
@@ -42,7 +43,7 @@ export function validateAuthForm(
 /** Connexion ou création de compte, selon la route (/connexion ou /inscription). */
 @Component({
   selector: 'ca-auth-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Captcha],
   templateUrl: './auth-page.html',
   styleUrl: './auth-page.css',
 })
@@ -55,6 +56,7 @@ export class AuthPage {
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
+  private readonly captcha = viewChild(Captcha);
 
   protected readonly signup = computed(() => this.mode() === 'inscription');
   protected readonly name = signal('');
@@ -99,12 +101,20 @@ export class AuthPage {
       return;
     }
 
+    const captchaToken = this.captcha()?.take();
+    if (captchaToken === null) {
+      this.serverError.set(CAPTCHA_PENDING);
+      this.focusSummary();
+      return;
+    }
+
     this.pending.set(true);
     const email = values.email.trim();
     const result = this.signup()
-      ? await this.auth.signUp(email, values.password, values.name.trim())
-      : await this.auth.signIn(email, values.password);
+      ? await this.auth.signUp(email, values.password, values.name.trim(), captchaToken)
+      : await this.auth.signIn(email, values.password, captchaToken);
     this.pending.set(false);
+    this.captcha()?.reset();
 
     if (!result.ok) {
       this.serverError.set(result.message);
@@ -120,10 +130,16 @@ export class AuthPage {
   /** Message de confirmation perdu ou expiré : on en renvoie un à la même adresse. */
   protected async resend(): Promise<void> {
     if (this.pending()) return;
+    const captchaToken = this.captcha()?.take();
+    if (captchaToken === null) {
+      this.resendMessage.set(CAPTCHA_PENDING);
+      return;
+    }
     this.pending.set(true);
     this.resendMessage.set('');
-    const result = await this.auth.resendConfirmation(this.email().trim());
+    const result = await this.auth.resendConfirmation(this.email().trim(), captchaToken);
     this.pending.set(false);
+    this.captcha()?.reset();
     if (!result.ok) {
       this.resendMessage.set(result.message);
     } else if (this.confirmationSent()) {

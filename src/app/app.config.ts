@@ -2,6 +2,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import {
   ApplicationConfig,
+  ErrorHandler,
   LOCALE_ID,
   inject,
   isDevMode,
@@ -20,6 +21,7 @@ import {
 } from '@angular/router';
 import { routes } from './app.routes';
 import { Analytics } from './core/analytics/analytics';
+import { ReportingErrorHandler } from './core/errors/reporting-error-handler';
 import { PageTitleStrategy } from './core/page-title.strategy';
 
 // Dates et nombres à la française : « 16 octobre », « 80 % ».
@@ -28,6 +30,8 @@ registerLocaleData(localeFr);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // Erreurs des apprenants connectés envoyées au serveur, pour être corrigées.
+    { provide: ErrorHandler, useClass: ReportingErrorHandler },
     { provide: LOCALE_ID, useValue: 'fr' },
     provideRouter(
       routes,

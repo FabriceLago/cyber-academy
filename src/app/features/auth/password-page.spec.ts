@@ -37,7 +37,8 @@ describe('PasswordPage', () => {
     expect(auth.requestPasswordReset).not.toHaveBeenCalled();
 
     await submit('  lea@exemple.test ');
-    expect(auth.requestPasswordReset).toHaveBeenCalledWith('lea@exemple.test');
+    // Pas de clé Turnstile en test : aucun jeton de captcha.
+    expect(auth.requestPasswordReset).toHaveBeenCalledWith('lea@exemple.test', undefined);
     expect(element.textContent).toContain('Si un compte existe pour');
   });
 
