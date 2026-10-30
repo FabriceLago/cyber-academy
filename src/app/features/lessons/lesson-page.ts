@@ -23,6 +23,7 @@ import { PacketJourney } from './animations/packet-journey';
 import { SubscriptionService } from '../../core/subscription/subscription.service';
 import { Paywall } from '../../shared/paywall/paywall';
 import { ReportError } from '../../shared/report-error/report-error';
+import { toolsForLesson } from '../tools/tools';
 import { LESSON_STATUS, LEVELS } from './lesson-list';
 import { PracticeQuestion } from './practice-question';
 
@@ -94,6 +95,8 @@ export class LessonPage {
       .map((a) => ({ at: a.submittedAt, score: quizScore(a) }))
       .reverse(),
   );
+  /** Outils réels auxquels cette leçon prépare (section « Outils du métier »). */
+  protected readonly tools = computed(() => toolsForLesson(this.lessonId()));
   protected readonly animationSteps = computed(() =>
     splitSteps(this.entry()?.lesson.animation.textAlternative ?? ''),
   );
@@ -119,6 +122,7 @@ export class LessonPage {
     ...(this.lab() ? [{ id: 'laboratoire', label: 'Laboratoire' }] : []),
     { id: 'quiz', label: 'Quiz de validation' },
     { id: 'resume', label: 'Résumé' },
+    ...(this.tools().length > 0 ? [{ id: 'outils', label: 'Outils du métier' }] : []),
     { id: 'criteres', label: 'Critères de réussite' },
   ]);
 

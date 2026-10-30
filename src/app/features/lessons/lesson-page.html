@@ -225,6 +225,22 @@
       </ul>
     </section>
 
+    @if (tools().length > 0) {
+      <section aria-labelledby="outils-titre">
+        <h2 id="outils-titre" tabindex="-1">Outils du métier</h2>
+        <p>Les professionnels utilisent ces outils réels pour ce que vous venez d’apprendre :</p>
+        <ul>
+          @for (tool of tools(); track tool.id) {
+            <li><a [routerLink]="['/outils', tool.id]">{{ tool.name }}</a> : {{ tool.summary }}</li>
+          }
+        </ul>
+        <p class="muted">
+          À essayer seulement sur vos propres appareils.
+          <a routerLink="/outils">Tous les outils du métier</a>
+        </p>
+      </section>
+    }
+
     <section aria-labelledby="criteres-titre">
       <h2 id="criteres-titre" tabindex="-1">Critères de réussite</h2>
       @let quizPassed = (quizResult()?.bestScore ?? 0) >= entry.module.passThreshold;

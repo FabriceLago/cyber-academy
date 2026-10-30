@@ -86,6 +86,21 @@ export const routes: Routes = [
       import('./features/glossary/glossary-term-page').then((m) => m.GlossaryTermPage),
   },
   {
+    // Outils réels (libres ou gratuits) reliés aux leçons, hors du menu principal.
+    path: 'outils',
+    title: 'Outils du métier',
+    loadComponent: () => import('./features/tools/tools-page').then((m) => m.ToolsPage),
+  },
+  {
+    path: 'outils/:outil',
+    title: (route) =>
+      import('./features/tools/tools').then((m) => {
+        const tool = m.findTool(route.paramMap.get('outil') ?? '');
+        return tool ? `${tool.name} : outil du métier` : 'Outil introuvable';
+      }),
+    loadComponent: () => import('./features/tools/tool-page').then((m) => m.ToolPage),
+  },
+  {
     path: 'cartes-memoire',
     title: 'Cartes mémoire',
     loadComponent: () =>

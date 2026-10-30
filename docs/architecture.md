@@ -60,6 +60,7 @@ src/app/
    ├─ home/              accueil public (/) : présentation de la plateforme (après l'étape 13)
    ├─ dashboard/         tableau de bord (/tableau-de-bord), à réviser    (étape 4, fait)
    ├─ glossary/          glossaire, une page par terme, cartes mémoire    (après l'étape 13, fait)
+   ├─ tools/             outils du métier : liste par domaine, fiches     (après l'étape 13, fait)
    ├─ skills/            compétences                                      (étape 4, fait)
    ├─ learning-paths/    carte des parcours, page d'une spécialisation    (étapes 5 et 11, fait)
    ├─ lessons/           page de leçon, liste, exercice guidé             (étape 5, fait)
@@ -659,3 +660,21 @@ automatiquement.
   réinitialisé. Sans `TURNSTILE_SITE_KEY` au build, rien ne s'affiche ni n'est demandé ; avec,
   `build:prod` ajoute `https://challenges.cloudflare.com` à `frame-src`, et le script de
   Turnstile, ajouté par l'application, passe par `strict-dynamic`.
+
+## 11. Outils du métier
+
+- **Contenu** : [`content/tools.ts`](../src/app/content/tools.ts), 14 logiciels et services réels,
+  libres ou gratuits, rangés en 7 domaines. Chaque fiche donne le type, la licence, les systèmes,
+  le site officiel (aucun téléchargement hébergé), l'usage, les métiers qui s'en servent, les
+  leçons et laboratoires qui y préparent (ou ce qui est « à venir »), un premier essai sans risque
+  et la date de vérification. Licence, systèmes et site sont relevés sur le site officiel de
+  chaque outil : à revérifier en changeant `VERIFIED`.
+- **Cadre légal** : les outils qui sondent ou attaquent (Nmap, ZAP, Burp Suite) portent
+  `AUTHORIZED_ONLY` (autorisation écrite, articles 323-1 et suivants du Code pénal) ; urlscan.io et
+  VirusTotal préviennent que ce qu'on y envoie peut être vu par d'autres.
+- **Pages** : `/outils` et `/outils/<outil>`, hors du menu principal ; liens depuis les
+  Laboratoires, le glossaire et la section « Outils du métier » des leçons concernées
+  (`toolsForLesson`). Le pré-rendu du glossaire écrit aussi leurs versions statiques et les ajoute
+  au sitemap.
+- **Tests** : `features/tools/tools.spec.ts` (leçons et laboratoires cités existants, sites en
+  https, avertissement légal présent) et `e2e/tools.spec.ts` (parcours, axe, page sans JavaScript).
