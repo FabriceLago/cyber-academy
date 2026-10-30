@@ -10,7 +10,10 @@ import { TERMS, searchGlossary } from './glossary';
       <p class="eyebrow">Référence</p>
       <h1>Glossaire</h1>
       <p>Tous les termes définis dans les leçons, avec un exemple et la leçon où les revoir.</p>
-      <p><a routerLink="/cartes-memoire">Réviser ces termes avec les cartes mémoire</a></p>
+      <p>
+        <a routerLink="/cartes-memoire">Réviser ces termes avec les cartes mémoire</a> ·
+        <a routerLink="/outils">Les outils du métier</a>
+      </p>
     </header>
 
     <div class="search card" role="search">

@@ -17,6 +17,10 @@ import { LAB_KINDS } from './lab-page';
         Le Cyber Lab : des exercices pratiques dans des environnements simulés. Rien n’y est exécuté
         pour de vrai et toutes les données sont fictives : vous pouvez essayer sans risque.
       </p>
+      <p>
+        Et ensuite ? Découvrez les <a routerLink="/outils">outils du métier</a>, les vrais logiciels
+        que ces laboratoires simulent.
+      </p>
     </header>
 
     <ul class="labs">
