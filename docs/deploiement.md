@@ -137,6 +137,11 @@ Le parcours Découverte est gratuit ; les parcours marqués `premium: true` dans
 l'instant « Analyste SOC junior ») demandent un abonnement actif. Le serveur le vérifie à chaque
 enregistrement (`record_quiz_attempt`, `record_lab_attempt`), pas seulement l'affichage.
 
+**Par défaut, la vente est fermée** : la page Abonnement annonce « pas encore en vente », sans prix
+ni essai, et la politique de confidentialité ne parle pas de Stripe. `$env:PREMIUM_SALES = "ouvertes"`
+avant `npm run build:prod` l'ouvre : à réserver à une préproduction (essai Stripe) tant que l'étape 8
+n'est pas faite. Un Premium accordé à un groupe (section 11) reste possible et affiché.
+
 1. **Compte Stripe** (stripe.com), en mode test d'abord. Créez un produit « Cyber Academy Premium »
    avec deux prix récurrents : 9,90 € par mois et 99 € par an. Ces montants sont affichés par
    `src/app/features/subscription/subscription-page.ts` (constante `PLANS`) : gardez-les identiques.
@@ -169,7 +174,7 @@ enregistrement (`record_quiz_attempt`, `record_lab_attempt`), pas seulement l'af
    carte `4000 0000 0000 0341`, acceptée à l'enregistrement puis refusée au prélèvement.
 8. **Avant de vendre** : conditions générales de vente (CGV, qui décrivent l'essai sans carte et
    le maintien de l'accès pendant les relances), mentions légales complètes, puis clés Stripe en
-   mode réel (`sk_live_…`, nouveaux prix, nouveau webhook).
+   mode réel (`sk_live_…`, nouveaux prix, nouveau webhook), et site reconstruit avec `PREMIUM_SALES`.
 
 Contrôles locaux : `supabase/tests/database/subscriptions.test.sql` (accès, enregistrements,
 suppression du compte) et les tests de parcours de `e2e/specialization.spec.ts`.

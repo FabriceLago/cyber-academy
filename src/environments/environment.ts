@@ -12,4 +12,6 @@ export const environment = {
   matomoSiteId: '',
   /** Captcha (Cloudflare Turnstile) : vide en local, donc aucun captcha. */
   turnstileSiteKey: '',
+  /** Vente du Premium : ouverte en local, pour tester le parcours d'achat. */
+  premiumSales: true,
 };

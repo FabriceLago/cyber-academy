@@ -10,6 +10,8 @@ declare const CA_MATOMO_URL: string;
 declare const CA_MATOMO_SITE_ID: string;
 /** Captcha : TURNSTILE_SITE_KEY, facultative (vide : aucun captcha). */
 declare const CA_TURNSTILE_SITE_KEY: string;
+/** Vente du Premium : PREMIUM_SALES=ouvertes, une fois Stripe et les CGV prêts (sinon fermée). */
+declare const CA_PREMIUM_SALES: boolean;
 
 export const environment = {
   supabaseUrl: CA_SUPABASE_URL,
@@ -17,4 +19,5 @@ export const environment = {
   matomoUrl: CA_MATOMO_URL,
   matomoSiteId: CA_MATOMO_SITE_ID,
   turnstileSiteKey: CA_TURNSTILE_SITE_KEY,
+  premiumSales: CA_PREMIUM_SALES,
 };

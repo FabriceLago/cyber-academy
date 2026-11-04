@@ -68,6 +68,12 @@ if (turnstileSiteKey && !/^[0-3]x[0-9A-Za-z_-]{18,28}$/.test(turnstileSiteKey)) 
   fail('TURNSTILE_SITE_KEY doit être la clé de site Turnstile (0x…), jamais la clé secrète.');
 }
 
+// Vente du Premium : fermée tant que Stripe et les CGV ne sont pas prêts (docs/deploiement.md).
+const premiumSales = process.env.PREMIUM_SALES ?? '';
+if (premiumSales && premiumSales !== 'ouvertes') {
+  fail('PREMIUM_SALES vaut « ouvertes » ou reste vide (vente fermée).');
+}
+
 /** Politique de sécurité du contenu : Matomo (mesures) et Turnstile (cadre du captcha), s'il y a lieu. */
 function withServices(policy, file) {
   const changes = [
@@ -103,6 +109,7 @@ execFileSync(
     ...define('CA_MATOMO_URL', matomoUrl),
     ...define('CA_MATOMO_SITE_ID', matomoUrl ? matomoSiteId : ''),
     ...define('CA_TURNSTILE_SITE_KEY', turnstileSiteKey),
+    ...define('CA_PREMIUM_SALES', premiumSales === 'ouvertes'),
   ],
   { stdio: 'inherit' },
 );

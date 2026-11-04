@@ -3,7 +3,11 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { CATALOG } from '../../content/outline.generated';
 import { AuthService } from '../../core/auth/auth.service';
-import { Plan, SubscriptionService } from '../../core/subscription/subscription.service';
+import {
+  PREMIUM_SALES,
+  Plan,
+  SubscriptionService,
+} from '../../core/subscription/subscription.service';
 
 /** Prix affichés : à garder identiques aux prix créés dans Stripe (STRIPE_PRICE_MENSUEL / ANNUEL). */
 const PLANS: readonly { id: Plan; label: string; price: string; note: string }[] = [
@@ -53,7 +57,13 @@ const TRIAL_DAYS = 7;
 
     <section class="card" aria-labelledby="formules">
       <h2 id="formules">Votre abonnement</h2>
-      @if (!auth.user()) {
+      @if (!salesOpen && !subscriptions.active()) {
+        <p>
+          <strong>L’abonnement Premium n’est pas encore en vente</strong> : aucun paiement n’est
+          possible pour l’instant.
+        </p>
+        <a class="btn btn-primary" routerLink="/parcours">Voir les parcours</a>
+      } @else if (!auth.user()) {
         <p>Pour vous abonner, connectez-vous ou créez un compte gratuit.</p>
         <div class="row">
           <a class="btn btn-primary" routerLink="/inscription">Créer un compte</a>
@@ -210,6 +220,7 @@ export class SubscriptionPage {
 
   protected readonly auth = inject(AuthService);
   protected readonly subscriptions = inject(SubscriptionService);
+  protected readonly salesOpen = inject(PREMIUM_SALES);
   protected readonly plans = PLANS;
   protected readonly premiumPaths = CATALOG.paths.filter((path) => path.premium);
   protected readonly trialDays = TRIAL_DAYS;
