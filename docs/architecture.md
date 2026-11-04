@@ -592,6 +592,10 @@ automatiquement.
 
 ## 8. Abonnement Premium
 
+- **Vente** : `environment.premiumSales` (jeton `PREMIUM_SALES`), ouverte en local, fermée en
+  production tant que `build:prod` ne reçoit pas `PREMIUM_SALES=ouvertes`. Fermée : la page
+  Abonnement annonce « pas encore en vente », sans prix ni essai, et la politique de confidentialité
+  ne parle pas de Stripe ; un Premium accordé à un groupe reste affiché.
 - **Contenu** : `premium: true` sur un parcours (`content.model.ts`), recopié dans
   `learning_paths.premium` par `npm run db:catalog`.
 - **État** : table `subscriptions` (une ligne par compte : client Stripe, statut, fin de période,

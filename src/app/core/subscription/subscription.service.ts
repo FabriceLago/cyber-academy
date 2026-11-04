@@ -1,4 +1,14 @@
-import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  DOCUMENT,
+  Injectable,
+  InjectionToken,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 import { GroupsService } from '../groups/groups.service';
 import { PathOutline } from '../models/content.model';
@@ -13,6 +23,12 @@ export interface Subscription {
 }
 
 export type Plan = 'mensuel' | 'annuel';
+
+/** Vente du Premium ouverte ; sinon (Stripe et CGV pas prêts), le site ne propose aucun achat. */
+export const PREMIUM_SALES = new InjectionToken<boolean>('PREMIUM_SALES', {
+  providedIn: 'root',
+  factory: () => environment.premiumSales,
+});
 
 /** Ouvrent l'accès : payé, en essai, ou paiement refusé que Stripe retente encore (past_due). */
 const ACCESS = ['active', 'trialing', 'past_due'];

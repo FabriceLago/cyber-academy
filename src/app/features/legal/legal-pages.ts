@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Analytics } from '../../core/analytics/analytics';
+import { PREMIUM_SALES } from '../../core/subscription/subscription.service';
 import { TURNSTILE_SITE_KEY } from '../../shared/captcha/captcha';
 
 // Les informations propres à l'éditeur sont marquées A_COMPLETER : `npm run build:prod` refuse de
@@ -129,12 +130,14 @@ export class LegalNoticePage {}
         conservées jusqu’à la suppression de votre compte, puis disparaissent des sauvegardes au
         bout de A_COMPLETER : durée de conservation des sauvegardes.
       </p>
-      <p>
-        Abonnement : le paiement est traité par Stripe (Stripe Payments Europe), qui reçoit votre
-        adresse e-mail et vos données de paiement. Cyber Academy ne voit ni ne garde votre numéro de
-        carte : seulement l’état de l’abonnement (actif, date de fin). Les factures sont conservées
-        dix ans, comme l’exige la loi pour les pièces comptables.
-      </p>
+      @if (salesOpen) {
+        <p>
+          Abonnement : le paiement est traité par Stripe (Stripe Payments Europe), qui reçoit votre
+          adresse e-mail et vos données de paiement. Cyber Academy ne voit ni ne garde votre numéro
+          de carte : seulement l’état de l’abonnement (actif, date de fin). Les factures sont
+          conservées dix ans, comme l’exige la loi pour les pièces comptables.
+        </p>
+      }
     </section>
     @if (captcha) {
       <section class="card prose" aria-labelledby="anti-robot">
@@ -216,4 +219,6 @@ export class PrivacyPage {
   protected readonly analytics = inject(Analytics);
   /** Captcha configuré (clé Turnstile au build) : la section qui le décrit s'affiche. */
   protected readonly captcha = inject(TURNSTILE_SITE_KEY) !== '';
+  /** Vente ouverte : le paragraphe sur Stripe s'affiche. */
+  protected readonly salesOpen = inject(PREMIUM_SALES);
 }

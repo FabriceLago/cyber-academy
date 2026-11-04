@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import {
+  PREMIUM_SALES,
   Subscription,
   SubscriptionService,
   isActive,
@@ -15,6 +16,7 @@ const IN_A_WEEK = new Date(Date.now() + 7 * 86_400_000).toISOString();
 function render(
   current: Subscription | null,
   group: { name: string; premiumUntil: string } | null = null,
+  salesOpen = true,
 ): HTMLElement {
   const subscription = signal(current);
   const ownActive = computed(() => isActive(subscription(), new Date()));
@@ -22,6 +24,7 @@ function render(
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
+      { provide: PREMIUM_SALES, useValue: salesOpen },
       { provide: AuthService, useValue: { user: signal({ id: 'u1' }), userId: signal('u1') } },
       {
         provide: SubscriptionService,
@@ -82,6 +85,20 @@ describe('SubscriptionPage', () => {
     expect(page.textContent).toContain('Accès Premium offert par votre groupe « Club cyber »');
     expect(choices(page)).toHaveLength(0);
     expect(page.textContent).not.toContain('Gérer mon abonnement');
+  });
+
+  it('vente fermée : le dit, sans prix, sans essai et sans formule', () => {
+    const page = render(null, null, false);
+    expect(page.textContent).toContain('n’est pas encore en vente');
+    expect(page.textContent).not.toContain('€');
+    expect(page.textContent).not.toContain('essai gratuit');
+    expect(choices(page)).toHaveLength(0);
+  });
+
+  it('vente fermée : un Premium déjà accordé par un groupe reste affiché', () => {
+    const page = render(null, { name: 'Club cyber', premiumUntil: IN_A_WEEK }, false);
+    expect(page.textContent).toContain('Accès Premium offert par votre groupe « Club cyber »');
+    expect(page.textContent).not.toContain('pas encore en vente');
   });
 
   it('paiement refusé : l’accès est maintenu et le moyen de paiement à mettre à jour', () => {
